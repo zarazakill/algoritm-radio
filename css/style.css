@@ -164,3 +164,9 @@ body {
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
+
+.track-time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}

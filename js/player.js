@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentTrackEl = document.getElementById('current-track');
     const nextTrackEl = document.getElementById('next-track');
     const historyList = document.getElementById('history-list');
+    const listenersCountEl = document.getElementById('listeners-count');
 
     // Настройки подключения
     const STREAMS = [
@@ -16,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     const API_ENDPOINTS = [
-        "https://wwcat.duckdns.org:8443/api/nowplaying/1",
+        "https://wwcat.duckdns.org:8443/api/nowplaying/1"
     ];
 
     // Текущие активные URL
@@ -48,6 +49,28 @@ document.addEventListener('DOMContentLoaded', function() {
         statusEl.className = isError ? 'status-error' : 'status-success';
     }
 
+    // Форматирование времени (mm:ss)
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Обновление информации о слушателях
+    function updateListenersCount(count) {
+        if (!listenersCountEl) return;
+        listenersCountEl.textContent = `${count} ${pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
+    }
+
+    // Склонение числительных
+    function pluralize(number, words) {
+        return words[
+            (number % 100 > 4 && number % 100 < 20) ? 2 
+            : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
+        ];
+    }
+
     // Инициализация плеера
     async function initPlayer() {
         setStatus("Подключение...");
@@ -63,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Поиск рабочего API
             currentApiUrl = await findWorkingApi();
             if (currentApiUrl) {
-                updateTrackInfo();
+                await updateTrackInfo();
                 updateInterval = setInterval(updateTrackInfo, 15000);
             }
         } else {
@@ -129,9 +152,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetchWithTimeout(currentApiUrl, 3000);
             const data = await response.json();
             updateTrackUI(data);
+            
+            // Обновляем количество слушателей
+            if (data.listeners && data.listeners.current) {
+                updateListenersCount(data.listeners.current);
+            }
+            
+            return true;
         } catch (error) {
             console.error("Ошибка загрузки данных:", error);
-            currentApiUrl = null; // Попробуем другой API в следующий раз
+            currentApiUrl = null;
+            return false;
         }
     }
 
@@ -140,49 +171,51 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // Текущий трек
             const current = data.now_playing.song;
-            currentTrackEl.innerHTML = `
-                <strong>${current.title}</strong> - ${current.artist}
+            const currentHtml = `
+                <strong>${current.title || 'Неизвестный трек'}</strong> - ${current.artist || 'Неизвестный исполнитель'}
                 <span class="progress">${formatTime(data.now_playing.elapsed)} / ${formatTime(data.now_playing.duration)}</span>
             `;
             
+            if (currentTrackEl) {
+                currentTrackEl.innerHTML = currentHtml;
+            }
+            
             // Следующий трек
             if (data.playing_next) {
-                nextTrackEl.innerHTML = `
-                    Далее: <strong>${data.playing_next.song.title}</strong> - ${data.playing_next.song.artist}
+                const nextHtml = `
+                    Далее: <strong>${data.playing_next.song.title || 'Неизвестный трек'}</strong> - ${data.playing_next.song.artist || 'Неизвестный исполнитель'}
                 `;
+                
+                if (nextTrackEl) {
+                    nextTrackEl.innerHTML = nextHtml;
+                }
             }
             
             // История треков
-    if (data.song_history) {
-        const historyContainer = document.getElementById('history-list');
-        historyContainer.innerHTML = '';
-        
-        data.song_history.slice(0, 5).forEach((track, index) => {
-            const li = document.createElement('li');
-            if (index === 0) li.classList.add('new-track');
-            
-            li.innerHTML = `
-                <span>${track.title || 'Пока пусто'} - ${track.artist || 'слушаем дальше'}</span>
-                <span class="track-time">${formatTime(track.duration || 0)}</span>
-            `;
-            historyContainer.appendChild(li);
-        
-        }
-
+            if (data.song_history && historyList) {
+                historyList.innerHTML = '';
+                
+                data.song_history.slice(0, 5).forEach((track, index) => {
+                    const li = document.createElement('li');
+                    if (index === 0) li.classList.add('new-track');
+                    
+                    li.innerHTML = `
+                        <span>${track.title || 'Неизвестный трек'} - ${track.artist || 'Неизвестный исполнитель'}</span>
+                        <span class="track-time">${formatTime(track.duration)}</span>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
         } catch (e) {
             console.error("Ошибка обработки данных:", e);
+            throw e;
         }
-    }
-
-    // Форматирование времени (mm:ss)
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
     // Обновление иконки громкости
     function updateVolumeIcon() {
+        if (!volumeBtn) return;
+        
         if (audio.muted || audio.volume === 0) {
             volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
         } else if (audio.volume < 0.5) {
@@ -193,21 +226,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Обработчики событий
-    playBtn.addEventListener('click', togglePlayback);
+    if (playBtn) {
+        playBtn.addEventListener('click', togglePlayback);
+    }
     
-    volumeSlider.addEventListener('input', function() {
-        audio.volume = this.value;
-        audio.muted = false;
-        updateVolumeIcon();
-    });
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', function() {
+            audio.volume = this.value;
+            audio.muted = false;
+            updateVolumeIcon();
+        });
+    }
 
-    volumeBtn.addEventListener('click', function() {
-        audio.muted = !audio.muted;
-        updateVolumeIcon();
-    });
+    if (volumeBtn) {
+        volumeBtn.addEventListener('click', function() {
+            audio.muted = !audio.muted;
+            updateVolumeIcon();
+        });
+    }
 
     audio.addEventListener('canplay', () => {
-        playBtn.disabled = false;
+        if (playBtn) playBtn.disabled = false;
     });
 
     audio.addEventListener('error', () => {
@@ -215,23 +254,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (updateInterval) clearInterval(updateInterval);
     });
 
-<script>
-
-function updateListenersCount(count) {
-    document.getElementById('listeners-count').textContent = 
-        `${count} ${pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
-}
-
-function pluralize(number, words) {
-    return words[
-        (number % 100 > 4 && number % 100 < 20) ? 2 
-        : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
-    ];
-}
-</script>
-    
     // Инициализация
-    audio.volume = volumeSlider.value;
+    if (volumeSlider) audio.volume = volumeSlider.value;
     updateVolumeIcon();
     initPlayer();
 });

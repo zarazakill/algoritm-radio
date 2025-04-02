@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const API_ENDPOINTS = [
         "https://wwcat.duckdns.org:8443/api/nowplaying/1",
-        "https://wwcat.duckdns.org:8000/api/nowplaying/1"
     ];
 
     // Текущие активные URL
@@ -153,12 +152,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             }
             
-            // История (последние 5 треков)
-            if (data.song_history) {
-                historyList.innerHTML = data.song_history.slice(0, 5).map(track => `
-                    <li>${track.title} - ${track.artist}</li>
-                `).join('');
-            }
+            // История треков
+    if (data.song_history) {
+        const historyContainer = document.getElementById('history-list');
+        historyContainer.innerHTML = '';
+        
+        data.song_history.slice(0, 5).forEach((track, index) => {
+            const li = document.createElement('li');
+            if (index === 0) li.classList.add('new-track');
+            
+            li.innerHTML = `
+                <span>${track.title || 'Пока пусто'} - ${track.artist || 'слушаем дальше'}</span>
+                <span class="track-time">${formatTime(track.duration || 0)}</span>
+            `;
+            historyContainer.appendChild(li);
+        
+        }
+
         } catch (e) {
             console.error("Ошибка обработки данных:", e);
         }

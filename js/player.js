@@ -215,6 +215,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (updateInterval) clearInterval(updateInterval);
     });
 
+<script>
+
+function updateListenersCount(count) {
+    document.getElementById('listeners-count').textContent = 
+        `${count} ${pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
+}
+
+function pluralize(number, words) {
+    return words[
+        (number % 100 > 4 && number % 100 < 20) ? 2 
+        : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
+    ];
+}
+</script>
+    
     // Инициализация
     audio.volume = volumeSlider.value;
     updateVolumeIcon();

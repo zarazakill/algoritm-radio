@@ -2,8 +2,55 @@ document.addEventListener('DOMContentLoaded', function() {
     const audio = document.getElementById('radio-stream');
     const playBtn = document.getElementById('play-btn');
     const statusEl = document.getElementById('stream-status');
-    const volumeSlider = document.getElementById('volume-slider');
-    const volumeBtn = document.getElementById('volume-btn');
+    const currentTrackEl = document.getElementById('current-track');
+    const nextTrackEl = document.getElementById('next-track');
+    const historyList = document.getElementById('history-list');
+    
+    // URL API для получения информации о треках (пример для AzuraCast)
+    const API_URL = "https://wwcat.duckdns.org/api/nowplaying/1";
+
+    // Функция обновления информации о треках
+    async function updateTrackInfo() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            
+            // Текущий трек
+            const current = data.now_playing.song;
+            currentTrackEl.innerHTML = `
+                <strong>${current.title}</strong> - ${current.artist}
+                <span class="progress">${formatTime(data.now_playing.elapsed)} / ${formatTime(data.now_playing.duration)}</span>
+            `;
+            
+            // Следующий трек
+            if (data.playing_next) {
+                nextTrackEl.innerHTML = `
+                    Далее: <strong>${data.playing_next.song.title}</strong> - ${data.playing_next.song.artist}
+                `;
+            }
+            
+            // История (последние 5 треков)
+            if (data.song_history) {
+                historyList.innerHTML = data.song_history.slice(0, 5).map(track => `
+                    <li>${track.title} - ${track.artist}</li>
+                `).join('');
+            }
+            
+        } catch (error) {
+            console.error("Ошибка загрузки данных:", error);
+        }
+    }
+
+    // Форматирование времени (mm:ss)
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Обновляем информацию каждые 10 секунд
+    setInterval(updateTrackInfo, 10000);
+    updateTrackInfo(); // Первоначальная загрузка
 
     // URL потоков
     const STREAM_URL = "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio";

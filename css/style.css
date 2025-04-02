@@ -524,3 +524,41 @@ transition: var(--transition);
     width: 80%;
     }
 }
+
+.track-info-container {
+    margin-top: 20px;
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.current-track {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.next-track {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-bottom: 15px;
+}
+
+.progress {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-left: 10px;
+}
+
+.history {
+    margin-top: 15px;
+}
+
+.history ul {
+    list-style: none;
+    padding: 0;
+}
+
+.history li {
+    padding: 5px 0;
+    border-bottom: 1px dashed #333;
+}

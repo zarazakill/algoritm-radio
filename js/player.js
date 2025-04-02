@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentArtEl = document.getElementById('current-art');
 
     // URL API и потоков
-    const API_URL = "https://wwcat.duckdns.org/api/nowplaying/1";
+    const API_URL = "https://wwcat.duckdns.org:8443/api/nowplaying/1";
     const STREAM_URL = "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio";
     const FALLBACK_URL = "https://wwcat.duckdns.org:8000/radio";
 

@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (state.isPlaying) {
                 elements.audio.pause();
                 elements.playBtn.innerHTML = '<i class="fas fa-play"></i>';
-                setStatus("Пауза");
+                                setStatus("Пауза");
             } else {
                 await elements.audio.play();
                 elements.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -108,4 +108,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Инициализируйте плеер
     initPlayer();
+
+    // Функции для нахождения рабочего потока и API
+    async function findWorkingStream(streams) {
+        for (const stream of streams) {
+            try {
+                const response = await fetch(stream, { method: 'HEAD', mode: 'no-cors' });
+                if (response.ok || response.type === 'opaque') {
+                    return stream; // Возвращаем первый доступный поток
+                }
+            } catch (error) {
+                console.error(Ошибка доступа к потоку ${stream}:, error);
+            }
+        }
+        return null; // Если ни один поток не доступен
+    }
+
+    async function findWorkingApi(apiEndpoints) {
+        for (const api of apiEndpoints) {
+            try {
+                const response = await fetch(api);
+                if (response.ok) {
+                    return api; // Возвращаем первый доступный API
+                }
+            } catch (error) {
+                console.error(Ошибка доступа к API ${api}:, error);
+            }
+        }
+        return null; // Если ни один API не доступен
+    }
 });

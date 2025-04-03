@@ -40,6 +40,13 @@ body {
     flex-direction: column;
 }
 
+.player-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -516,6 +523,11 @@ footer {
     animation: pulse 2s infinite;
 }
 
+.album-art {
+    position: relative;
+    margin: 0 auto;
+}
+
 /* Анимации */
 @keyframes spin {
     from { transform: rotate(0deg); }
@@ -540,10 +552,6 @@ footer {
 
 .playing .album-art img {
     transform: scale(1.02);
-}
-
-.playing .vinyl {
-    animation: spin 2s linear infinite;
 }
 
 /* Адаптивность */
@@ -574,20 +582,39 @@ footer {
 
 @media (max-width: 480px) {
     .logo {
-        flex-direction: row;
-        justify-content: center;
-        text-align: left;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
         gap: 1rem;
     }
-
-    .logo-text {
-        gap: 0.2rem;
-    }
-
+    
     .logo img {
-        width: 60px;
-        height: 60px;
+        width: 120px;
+        height: 120px;
     }
+    
+    .logo-text {
+        width: 100%;
+        text-align: center;
+    }
+    
+   
+    .now-playing h3::before, 
+    .up-next h3::before, 
+    .recent-tracks h3::before {
+        display: none;
+    }
+    
+    
+    .album-art {
+        margin: 0 auto;
+    }
+    
+   
+    .player-container {
+        padding: 1rem;
+    }
+}
 
     .player-buttons {
         flex-direction: column;

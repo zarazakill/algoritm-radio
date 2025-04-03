@@ -73,7 +73,7 @@ class RadioPlayer {
         // Обработчики громкости
         if (this.elements.volumeSlider) {
             this.elements.volumeSlider.addEventListener('input', () => {
-                this.elements.audio.volume = this.elements.volumeSlider.value;
+            this.elements.audio.volume = this.elements.volumeSlider.value;
                 this.elements.audio.muted = false;
                 this.updateVolumeIcon();
             });

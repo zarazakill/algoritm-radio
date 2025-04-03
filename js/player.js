@@ -1,108 +1,301 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Основные элементы управления
-    const elements = {
-        audio: document.getElementById('radio-stream'),
-        playBtn: document.getElementById('play-btn'),
-        statusEl: document.getElementById('stream-status'),
-        volumeSlider: document.getElementById('volume-slider'),
-        volumeBtn: document.getElementById('volume-btn'),
-        currentTrackEl: document.getElementById('current-track'),
-        nextTrackEl: document.getElementById('next-track'),
-        historyList: document.getElementById('history-list'),
-        listenersCount: document.getElementById('listeners-count'),
-        trackTitle: document.getElementById('track-title'),
-        trackArtist: document.getElementById('track-artist'),
-        currentTime: document.getElementById('current-time'),
-        duration: document.getElementById('duration'),
-        progressBar: document.getElementById('progress-bar')
-    };
+class RadioPlayer {
+    constructor() {
+        this.elements = {
+            audio: document.getElementById('radio-stream'),
+            playBtn: document.getElementById('play-btn'),
+            statusEl: document.getElementById('stream-status'),
+            volumeSlider: document.getElementById('volume-slider'),
+            volumeBtn: document.getElementById('volume-btn'),
+            currentTrackEl: document.getElementById('current-track'),
+            nextTrackEl: document.getElementById('next-track'),
+            historyList: document.getElementById('history-list'),
+            listenersCount: document.getElementById('listeners-count')
+        };
 
-    // Конфигурация потоков и API
-    const config = {
-        streams: [
-            "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio",
-            "https://wwcat.duckdns.org:8000/radio",
-            "http://wwcat.hopto.org:8000/radio"
-        ],
-        apiEndpoints: [
-            "https://wwcat.duckdns.org:8443/api/nowplaying/1"
-        ],
-        updateInterval: 15000,
-        connectionTimeout: 5000
-    };
+        this.config = {
+            streams: [
+                { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
+                { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 }
+            ],
+            apiEndpoints: [
+                "https://wwcat.duckdns.org:8443/api/nowplaying/1"
+            ],
+            updateInterval: 15000,
+            reconnectDelay: 3000,
+            networkCheckInterval: 10000,
+            bufferLength: 20,
+            diagnostics: {
+                enabled: true,
+                logInterval: 60000
+            }
+        };
 
-    // Состояние плеера
-    const state = {
-        currentStreamUrl: null,
-        currentApiUrl: null,
-        updateIntervalId: null,
-        isPlaying: false
-        streamRetryCount: 0,
-        maxStreamRetries: 3
-    };
+        this.state = {
+            currentStream: null,
+            currentApiUrl: null,
+            isPlaying: false,
+            retryCount: 0,
+            networkQuality: 'good',
+            lastUpdateTime: 0,
+            audioContext: null,
+            diagnostics: {
+                bufferingEvents: 0,
+                connectionErrors: 0,
+                qualityChanges: 0,
+                lastError: null
+            }
+        };
 
-    // Инициализация плеера
-    async function initPlayer() {
-        setStatus("Подключение...");
-        
+        this.init();
+    }
+
+    async init() {
+        this.setupEventListeners();
+        this.initAudioContext();
+        await this.connectToStream();
+        this.startDiagnostics();
+    }
+
+    async connectToStream() {
         try {
-            // Поиск рабочего потока
-            state.currentStreamUrl = await findWorkingStream(config.streams);
+            this.setStatus("Подключение...");
+            this.state.currentStream = await this.findWorkingStream();
             
-            if (state.currentStreamUrl) {
-                elements.audio.src = state.currentStreamUrl;
-                elements.audio.crossOrigin = "anonymous";
+            if (this.state.currentStream) {
+                this.elements.audio.src = this.state.currentStream.url;
+                this.elements.audio.crossOrigin = "anonymous";
+                this.setupAudioBuffer();
                 
-                // Поиск рабочего API
-                state.currentApiUrl = await findWorkingApi(config.apiEndpoints);
-                
-                if (state.currentApiUrl) {
-                    await updateTrackInfo();
-                    state.updateIntervalId = setInterval(updateTrackInfo, config.updateInterval);
-                    setStatus("Готов к воспроизведению");
+                this.state.currentApiUrl = await this.findWorkingApi();
+                if (this.state.currentApiUrl) {
+                    await this.updateTrackInfo();
+                    this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
                 }
+                
+                this.state.retryCount = 0;
+                this.setStatus("Готов к воспроизведению");
             } else {
                 throw new Error("Все потоки недоступны");
             }
         } catch (error) {
-            console.error("Ошибка инициализации:", error);
-            setStatus(error.message, true);
-            elements.playBtn.disabled = true;
+            this.handleConnectionError(error);
         }
     }
 
-    // Управление воспроизведением
-    async function togglePlayback() {
-        try {
-            if (elements.audio.paused) {
-                await elements.audio.play();
-                elements.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                setStatus("Онлайн");
-                state.isPlaying = true;
-            } else {
-                elements.audio.pause();
-                elements.playBtn.innerHTML = '<i class="fas fa-play"></i>';
-                setStatus("Пауза");
-                state.isPlaying = false;
+    async findWorkingStream() {
+        // Сортируем потоки по приоритету
+        const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
+        
+        for (const stream of sortedStreams) {
+            try {
+                if (await this.testStream(stream.url)) {
+                    return stream;
+                }
+            } catch (error) {
+                console.warn(`Поток недоступен: ${stream.url}`, error);
             }
-        } catch (error) {
-            console.error("Ошибка воспроизведения:", error);
-            setStatus("Нажмите разрешить", true);
+        }
+        return null;
+    }
+
+    async testStream(url) {
+        try {
+            // Используем AbortController для таймаута
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3000);
+            
+            const response = await fetch(url, { 
+                method: 'HEAD', 
+                mode: 'no-cors',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeout);
+            return true;
+        } catch {
+            return false;
         }
     }
 
-    // Обновление информации о треках
-    async function updateTrackInfo() {
-        if (!state.currentApiUrl) return;
+    setupAudioBuffer() {
+        // Используем Web Audio API для лучшего контроля буферизации
+        if (!this.state.audioContext) return;
+        
+        const source = this.state.audioContext.createMediaElementSource(this.elements.audio);
+        const analyser = this.state.audioContext.createAnalyser();
+        source.connect(analyser);
+        analyser.connect(this.state.audioContext.destination);
+    }
+
+    async updateTrackInfo() {
+        if (!this.state.currentApiUrl) return;
         
         try {
-            const response = await fetchWithTimeout(state.currentApiUrl, config.connectionTimeout);
+            const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
             const data = await response.json();
-            updateUI(data);
+            this.updateUI(data);
+            this.state.lastUpdateTime = Date.now();
         } catch (error) {
             console.error("Ошибка обновления треков:", error);
-            state.currentApiUrl = await findWorkingApi(config.apiEndpoints);
+            this.state.currentApiUrl = await this.findWorkingApi();
         }
+    }
+
+    handleConnectionError(error) {
+        console.error("Ошибка подключения:", error);
+        this.state.diagnostics.connectionErrors++;
+        this.state.diagnostics.lastError = error.message;
+        
+        this.setStatus("Ошибка подключения", true);
+        this.elements.playBtn.disabled = true;
+        
+        // Экспоненциальная задержка для повторного подключения
+        const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
+        this.state.retryCount++;
+        
+        setTimeout(() => {
+            this.connectToStream();
+        }, delay);
+    }
+
+    setupEventListeners() {
+        this.elements.playBtn.addEventListener('click', () => this.togglePlayback());
+        
+        this.elements.volumeSlider.addEventListener('input', () => {
+            this.elements.audio.volume = this.elements.volumeSlider.value;
+            this.elements.audio.muted = false;
+            this.updateVolumeIcon();
+        });
+
+        this.elements.volumeBtn.addEventListener('click', () => {
+            this.elements.audio.muted = !this.elements.audio.muted;
+            this.updateVolumeIcon();
+        });
+
+        this.elements.audio.addEventListener('playing', () => {
+            this.state.isPlaying = true;
+            this.setStatus("Онлайн");
+        });
+
+        this.elements.audio.addEventListener('pause', () => {
+            this.state.isPlaying = false;
+            this.setStatus("Пауза");
+        });
+
+        this.elements.audio.addEventListener('error', () => {
+            this.handleConnectionError(new Error("Audio element error"));
+        });
+
+        this.elements.audio.addEventListener('stalled', () => {
+            this.handleNetworkIssue();
+        });
+
+        this.elements.audio.addEventListener('waiting', () => {
+            this.state.diagnostics.bufferingEvents++;
+            this.handleNetworkIssue();
+        });
+
+        // Оптимизация для фоновых вкладок
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.handleBackgroundTab();
+            } else {
+                this.handleForegroundTab();
+            }
+        });
+    }
+
+    handleNetworkIssue() {
+        // Адаптация к качеству сети
+        if (this.state.networkQuality === 'good') {
+            this.state.networkQuality = 'degraded';
+            this.state.diagnostics.qualityChanges++;
+            this.adjustForNetworkQuality();
+        }
+    }
+
+    adjustForNetworkQuality() {
+        switch (this.state.networkQuality) {
+            case 'degraded':
+                // Уменьшаем частоту обновлений в плохой сети
+                clearInterval(this.state.updateIntervalId);
+                this.state.updateIntervalId = setInterval(
+                    () => this.updateTrackInfo(), 
+                    this.config.updateInterval * 2
+                );
+                break;
+            case 'good':
+            default:
+                // Восстанавливаем нормальные настройки
+                clearInterval(this.state.updateIntervalId);
+                this.state.updateIntervalId = setInterval(
+                    () => this.updateTrackInfo(), 
+                    this.config.updateInterval
+                );
+        }
+    }
+
+    handleBackgroundTab() {
+        // Оптимизации для фоновых вкладок
+        if (this.state.audioContext) {
+            this.state.audioContext.suspend().catch(console.error);
+        }
+        
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(), 
+            this.config.updateInterval * 3
+        );
+    }
+
+    handleForegroundTab() {
+        // Восстановление нормальной работы
+        if (this.state.audioContext) {
+            this.state.audioContext.resume().catch(console.error);
+        }
+        
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(), 
+            this.config.updateInterval
+        );
+        
+        if (this.state.isPlaying) {
+            this.elements.audio.play().catch(console.error);
+        }
+    }
+
+    initAudioContext() {
+        try {
+            this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Восстановление после авто-приостановки браузером
+            document.addEventListener('click', () => {
+                if (this.state.audioContext.state === 'suspended') {
+                    this.state.audioContext.resume();
+                }
+            }, { once: true });
+        } catch (error) {
+            console.error("Ошибка инициализации AudioContext:", error);
+        }
+    }
+
+    startDiagnostics() {
+        if (!this.config.diagnostics.enabled) return;
+        
+        setInterval(() => {
+            console.log('Диагностика плеера:', {
+                networkQuality: this.state.networkQuality,
+                bufferingEvents: this.state.diagnostics.bufferingEvents,
+                connectionErrors: this.state.diagnostics.connectionErrors,
+                qualityChanges: this.state.diagnostics.qualityChanges,
+                lastError: this.state.diagnostics.lastError,
+                currentStream: this.state.currentStream?.url,
+                isPlaying: this.state.isPlaying,
+                volume: this.elements.audio.volume,
+                muted: this.elements.audio.muted
+            });
+        }, this.config.diagnostics.logInterval);
     }
 
     // Обновление интерфейса
@@ -343,5 +536,6 @@ async function testStream(url) {
     }
 
     // Запуск
-    init();
+    document.addEventListener('DOMContentLoaded', () => {
+    new RadioPlayer();
 });

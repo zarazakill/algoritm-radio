@@ -90,7 +90,7 @@ class RadioPlayer {
         // Обработчик кнопки запуска
         document.getElementById('start-playback')?.addEventListener('click', async () => {
             try {
-                document.getElementById('audio-overlay')?.style.display = 'none';
+                document.getElementById('audio-overlay')?.style.display == 'none';
                 await this.connectToStream();
 
                 if (this.state.audioContext?.state === 'suspended') {

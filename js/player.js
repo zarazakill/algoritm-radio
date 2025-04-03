@@ -1,5 +1,8 @@
 class RadioPlayer {
     constructor() {
+        this.elements.audio.autoplay = true;
+            this.init();
+        
         this.elements = {
             audio: document.getElementById('radio-stream'),
             playBtn: document.getElementById('play-btn'),
@@ -63,13 +66,6 @@ class RadioPlayer {
     }
 
     setupEventListeners() {
-        this.elements.playBtn.addEventListener('click', () => this.togglePlayback());
-
-        this.elements.volumeSlider.addEventListener('input', () => {
-            this.elements.audio.volume = this.elements.volumeSlider.value;
-            this.elements.audio.muted = false;
-            this.updateVolumeIcon();
-        });
 
         this.elements.volumeBtn.addEventListener('click', () => {
             this.elements.audio.muted = !this.elements.audio.muted;
@@ -203,6 +199,12 @@ class RadioPlayer {
         }
     }
 
+    async togglePlayback() {
+    // Автозапуск без проверок
+    await this.connectToStream();
+    this.elements.audio.play().catch(console.error);
+}
+    
     updateUI(data) {
         this.updateCurrentTrack(data.now_playing);
 
@@ -354,17 +356,6 @@ updateCurrentTrack(nowPlaying) {
             this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
         } else {
             this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-        }
-    }
-
-    togglePlayback() {
-        if (this.state.isPlaying) {
-            this.elements.audio.pause();
-        } else {
-            this.elements.audio.play().catch(error => {
-                console.error("Ошибка воспроизведения:", error);
-                this.setStatus("Ошибка воспроизведения", true);
-            });
         }
     }
 

@@ -146,6 +146,36 @@ class RadioPlayer {
         return null;
     }
 
+        async connectToStream() {
+        try {
+            const stream = await this.findWorkingStream();
+            if (!stream) throw new Error("Нет доступных потоков");
+
+            if (this.state.currentStream?.url !== stream.url) {
+                this.elements.audio.src = stream.url;
+                this.state.currentStream = stream;
+                this.state.retryCount = 0;
+                this.setStatus("Подключение...");
+                
+                // Устанавливаем API endpoint
+                this.state.currentApiUrl = await this.findWorkingApi();
+                
+                await new Promise((resolve, reject) => {
+                    this.elements.audio.onloadeddata = resolve;
+                    this.elements.audio.onerror = reject;
+                });
+
+                await this.togglePlayback();
+                this.setStatus("В эфире", false);
+                this.state.networkQuality = 'good';
+                this.adjustForNetworkQuality();
+            }
+        } catch (error) {
+            this.handleConnectionError(error);
+            throw error;
+        }
+    }
+
     async testStream(url) {
         try {
             const controller = new AbortController();

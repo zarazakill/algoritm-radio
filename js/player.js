@@ -9,7 +9,12 @@ class RadioPlayer {
             currentTrackEl: document.getElementById('current-track'),
             nextTrackEl: document.getElementById('next-track'),
             historyList: document.getElementById('history-list'),
-            listenersCount: document.getElementById('listeners-count')
+            listenersCount: document.getElementById('listeners-count'),
+            trackTitle: document.getElementById('track-title'),
+            trackArtist: document.getElementById('track-artist'),
+            currentTime: document.getElementById('current-time'),
+            progressBar: document.getElementById('progress-bar'),
+            duration: document.getElementById('duration')
         };
 
         this.config = {
@@ -55,6 +60,65 @@ class RadioPlayer {
         this.initAudioContext();
         await this.connectToStream();
         this.startDiagnostics();
+    }
+
+    setupEventListeners() {
+        this.elements.playBtn.addEventListener('click', () => this.togglePlayback());
+
+        this.elements.volumeSlider.addEventListener('input', () => {
+            this.elements.audio.volume = this.elements.volumeSlider.value;
+            this.elements.audio.muted = false;
+            this.updateVolumeIcon();
+        });
+
+        this.elements.volumeBtn.addEventListener('click', () => {
+            this.elements.audio.muted = !this.elements.audio.muted;
+            this.updateVolumeIcon();
+        });
+
+        this.elements.audio.addEventListener('playing', () => {
+            this.state.isPlaying = true;
+            this.setStatus("Онлайн");
+            this.elements.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+
+        this.elements.audio.addEventListener('pause', () => {
+            this.state.isPlaying = false;
+            this.setStatus("Пауза");
+            this.elements.playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        this.elements.audio.addEventListener('error', () => {
+            this.handleConnectionError(new Error("Audio element error"));
+        });
+
+        this.elements.audio.addEventListener('stalled', () => {
+            this.handleNetworkIssue();
+        });
+
+        this.elements.audio.addEventListener('waiting', () => {
+            this.state.diagnostics.bufferingEvents++;
+            this.handleNetworkIssue();
+        });
+
+        this.elements.audio.addEventListener('timeupdate', () => {
+            if (this.elements.currentTime && this.elements.progressBar) {
+                this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
+                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
+            }
+        });
+
+        this.elements.audio.addEventListener('canplay', () => {
+            if (this.elements.playBtn) this.elements.playBtn.disabled = false;
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.handleBackgroundTab();
+            } else {
+                this.handleForegroundTab();
+            }
+        });
     }
 
     async connectToStream() {

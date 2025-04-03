@@ -64,15 +64,15 @@ header {
 }
 
 .logo img {
-    width: 80px;
-    height: 80px;
+    width: 160px;
+    height: 160px;
     object-fit: contain;
     filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
     transition: var(--transition);
 }
 
 .logo:hover img {
-    transform: rotate(5deg) scale(1.05);
+    transform: rotate(15deg) scale(1.05);
 }
 
 .logo-text {

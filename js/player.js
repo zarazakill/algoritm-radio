@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const config = {
         streams: [
             "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio",
-            "https://wwcat.duckdns.org:8000/radio"
+            "https://wwcat.duckdns.org:8000/radio",
+            "http://wwcat.hopto.org:8000/radio"
         ],
         apiEndpoints: [
             "https://wwcat.duckdns.org:8443/api/nowplaying/1"

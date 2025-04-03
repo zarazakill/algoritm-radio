@@ -75,6 +75,26 @@ class RadioPlayer {
 
     setupEventListeners() {
 
+        this.elements.volumeSlider.addEventListener('input', () => {
+            this.elements.audio.volume = this.elements.volumeSlider.value;
+            this.elements.audio.muted = false;
+            this.updateVolumeIcon();
+        });
+
+        this.elements.volumeBtn.addEventListener('click', () => {
+            this.elements.audio.muted = !this.elements.audio.muted;
+            this.updateVolumeIcon();
+        });
+
+        // Обработчик кнопки включения
+        document.getElementById('start-playback')?.addEventListener('click', () => {
+            document.getElementById('audio-overlay').style.display = 'none';
+            this.connectToStream().then(() => {
+                this.elements.audio.play().catch(e => console.error("Play error:", e));
+            });
+        });
+
+            
          const handleFirstInteraction = () => {
         if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
             this.state.audioContext.resume();

@@ -2,7 +2,6 @@ class RadioPlayer {
     constructor() {
         this.elements = {
             audio: document.getElementById('radio-stream'),
-            playBtn: document.getElementById('play-btn'),
             statusEl: document.getElementById('stream-status'),
             volumeSlider: document.getElementById('volume-slider'),
             volumeBtn: document.getElementById('volume-btn'),
@@ -70,15 +69,6 @@ class RadioPlayer {
         this.startDiagnostics();
     }
 
-    setupEventListeners() {
-        // Обработчик кнопки запуска
-        document.getElementById('start-playback')?.addEventListener('click', () => {
-            document.getElementById('audio-overlay').style.display = 'none';
-            this.connectToStream().then(() => {
-                this.elements.audio.play().catch(e => console.error("Play error:", e));
-            });
-        });
-
         // Обработчики громкости
         if (this.elements.volumeSlider) {
             this.elements.volumeSlider.addEventListener('input', () => {
@@ -92,6 +82,10 @@ class RadioPlayer {
             this.elements.volumeBtn.addEventListener('click', () => {
                 this.elements.audio.muted = !this.elements.audio.muted;
                 this.updateVolumeIcon();
+                if (!this.elements.audio) {
+            console.error('Audio element not found!');
+            return;
+        }
             });
         }
 
@@ -150,28 +144,36 @@ class RadioPlayer {
         try {
             this.setStatus("Подключение...");
             
-            // Остановить текущее воспроизведение
+            // Сбросим текущее состояние
             this.elements.audio.pause();
             this.elements.audio.src = '';
             
+            // Найдем рабочий поток
             this.state.currentStream = await this.findWorkingStream();
-
-            if (this.state.currentStream) {
-                this.elements.audio.src = this.state.currentStream.url;
-                await new Promise(resolve => {
-                    this.elements.audio.onloadedmetadata = resolve;
-                    this.elements.audio.load();
-                });
-
-                try {
-                    await this.elements.audio.play();
-                    this.setStatus("Онлайн");
-                } catch (playError) {
-                    console.log("Автовоспроизведение заблокировано");
-                    this.setStatus("Нажмите для запуска", true);
-                }
-            } else {
+            
+            if (!this.state.currentStream) {
                 throw new Error("No working streams available");
+            }
+
+            // Установим новый источник
+            this.elements.audio.src = this.state.currentStream.url;
+            
+            // Дождемся загрузки метаданных
+            await new Promise((resolve, reject) => {
+                this.elements.audio.onloadedmetadata = resolve;
+                this.elements.audio.onerror = reject;
+                this.elements.audio.load();
+            });
+
+            // Попробуем воспроизвести
+            try {
+                await this.elements.audio.play();
+                this.setStatus("Онлайн");
+            } catch (playError) {
+                console.log("Автовоспроизведение заблокировано");
+                this.setStatus("Нажмите для запуска", true);
+                // Покажем оверлей с кнопкой, если автовоспроизведение заблокировано
+                document.getElementById('audio-overlay')?.style.display = 'flex';
             }
         } catch (error) {
             this.handleConnectionError(error);
@@ -185,6 +187,7 @@ class RadioPlayer {
 
         this.setStatus("Ошибка подключения", true);
         
+        // Добавим проверку на существование playBtn перед обращением к нему
         if (this.elements.playBtn) {
             this.elements.playBtn.disabled = true;
         }
@@ -196,6 +199,45 @@ class RadioPlayer {
             this.connectToStream();
         }, delay);
     }
+
+    setupEventListeners() {
+        // Обработчик кнопки запуска с улучшенной обработкой ошибок
+        document.getElementById('start-playback')?.addEventListener('click', async () => {
+            try {
+                document.getElementById('audio-overlay').style.display = 'none';
+                await this.connectToStream();
+                
+                // Разблокируем AudioContext если нужно
+                if (this.state.audioContext?.state === 'suspended') {
+                    await this.state.audioContext.resume();
+                }
+            } catch (error) {
+                console.error("Ошибка запуска:", error);
+            }
+        });
+
+        // Обработчик ошибок аудио
+        this.elements.audio.addEventListener('error', (e) => {
+            console.error("Audio error:", e);
+            // Проверим конкретную ошибку
+            if (this.elements.audio.error) {
+                switch(this.elements.audio.error.code) {
+                    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                        console.error("Формат аудио не поддерживается");
+                        break;
+                    case MediaError.MEDIA_ERR_NETWORK:
+                        console.error("Ошибка сети");
+                        break;
+                    case MediaError.MEDIA_ERR_DECODE:
+                        console.error("Ошибка декодирования");
+                        break;
+                    default:
+                        console.error("Неизвестная ошибка аудио");
+                }
+            }
+            this.handleConnectionError(new Error("Audio element error"));
+        });
+
 
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);

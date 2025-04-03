@@ -4,6 +4,7 @@
     --secondary-color: #a29bfe;
     --dark-color: #1a1a2e;
     --darker-color: #16213e;
+    
     --light-color: #f5f6fa;
     --accent-color: #fd79a8;
     --success-color: #00b894;
@@ -144,6 +145,9 @@ main {
     border-radius: calc(var(--border-radius) - 5px);
     overflow: hidden;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .album-art img {
@@ -215,11 +219,12 @@ main {
 }
 
 .player-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
+display: none;
+}
+
+.playing #play-btn {
+    opacity: 1;
+    background: rgba(253, 121, 168, 0.8);
 }
 
 .player-buttons button {
@@ -235,14 +240,21 @@ main {
 }
 
 #play-btn {
-    width: 60px;
-    height: 60px;
-    background: var(--primary-color);
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: rgba(108, 92, 231, 0.8);
     color: white;
-    font-size: 1.5rem;
-    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
-    position: relative;
-    overflow: hidden;
+    font-size: 1.8rem;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    border: 3px solid white;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.album-art:hover #play-btn {
+    opacity: 1;
 }
 
 #play-btn::before {
@@ -529,65 +541,89 @@ footer {
 
 /* Адаптивность для мобилок */
 @media (max-width: 768px) {
-    body {
-        padding: 15px;
-    }
-
     .player-container {
-        padding: 1.2rem;
-    }
-
-    .track-details {
         padding: 1rem;
+        max-width: 100%;
     }
-
+    
+    .album-art {
+        width: 100%;
+        max-width: 300px;
+    }
+    
     #play-btn {
-        width: 55px;
-        height: 55px;
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        opacity: 1; /* Всегда видима на мобильных */
     }
-
+    
+    .track-details {
+        padding: 0.8rem;
+        margin-top: 1rem;
+    }
+    
+    .track-info-box {
+        padding: 0.6rem;
+    }
+    
+    .now-playing, .up-next, .recent-tracks {
+        margin-bottom: 1rem;
+    }
+    
+    /* Компактный список истории */
+    #history-list li {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+        grid-template-columns: 1fr;
+    }
+    
+    /* Уменьшаем отступы */
+    .container {
+        padding: 0 10px;
+    }
+    
+    /* Бейдж слушателей */
     .now-playing-badge {
-        bottom: 15px;
-        right: 15px;
-        font-size: 0.8rem;
+        bottom: 10px;
+        right: 10px;
+        padding: 5px 8px;
+        font-size: 0.75rem;
     }
 }
 
 @media (max-width: 480px) {
-  
-    .logo {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .logo-text {
-        width: 100%;
-        text-align: center;
-    }
-    
-    .logo img {
-        width: 200px;
-        height: 200px;
-    }
-    
-    .now-playing h3,
-    .up-next h3,
-    .recent-tracks h3 {
-        justify-content: center;
-        text-align: center;
-    }
-    
-    
     .album-art {
-        margin: 0 auto 1rem;
-        width: 90%;
+        max-width: 250px;
     }
     
-}
+    #play-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+    }
     
+    .track-info h2 {
+        font-size: 1.1rem;
+    }
+    
+    .track-info p {
+        font-size: 0.85rem;
+    }
+    
+    /* Еще более компактный вид */
+    .player-container {
+        padding: 0.8rem;
+    }
+    
+    .track-details {
+        padding: 0.6rem;
+    }
+}
+
+
+
+
     /* Кнопки управления */
     .player-buttons {
         flex-direction: column;

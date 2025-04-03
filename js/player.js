@@ -1,8 +1,5 @@
 class RadioPlayer {
     constructor() {
-        this.elements.audio.autoplay = true;
-            this.init();
-        
         this.elements = {
             audio: document.getElementById('radio-stream'),
             playBtn: document.getElementById('play-btn'),
@@ -19,7 +16,7 @@ class RadioPlayer {
             progressBar: document.getElementById('progress-bar'),
             duration: document.getElementById('duration')
         };
-
+       
         this.config = {
             streams: [
                 { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
@@ -54,7 +51,7 @@ class RadioPlayer {
                 lastError: null
             }
         };
-
+        this.elements.audio.autoplay = true;
         this.init();
     }
 

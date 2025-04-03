@@ -219,16 +219,27 @@ class RadioPlayer {
         }
     }
 
-    updateCurrentTrack(nowPlaying) {
-        const track = nowPlaying.song;
-        const html = `
-        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-        <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
-        `;
+updateCurrentTrack(nowPlaying) {
+    const track = nowPlaying.song;
+    const html = `
+    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+    <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
+    `;
 
-        if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+    if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+    
+    // Добавленные строки для обновления заголовка и исполнителя:
+    if (this.elements.trackTitle) {
+        this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
     }
+    if (this.elements.trackArtist) {
+        this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
+    }
+    if (this.elements.duration) {
+        this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
+    }
+}
 
     updateNextTrack(playingNext) {
         const track = playingNext.song;

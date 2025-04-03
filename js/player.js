@@ -17,10 +17,12 @@ class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
-            Object.entries(this.elements).forEach(([name, element]) => {
+        // Проверка элементов
+        Object.entries(this.elements).forEach(([name, element]) => {
             if (!element) console.warn(`Элемент ${name} не найден`);
-        
-        // Перенесённый обработчик кнопки
+        });
+
+        // Обработчик кнопки запуска
         document.getElementById('start-playback')?.addEventListener('click', () => {
             document.getElementById('audio-overlay').style.display = 'none';
             this.elements.audio.play()

@@ -557,119 +557,40 @@ footer {
 }
 
 @media (max-width: 480px) {
-    /* Общие настройки шрифтов */
-    body {
-        font-size: 14px;
-        line-height: 1.4;
-        padding: 10px;
-    }
-
-    /* Шапка */
-    .logo h1 {
-        font-size: 1.5rem;
-    }
-    .logo p {
-        font-size: 0.8rem;
-    }
-
-    /* Основной плеер */
-    .player-container {
-        padding: 0.8rem;
-        margin: 0;
-        width: 100%;
-    }
-
-    /* Обложка альбома */
-    .album-art {
-        width: 150px;
-        height: 150px;
-        margin: 0 auto 0.5rem;
-    }
-
-    /* Информация о треке */
-    .track-info h2 {
-        font-size: 1rem;
-        margin-bottom: 0.3rem;
-    }
-    .track-info p {
-        font-size: 0.8rem;
-        margin-bottom: 0.3rem;
-    }
-
-    /* Прогресс-бар */
-    .track-progress {
-        margin-top: 0.5rem;
-    }
-    .track-progress span {
-        font-size: 0.7rem;
-    }
-
-    /* Блоки с треками */
-    .track-details {
-        padding: 0.8rem;
-        margin-top: 0.8rem;
-    }
-    .now-playing h3, 
-    .up-next h3, 
-    .recent-tracks h3 {
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-    }
-
-    /* История треков */
-    #history-list li {
-        padding: 0.5rem;
-        font-size: 0.75rem;
-        grid-template-columns: 1fr;
-    }
-
-    /* Кнопки управления */
-    .player-buttons {
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-
-    /* Регулятор громкости */
+    /* Компактные элементы управления */
     .volume-control {
-        max-width: 120px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 200px;
+        margin: 0.5rem auto;
     }
-
-    /* Статус и подвал */
-    #stream-status {
-        font-size: 0.8rem;
+    
+    #volume-slider {
+        flex-grow: 1;
+        margin: 0 0.5rem;
     }
-    footer {
-        font-size: 0.75rem;
-        padding-top: 0.8rem;
+    
+    #volume-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
     }
-
-    /* Бейдж слушателей */
-    .now-playing-badge {
-        bottom: 5px;
-        right: 5px;
-        padding: 4px 8px;
-        font-size: 0.7rem;
+    
+    /* Компактный оверлей */
+    .audio-overlay {
+        padding: 1rem;
     }
-}
-
-/* Для очень маленьких экранов */
-@media (max-width: 360px) {
-    body {
-        font-size: 13px;
+    
+    #start-playback {
+        padding: 10px 20px;
+        font-size: 1rem;
     }
+    
+    /* Уменьшенные размеры */
     .album-art {
-        width: 120px;
-        height: 120px;
-    }
-    #history-list li {
-        padding: 0.4rem;
-    }
-}
-/* Дополнительные улучшения для очень маленьких экранов */
-@media (max-width: 360px) {
-    .logo img {
-        width: 120px;
-        height: 120px;
+        width: 180px;
+        height: 180px;
     }
     
     .track-info h2 {
@@ -678,5 +599,26 @@ footer {
     
     .track-info p {
         font-size: 0.85rem;
+    }
+    
+    .track-details {
+        padding: 0.8rem;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 360px) {
+    .album-art {
+        width: 150px;
+        height: 150px;
+    }
+    
+    #start-playback {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .track-info h2 {
+        font-size: 1rem;
     }
 }

@@ -78,6 +78,20 @@ class RadioPlayer {
 
     setupEventListeners() {
 
+const startButton = document.getElementById('start-playback');
+    if (startButton) {
+        startButton.addEventListener('click', async () => {
+            try {
+                document.getElementById('audio-overlay').style.display = 'none';
+                await this.connectToStream();
+                if (this.state.audioContext?.state === 'suspended') {
+                    await this.state.audioContext.resume();
+                }
+            } catch (error) {
+                console.error("Ошибка запуска:", error);
+            }
+        });
+        
         this.elements.volumeSlider.addEventListener('input', () => {
             this.elements.audio.volume = this.elements.volumeSlider.value;
             this.elements.audio.muted = false;

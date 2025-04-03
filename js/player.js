@@ -157,20 +157,26 @@ class RadioPlayer {
 async connectToStream() {
     try {
         this.setStatus("Подключение...");
+        
+        // Остановить текущее воспроизведение перед загрузкой нового потока
+        this.elements.audio.pause();
+        this.elements.audio.src = '';
+        
         this.state.currentStream = await this.findWorkingStream();
 
         if (this.state.currentStream) {
             this.elements.audio.src = this.state.currentStream.url;
-            this.elements.audio.load();
-            
-            // Пытаемся запустить автоматически
-            const playPromise = this.elements.audio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    // Автовоспроизведение заблокировано
-                    this.setStatus("Нажмите для запуска", true);
-                });
+            await new Promise(resolve => {
+                this.elements.audio.onloadedmetadata = resolve;
+                this.elements.audio.load();
+            });
+
+            try {
+                await this.elements.audio.play();
+                this.setStatus("Онлайн");
+            } catch (playError) {
+                console.log("Автовоспроизведение заблокировано, требуется действие пользователя");
+                this.setStatus("Нажмите для запуска", true);
             }
         }
     } catch (error) {

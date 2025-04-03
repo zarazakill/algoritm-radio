@@ -238,26 +238,23 @@ async connectToStream() {
 
 updateCurrentTrack(nowPlaying) {
     const track = nowPlaying.song;
-    const html = `
-    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
-    `;
-
-    if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+    const isMobile = window.innerWidth <= 480;
     
-    // Добавленные строки для обновления заголовка и исполнителя:
-    if (this.elements.trackTitle) {
-        this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
-    }
-    if (this.elements.trackArtist) {
-        this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
-    }
-    if (this.elements.duration) {
-        this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
+    const title = track.title || 'Неизвестный трек';
+    const artist = track.artist || 'Неизвестный исполнитель';
+    
+    if (isMobile) {
+        // Сокращаем длинные названия
+        const shortTitle = title.length > 20 ? title.substring(0, 17) + '...' : title;
+        const shortArtist = artist.length > 25 ? artist.substring(0, 22) + '...' : artist;
+        
+        if (this.elements.trackTitle) this.elements.trackTitle.textContent = shortTitle;
+        if (this.elements.trackArtist) this.elements.trackArtist.textContent = shortArtist;
+    } else {
+        if (this.elements.trackTitle) this.elements.trackTitle.textContent = title;
+        if (this.elements.trackArtist) this.elements.trackArtist.textContent = artist;
     }
 }
-
     updateNextTrack(playingNext) {
         const track = playingNext.song;
         const html = `

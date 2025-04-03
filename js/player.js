@@ -17,6 +17,9 @@ class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
+            Object.entries(this.elements).forEach(([name, element]) => {
+            if (!element) console.warn(`Элемент ${name} не найден`);
+        
         // Перенесённый обработчик кнопки
         document.getElementById('start-playback')?.addEventListener('click', () => {
             document.getElementById('audio-overlay').style.display = 'none';

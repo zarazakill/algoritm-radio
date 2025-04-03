@@ -155,32 +155,59 @@ main {
 
 .vinyl {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 25%;
+    bottom: 15px;
+    right: 15px;
+    width: 35%; /* Увеличиваем размер */
     aspect-ratio: 1/1;
-    background: #000;
+    background: 
+        radial-gradient(circle at center, 
+            #222 0%, 
+            #000 20%, 
+            #222 30%, 
+            #000 40%, 
+            #222 50%, 
+            #000 60%, 
+            #222 70%, 
+            #000 80%, 
+            #222 90%, 
+            #000 100%);
     border-radius: 50%;
-    border: 2px solid #333;
+    border: 1px solid #444;
     z-index: 2;
     transition: var(--transition);
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    box-shadow: 
+        0 0 15px rgba(0,0,0,0.8),
+        inset 0 0 10px rgba(0,0,0,0.5);
+    transform: rotate(15deg); /* Легкий наклон */
+    animation: vinylRotate 20s linear infinite;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .vinyl::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 25%;
+    width: 15%;
     aspect-ratio: 1/1;
     background: var(--primary-color);
     border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 
+        0 0 5px rgba(0,0,0,0.5),
+        inset 0 0 5px rgba(0,0,0,0.3);
 }
 
+.vinyl::after {
+    content: '';
+    position: absolute;
+    width: 5%;
+    aspect-ratio: 1/1;
+    background: #fff;
+    border-radius: 50%;
+    z-index: 3;
+}
 .track-info {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -550,6 +577,20 @@ footer {
     100% { transform: scale(1); opacity: 1; }
 }
 
+/* Анимация вращения */
+@keyframes vinylRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* При воспроизведении */
+.playing .vinyl {
+    animation: vinylRotate 2s linear infinite;
+    box-shadow: 
+        0 0 20px rgba(108, 92, 231, 0.6),
+        inset 0 0 10px rgba(0,0,0,0.5);
+}
+
 .playing .album-art img {
     transform: scale(1.02);
 }
@@ -641,6 +682,14 @@ footer {
     }
 }
 
+@media (max-width: 768px) {
+    .vinyl {
+        width: 30%;
+        bottom: 10px;
+        right: 10px;
+    }
+}
+
 @media (max-width: 480px) {
     /* Логотип и заголовок */
     .logo {
@@ -661,13 +710,7 @@ footer {
         text-align: center;
     }
     
-    /* Убираем точки перед заголовками */
-    .now-playing h3::before,
-    .up-next h3::before,
-    .recent-tracks h3::before {
-        display: none;
-    }
-    
+   
     /* Центрируем заголовки */
     .now-playing h3,
     .up-next h3,
@@ -682,10 +725,12 @@ footer {
         width: 90%;
     }
     
-    /* Убираем виниловую пластинку в мобильной версии */
     .vinyl {
-        display: none;
+        width: 30%;
+        bottom: 10px;
+        right: 10px;
     }
+}
     
     /* Кнопки управления */
     .player-buttons {

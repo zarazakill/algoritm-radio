@@ -69,12 +69,18 @@ class RadioPlayer {
         this.init();
     }
 
-    async init() {
-        this.setupEventListeners();
-        this.initAudioContext();
+async init() {
+    this.setupEventListeners();
+    this.initAudioContext();
+    
+    try {
         await this.connectToStream();
-        this.startDiagnostics();
+    } catch (error) {
+        console.error("Ошибка инициализации:", error);
     }
+    
+    this.startDiagnostics();
+}
 
     setupEventListeners() {
 

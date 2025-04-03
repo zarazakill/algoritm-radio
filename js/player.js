@@ -59,7 +59,7 @@ class RadioPlayer {
     }
 
 async init() {
-    this.setupEventListeners();
+    this.();
     // Убрать автоматическую инициализацию AudioContext и подключение
     this.prepareAudioOverlay();
     this.startDiagnostics();
@@ -94,7 +94,7 @@ prepareAudioOverlay() {
                 this.updateVolumeIcon();
             });
         }
-
+    }
 
         // Обработчик кнопки запуска
     document.getElementById('start-playback').addEventListener('click', async () => {

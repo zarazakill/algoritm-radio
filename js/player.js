@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentApiUrl: null,
         updateIntervalId: null,
         isPlaying: false
+        streamRetryCount: 0,
+        maxStreamRetries: 3
     };
 
     // Инициализация плеера

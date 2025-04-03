@@ -235,25 +235,16 @@ main {
 }
 
 #play-btn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
-    background: rgba(108, 92, 231, 0.9);
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
     color: white;
-    font-size: 2rem;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    z-index: 10;
-    box-shadow: 
-        0 0 0 8px rgba(108, 92, 231, 0.3),
-        0 0 30px rgba(108, 92, 231, 0.6);
-    transition: all 0.3s ease;
-    opacity: 0;
+    font-size: 1.5rem;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    position: relative;
+    overflow: hidden;
 }
+
 #play-btn::before {
     content: '';
     position: absolute;
@@ -265,10 +256,6 @@ main {
     opacity: 0;
     transition: var(--transition);
     z-index: 0;
-}
-
-.album-art:hover #play-btn {
-    opacity: 1;
 }
 
 #play-btn:hover {
@@ -283,14 +270,6 @@ main {
 #play-btn i {
     position: relative;
     z-index: 1;
-}
-
-.playing #play-btn {
-    animation: pulse 1.5s infinite;
-    background: rgba(253, 121, 168, 0.9); /* Акцентный цвет */
-    box-shadow: 
-        0 0 0 12px rgba(253, 121, 168, 0.2),
-        0 0 40px rgba(253, 121, 168, 0.7);
 }
 
 .volume-control {

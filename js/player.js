@@ -58,15 +58,24 @@ class RadioPlayer {
         this.init();
     }
 
-    async init() {
-        this.setupEventListeners();
-        this.initAudioContext();
-        try {
-            await this.connectToStream();
-        } catch (error) {
-            console.error("Ошибка инициализации:", error);
-        }
-        this.startDiagnostics();
+async init() {
+    this.setupEventListeners();
+    // Убрать автоматическую инициализацию AudioContext и подключение
+    this.prepareAudioOverlay();
+    this.startDiagnostics();
+}
+
+prepareAudioOverlay() {
+    const overlay = document.getElementById('audio-overlay');
+    if (!overlay) return;
+
+    // Создаем кнопку если её нет в HTML
+    if (!document.getElementById('start-playback')) {
+        overlay.innerHTML = `
+            <button id="start-playback" class="play-button">
+                Включить трансляцию
+            </button>
+        `;
     }
 
     setupEventListeners() {
@@ -88,18 +97,22 @@ class RadioPlayer {
 
 
         // Обработчик кнопки запуска
-        document.getElementById('start-playback')?.addEventListener('click', async () => {
-            try {
-                document.getElementById('audio-overlay').style.display = 'none';
-                await this.connectToStream();
-
-                if (this.state.audioContext?.state === 'suspended') {
-                    await this.state.audioContext.resume();
-                }
-            } catch {
-                document.getElementById('audio-overlay').style.display = 'flex';
+    document.getElementById('start-playback').addEventListener('click', async () => {
+        try {
+            this.initAudioContext(); // Инициализируем только после клика
+            await this.connectToStream();
+            
+            if (this.state.audioContext?.state === 'suspended') {
+                await this.state.audioContext.resume();
             }
-        });
+            
+            overlay.style.display = 'none';
+            this.elements.audio.play().catch(console.error);
+        } catch (error) {
+            console.error("Ошибка запуска:", error);
+            overlay.style.display = 'flex';
+        }
+    });
 
         this.elements.audio.addEventListener('error', (e) => {
             console.error("Audio error:", e);
@@ -457,9 +470,11 @@ handleConnectionError(error) {
     }
 
 initAudioContext() {
+    if (this.state.audioContext) return;
+    
     try {
         this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        // Не пытаемся сразу запустить, ждем взаимодействия
+        this.setupAudioBuffer();
     } catch (error) {
         console.error("Ошибка инициализации AudioContext:", error);
     }

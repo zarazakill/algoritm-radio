@@ -90,22 +90,6 @@ class RadioPlayer {
         }
 
         // Обработчики аудио
-        this.elements.audio.addEventListener('playing', () => {
-            this.state.isPlaying = true;
-            this.setStatus("Онлайн");
-            if (this.elements.playBtn) {
-                this.elements.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            }
-        });
-
-        this.elements.audio.addEventListener('pause', () => {
-            this.state.isPlaying = false;
-            this.setStatus("Пауза");
-            if (this.elements.playBtn) {
-                this.elements.playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        });
-
         this.elements.audio.addEventListener('error', (e) => {
             console.error("Audio error:", e);
             this.handleConnectionError(new Error("Audio element error"));
@@ -125,10 +109,6 @@ class RadioPlayer {
                 this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
                 this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
             }
-        });
-
-        this.elements.audio.addEventListener('canplay', () => {
-            if (this.elements.playBtn) this.elements.playBtn.disabled = false;
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -187,11 +167,6 @@ class RadioPlayer {
 
         this.setStatus("Ошибка подключения", true);
         
-        // Добавим проверку на существование playBtn перед обращением к нему
-        if (this.elements.playBtn) {
-            this.elements.playBtn.disabled = true;
-        }
-
         const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
         this.state.retryCount++;
 
@@ -458,7 +433,6 @@ updateCurrentTrack(nowPlaying) {
         this.state.diagnostics.lastError = error.message;
 
         this.setStatus("Ошибка подключения", true);
-        this.elements.playBtn.disabled = true;
 
         const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
         this.state.retryCount++;

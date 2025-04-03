@@ -70,7 +70,7 @@ class RadioPlayer {
     }
 
     setupEventListeners() {
-        // Volume controls
+        // Обработчики громкости
         if (this.elements.volumeSlider) {
             this.elements.volumeSlider.addEventListener('input', () => {
                 this.elements.audio.volume = this.elements.volumeSlider.value;
@@ -86,6 +86,7 @@ class RadioPlayer {
             });
         }
 
+
         // Обработчик кнопки запуска
         document.getElementById('start-playback')?.addEventListener('click', async () => {
             try {
@@ -100,24 +101,8 @@ class RadioPlayer {
             }
         });
 
-        // Audio event listeners
         this.elements.audio.addEventListener('error', (e) => {
             console.error("Audio error:", e);
-            if (this.elements.audio.error) {
-                switch(this.elements.audio.error.code) {
-                    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                        console.error("Формат аудио не поддерживается");
-                        break;
-                    case MediaError.MEDIA_ERR_NETWORK:
-                        console.error("Ошибка сети");
-                        break;
-                    case MediaError.MEDIA_ERR_DECODE:
-                        console.error("Ошибка декодирования");
-                        break;
-                    default:
-                        console.error("Неизвестная ошибка аудио");
-                }
-            }
             this.handleConnectionError(new Error("Audio element error"));
         });
 

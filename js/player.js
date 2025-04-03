@@ -72,34 +72,34 @@ class RadioPlayer {
     }
 
 async init() {
-    this.setupEventListeners();
-    this.initAudioContext();
-    
-    try {
-        await this.connectToStream();
-    } catch (error) {
-        console.error("Ошибка инициализации:", error);
+        this.setupEventListeners();
+        this.initAudioContext();
+        
+        try {
+            await this.connectToStream();
+        } catch (error) {
+            console.error("Ошибка инициализации:", error);
+        }
+        
+        this.startDiagnostics();
     }
-    
-    this.startDiagnostics();
-}
 
     setupEventListeners() {
-
-const startButton = document.getElementById('start-playback');
-    if (startButton) {
-        startButton.addEventListener('click', async () => {
-            try {
-                document.getElementById('audio-overlay').style.display = 'none';
-                await this.connectToStream();
-                if (this.state.audioContext?.state === 'suspended') {
-                    await this.state.audioContext.resume();
+        const startButton = document.getElementById('start-playback');
+        if (startButton) {
+            startButton.addEventListener('click', async () => {
+                try {
+                    document.getElementById('audio-overlay').style.display = 'none';
+                    await this.connectToStream();
+                    if (this.state.audioContext?.state === 'suspended') {
+                        await this.state.audioContext.resume();
+                    }
+                } catch (error) {
+                    console.error("Ошибка запуска:", error);
                 }
-            } catch (error) {
-                console.error("Ошибка запуска:", error);
-            }
-        });
-        
+            });
+        }
+
         this.elements.volumeSlider.addEventListener('input', () => {
             this.elements.audio.volume = this.elements.volumeSlider.value;
             this.elements.audio.muted = false;
@@ -111,23 +111,14 @@ const startButton = document.getElementById('start-playback');
             this.updateVolumeIcon();
         });
 
-        // Обработчик кнопки включения
-        document.getElementById('start-playback')?.addEventListener('click', () => {
-            document.getElementById('audio-overlay').style.display = 'none';
-            this.connectToStream().then(() => {
-                this.elements.audio.play().catch(e => console.error("Play error:", e));
-            });
-        });
+        const handleFirstInteraction = () => {
+            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+                this.state.audioContext.resume();
+            }
+            document.removeEventListener('click', handleFirstInteraction);
+        };
 
-            
-         const handleFirstInteraction = () => {
-        if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-            this.state.audioContext.resume();
-        }
-        document.removeEventListener('click', handleFirstInteraction);
-    };
-    
-    document.addEventListener('click', handleFirstInteraction);
+        document.addEventListener('click', handleFirstInteraction);
 
         this.elements.volumeBtn.addEventListener('click', () => {
             this.elements.audio.muted = !this.elements.audio.muted;
@@ -179,35 +170,35 @@ const startButton = document.getElementById('start-playback');
         });
     }
 
-async connectToStream() {
-    try {
-        this.setStatus("Подключение...");
-        
-        // Остановить текущее воспроизведение перед загрузкой нового потока
-        this.elements.audio.pause();
-        this.elements.audio.src = '';
-        
-        this.state.currentStream = await this.findWorkingStream();
+    async connectToStream() {
+        try {
+            this.setStatus("Подключение...");
+            
+            // Остановить текущее воспроизведение перед загрузкой нового потока
+            this.elements.audio.pause();
+            this.elements.audio.src = '';
+            
+            this.state.currentStream = await this.findWorkingStream();
 
-        if (this.state.currentStream) {
-            this.elements.audio.src = this.state.currentStream.url;
-            await new Promise(resolve => {
-                this.elements.audio.onloadedmetadata = resolve;
-                this.elements.audio.load();
-            });
+            if (this.state.currentStream) {
+                this.elements.audio.src = this.state.currentStream.url;
+                await new Promise(resolve => {
+                    this.elements.audio.onloadedmetadata = resolve;
+                    this.elements.audio.load();
+                });
 
-            try {
-                await this.elements.audio.play();
-                this.setStatus("Онлайн");
-            } catch (playError) {
-                console.log("Автовоспроизведение заблокировано, требуется действие пользователя");
-                this.setStatus("Нажмите для запуска", true);
+                try {
+                    await this.elements.audio.play();
+                    this.setStatus("Онлайн");
+                } catch (playError) {
+                    console.log("Автовоспроизведение заблокировано, требуется действие пользователя");
+                    this.setStatus("Нажмите для запуска", true);
+                }
             }
+        } catch (error) {
+            this.handleConnectionError(error);
         }
-    } catch (error) {
-        this.handleConnectionError(error);
     }
-}
 
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);

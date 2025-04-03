@@ -245,14 +245,19 @@ function updateHistory(history) {
         return null;
     }
 
-    async function testStream(url) {
-        try {
-            await fetchWithTimeout(url, config.connectionTimeout, { method: 'HEAD', mode: 'no-cors' });
-            return true;
-        } catch {
-            return false;
-        }
+async function testStream(url) {
+    try {
+        const response = await fetchWithTimeout(url, config.connectionTimeout, { 
+            method: 'HEAD', 
+            mode: 'no-cors',
+            cache: 'no-store'
+        });
+        return response.ok || response.status === 0; // CORS может вернуть status=0
+    } catch {
+        return false;
     }
+}
+
 
     function fetchWithTimeout(url, timeout, options = {}) {
         return Promise.race([

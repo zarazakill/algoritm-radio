@@ -150,24 +150,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Обновление истории треков
-    function updateHistory(history) {
-        if (!elements.historyList) return;
+function updateHistory(history) {
+    if (!elements.historyList || !history) return;
+    
+    elements.historyList.innerHTML = '';
+    
+    // Берем последние 5 треков (новые сверху)
+    const recentTracks = history.slice(0, 5).reverse();
+    
+    recentTracks.forEach((track, index) => {
+        const li = document.createElement('li');
+        if (index === 0) li.classList.add('new-track');
         
-        elements.historyList.innerHTML = '';
+        // Проверяем наличие данных и устанавливаем значения по умолчанию
+        const title = track.title || 'Неизвестный трек';
+        const artist = track.artist || 'Неизвестный исполнитель';
+        const duration = track.duration ? formatTime(track.duration) : '';
         
-        history.slice(0, 5).forEach((track, index) => {
-            const li = document.createElement('li');
-            if (index === 0) li.classList.add('new-track');
-            
-            li.innerHTML = `
-                <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-                <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-                <span class="track-time">${formatTime(track.duration)}</span>
-            `;
-            
-            elements.historyList.appendChild(li);
-        });
-    }
+        li.innerHTML = `
+            <span class="track-title">${title}</span>
+            <span class="track-artist">${artist}</span>
+            ${duration ? `<span class="track-time">${duration}</span>` : ''}
+        `;
+        
+        elements.historyList.appendChild(li);
+    });
+}
 
     // Обновление счетчика слушателей
     function updateListenersCount(count) {

@@ -150,22 +150,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Обновление истории треков
+function updateTrackUI(data) {
+    try {
+        // Текущий трек
+        updateCurrentTrack(data.now_playing);
+        
+        // Следующий трек
+        if (data.playing_next) {
+            updateNextTrack(data.playing_next);
+        }
+        
+        // История треков (правильная обработка структуры)
+        if (data.song_history && Array.isArray(data.song_history)) {
+            updateHistory(data.song_history);
+        }
+        
+        // Количество слушателей
+        if (data.listeners && data.listeners.current) {
+            updateListenersCount(data.listeners.current);
+        }
+    } catch (e) {
+        console.error("Ошибка обработки данных:", e);
+    }
+}
+
+// Обновленная функция для истории треков
 function updateHistory(history) {
     if (!elements.historyList || !history) return;
     
     elements.historyList.innerHTML = '';
     
     // Берем последние 5 треков (новые сверху)
-    const recentTracks = history.slice(0, 5).reverse();
+    const recentTracks = history.slice(0, 5);
     
-    recentTracks.forEach((track, index) => {
+    recentTracks.forEach((item, index) => {
         const li = document.createElement('li');
         if (index === 0) li.classList.add('new-track');
         
-        // Проверяем наличие данных и устанавливаем значения по умолчанию
-        const title = track.title || 'Неизвестный трек';
-        const artist = track.artist || 'Неизвестный исполнитель';
-        const duration = track.duration ? formatTime(track.duration) : '';
+        // Проверяем наличие данных в правильной структуре
+        const song = item.song || {};
+        const title = song.title || 'Неизвестный трек';
+        const artist = song.artist || 'Неизвестный исполнитель';
+        const duration = item.duration ? formatTime(item.duration) : '';
         
         li.innerHTML = `
             <span class="track-title">${title}</span>

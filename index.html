@@ -32,11 +32,11 @@
         <main>
             <div class="player-container continuous-stream">
                 <div class="album-art">
+                    <button id="play-btn" aria-label="Воспроизвести/пауза"><i class="fas fa-play"></i></button>
                     <picture>
                         <source srcset="img/album-art/default.webp" type="image/webp">
                         <img id="current-art" src="img/album-art/default.jpg" alt="Current track" width="300" height="300" loading="lazy">
                     </picture>
-                    <div class="vinyl"></div>
                 </div>
                 <div class="player-controls">
                     <div class="track-info">
@@ -49,8 +49,7 @@
                         </div>
                     </div>
                     <div class="player-buttons">
-                        <button id="play-btn" aria-label="Воспроизвести/пауза"><i class="fas fa-play"></i></button>
-                        <div class="volume-control">
+                            <div class="volume-control">
                             <button id="volume-btn" aria-label="Громкость"><i class="fas fa-volume-up"></i></button>
                             <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.65" aria-label="Уровень громкости">
                         </div>

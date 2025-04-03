@@ -374,19 +374,32 @@ main {
     border-left: 3px solid var(--primary-color);
 }
 
+.track-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    grid-column: 1;
+}
+
+.track-artist {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    grid-column: 1;
+}
+
+.track-time {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    text-align: right;
+}
+
 .track-name {
     font-weight: 600;
     color: var(--text-primary);
     display: block;
     margin-bottom: 0.3rem;
     font-size: 1rem;
-}
-
-.track-artist {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    display: block;
-    margin-bottom: 0.3rem;
 }
 
 .track-progress, .track-time {
@@ -400,16 +413,11 @@ main {
 }
 
 #history-list li {
-    padding: 0.6rem;
-    margin-bottom: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    transition: var(--transition);
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 10px;
     align-items: center;
-    font-size: 0.9rem;
-    border-left: 2px solid transparent;
 }
 
 #history-list li:hover {
@@ -421,11 +429,6 @@ main {
     content: '♫';
     margin-right: 10px;
     color: var(--primary-color);
-    font-size: 0.8rem;
-}
-
-.track-time {
-    opacity: 0.7;
     font-size: 0.8rem;
 }
 

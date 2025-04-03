@@ -30,58 +30,43 @@
         </header>
 
         <main>
-            <div class="player-container continuous-stream">
-                <div class="album-art">
-                    <picture>
-                        <source srcset="img/album-art/default.webp" type="image/webp">
-                        <img id="current-art" src="img/album-art/default.jpg" alt="Current track" width="300" height="300" loading="lazy">
-                    </picture>
-                    </div>
-                <div class="player-controls">
-                    <div class="track-info">
-                        <h2 id="track-title">Загрузка...</h2>
-                        <p id="track-artist">AlgoRitm-StreAM</p>
-                        <div class="track-progress">
-                            <span id="current-time">0:00</span>
-                            <input type="range" id="progress-bar" value="0" aria-label="Прогресс трека">
-                            <span id="duration">0:00</span>
-                        </div>
-                    </div>
-                    <div id="audio-overlay" class="audio-overlay">
-                        <button id="start-playback">Включить радио</button>
-                    </div>
-                    <div class="player-buttons">
-                            <div class="volume-control">
-                            <button id="volume-btn" aria-label="Громкость"><i class="fas fa-volume-up"></i></button>
-                            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.65" aria-label="Уровень громкости">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="track-details">
-                    <div class="now-playing">
-                        <h3>Сейчас играет:</h3>
-                        <div id="current-track" class="track-info-box">
-                            <span class="track-name">Загрузка...</span>
-                            <span class="track-progress">0:00 / 0:00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="up-next">
-                        <h3>Следующий трек:</h3>
-                        <div id="next-track" class="track-info-box">
-                            <span class="track-name">Неизвестно</span>
-                        </div>
-                    </div>
-                    
-                    <div class="recent-tracks">
-                        <h3>Недавно играло:</h3>
-                        <ul id="history-list">
-                            <li>Загрузка истории...</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<div class="player-container continuous-stream">
+    <!-- Упрощенная структура для мобильных -->
+    <div class="album-art">
+        <picture>
+            <source srcset="img/album-art/default.webp" type="image/webp">
+            <img id="current-art" src="img/album-art/default.jpg" alt="Current track" loading="lazy">
+        </picture>
+    </div>
+
+    <div class="track-info">
+        <h2 id="track-title">Загрузка...</h2>
+        <p id="track-artist">AlgoRitm-stream</p>
+        <div class="track-progress">
+            <span id="current-time">0:00</span>
+            <input type="range" id="progress-bar" value="0">
+            <span id="duration">0:00</span>
+        </div>
+    </div>
+
+    <div class="track-details">
+        <!-- Компактные блоки -->
+        <div class="now-playing">
+            <h3>Сейчас:</h3>
+            <div id="current-track" class="track-info-box"></div>
+        </div>
+
+        <div class="up-next">
+            <h3>Следующий:</h3>
+            <div id="next-track" class="track-info-box"></div>
+        </div>
+
+        <div class="recent-tracks">
+            <h3>История:</h3>
+            <ul id="history-list"></ul>
+        </div>
+    </div>
+</div>
         </main>
 
         <footer>

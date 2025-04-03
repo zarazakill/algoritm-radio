@@ -70,22 +70,15 @@ header {
     gap: 0.5rem;
 }
 
-.logo img {
-    width: 200px;
-    height: 200px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
-    transition: var(--transition);
-}
-
-.logo:hover img {
-    transform: rotate(15deg) scale(1.05);
-}
 
 .logo-text {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+}
+
+.logo:hover img {
+    transform: rotate(15deg) scale(1.05);
 }
 
 .logo h1 {
@@ -96,6 +89,14 @@ header {
     color: transparent;
     letter-spacing: 1px;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.logo img {
+    width: 250px;
+    height: 250px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
+    transition: var(--transition);
 }
 
 .logo p {
@@ -153,61 +154,6 @@ main {
     transition: var(--transition);
 }
 
-.vinyl {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    width: 35%; /* Увеличиваем размер */
-    aspect-ratio: 1/1;
-    background: 
-        radial-gradient(circle at center, 
-            #222 0%, 
-            #000 20%, 
-            #222 30%, 
-            #000 40%, 
-            #222 50%, 
-            #000 60%, 
-            #222 70%, 
-            #000 80%, 
-            #222 90%, 
-            #000 100%);
-    border-radius: 50%;
-    border: 1px solid #444;
-    z-index: 2;
-    transition: var(--transition);
-    box-shadow: 
-        0 0 15px rgba(0,0,0,0.8),
-        inset 0 0 10px rgba(0,0,0,0.5);
-    transform: rotate(15deg); /* Легкий наклон */
-    animation: vinylRotate 20s linear infinite;
-    opacity: 0.9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.vinyl::before {
-    content: '';
-    position: absolute;
-    width: 15%;
-    aspect-ratio: 1/1;
-    background: var(--primary-color);
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.3);
-    box-shadow: 
-        0 0 5px rgba(0,0,0,0.5),
-        inset 0 0 5px rgba(0,0,0,0.3);
-}
-
-.vinyl::after {
-    content: '';
-    position: absolute;
-    width: 5%;
-    aspect-ratio: 1/1;
-    background: #fff;
-    border-radius: 50%;
-    z-index: 3;
-}
 .track-info {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -577,25 +523,11 @@ footer {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* Анимация вращения */
-@keyframes vinylRotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* При воспроизведении */
-.playing .vinyl {
-    animation: vinylRotate 2s linear infinite;
-    box-shadow: 
-        0 0 20px rgba(108, 92, 231, 0.6),
-        inset 0 0 10px rgba(0,0,0,0.5);
-}
-
 .playing .album-art img {
     transform: scale(1.02);
 }
 
-/* Адаптивность */
+/* Адаптивность для мобилок */
 @media (max-width: 768px) {
     body {
         padding: 15px;
@@ -622,76 +554,7 @@ footer {
 }
 
 @media (max-width: 480px) {
-    .logo {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 1rem;
-    }
-    
-    .logo img {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .logo-text {
-        width: 100%;
-        text-align: center;
-    }
-    
-   
-    .now-playing h3::before, 
-    .up-next h3::before, 
-    .recent-tracks h3::before {
-        display: none;
-    }
-    
-    
-    .album-art {
-        margin: 0 auto;
-    }
-    
-   
-    .player-container {
-        padding: 1rem;
-    }
-}
-
-    .player-buttons {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .volume-control {
-        max-width: 100%;
-    }
-
-    .track-progress span {
-        font-size: 0.75rem;
-    }
-
-    #history-list li {
-        padding: 0.5rem;
-        font-size: 0.85rem;
-    }
-
-    .now-playing-badge {
-        bottom: 10px;
-        right: 10px;
-        padding: 6px 10px;
-    }
-}
-
-@media (max-width: 768px) {
-    .vinyl {
-        width: 30%;
-        bottom: 10px;
-        right: 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    /* Логотип и заголовок */
+  
     .logo {
         flex-direction: column;
         align-items: center;
@@ -699,19 +562,17 @@ footer {
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
-    
-    .logo img {
-        width: 140px; /* Увеличиваем размер логотипа */
-        height: 140px;
-    }
-    
+
     .logo-text {
         width: 100%;
         text-align: center;
     }
     
-   
-    /* Центрируем заголовки */
+    .logo img {
+        width: 200px;
+        height: 200px;
+    }
+    
     .now-playing h3,
     .up-next h3,
     .recent-tracks h3 {
@@ -719,17 +580,12 @@ footer {
         text-align: center;
     }
     
-    /* Обложка альбома */
+    
     .album-art {
         margin: 0 auto 1rem;
         width: 90%;
     }
     
-    .vinyl {
-        width: 30%;
-        bottom: 10px;
-        right: 10px;
-    }
 }
     
     /* Кнопки управления */

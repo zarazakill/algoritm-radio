@@ -15,18 +15,20 @@ class RadioPlayer {
             currentTime: document.getElementById('current-time'),
             progressBar: document.getElementById('progress-bar'),
             duration: document.getElementById('duration')
-            document.getElementById('start-playback').addEventListener('click', () => {
-                document.getElementById('audio-overlay').style.display = 'none';
-                this.elements.audio.play()
-                    .then(() => {
-            if (this.state.audioContext) {
-                this.state.audioContext.resume();
-            }
-        })
-        .catch(console.error);
-});
         };
-       
+
+        // Перенесённый обработчик кнопки
+        document.getElementById('start-playback')?.addEventListener('click', () => {
+            document.getElementById('audio-overlay').style.display = 'none';
+            this.elements.audio.play()
+                .then(() => {
+                    if (this.state.audioContext) {
+                        this.state.audioContext.resume();
+                    }
+                })
+                .catch(console.error);
+        });
+
         this.config = {
             streams: [
                 { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },

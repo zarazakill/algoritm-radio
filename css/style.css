@@ -64,8 +64,8 @@ header {
 }
 
 .logo img {
-    width: 160px;
-    height: 160px;
+    width: 200px;
+    height: 200px;
     object-fit: contain;
     filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
     transition: var(--transition);

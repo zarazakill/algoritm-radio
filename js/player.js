@@ -64,7 +64,7 @@ class RadioPlayer {
          };
          this.elements.audio.autoplay = true;
          this.init();
-     }
+     });
  
           async init() {
               this.setupEventListeners();

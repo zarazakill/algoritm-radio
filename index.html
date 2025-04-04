@@ -37,10 +37,15 @@
             <source srcset="img/album-art/default.webp" type="image/webp">
             <img id="current-art" src="img/album-art/default.jpg" alt="Current track" loading="lazy">
         </picture>
+            <div class="audio-overlay" id="audio-overlay">
+                <button id="start-playback">▶️ Запустить радио</button>
+            </div>
+                <div class="player-buttons">
+                    <div class="volume-control">
+                    <button id="volume-btn"><i class="fas fa-volume-up"></i></button>
+                 <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+            </div>
     </div>
-<div id="audio-overlay" style="display: none;">
-    <button id="start-playback">Запустить радио</button>
-</div>
     <div class="track-info">
         <h2 id="track-title">Загрузка...</h2>
         <p id="track-artist">AlgoRitm-StreAM</p>

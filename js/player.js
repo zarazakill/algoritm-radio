@@ -15,8 +15,9 @@ class RadioPlayer {
              progressBar: document.getElementById('progress-bar'),
              duration: document.getElementById('duration')
          };
-
                document.getElementById('start-playback').addEventListener('click', () => {
+               document.querySelector('.loading-status').style.display = 'block';
+                 this.elements.audio.play().then(() => {
                document.getElementById('audio-overlay').style.display = 'none';
                  this.elements.audio.play()
                      .then(() => {
@@ -24,7 +25,8 @@ class RadioPlayer {
                  this.state.audioContext.resume();
              }
          })
-         .catch(console.error);
+         .catch(error => {
+        document.querySelector('.loading-status').style.display = 'none';
  });
  
          this.config = {

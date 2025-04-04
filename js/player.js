@@ -140,10 +140,20 @@ class RadioPlayer {
         // Уберите autoplay из HTML и добавьте обработку пользовательского взаимодействия
         this.elements.audio.autoplay = false; 
         
-        // Явная обработка воспроизведения после user gesture
-        document.getElementById('start-playback').addEventListener('click', () => {
-            this.elements.audio.play().catch(console.error);
-        });
+        // Явная обработка воспроизведения
+document.getElementById('start-playback').addEventListener('click', async () => {
+    document.getElementById('audio-overlay').style.display = 'none';
+    try {
+        if (!this.state.currentStream) {
+            await this.connectToStream();
+        }
+        await this.elements.audio.play();
+        this.state.isPlaying = true;
+    } catch (error) {
+        this.handleConnectionError(error);
+        this.state.isPlaying = false;
+    }
+});
 
     } catch (error) {
         this.setStatus("Ошибка подключения", true);

@@ -41,34 +41,27 @@ body {
     flex-direction: column;
 }
 
-.progress-bar-container {
-    width: 100%;
-    height: 4px;
-    background: rgba(255,255,255,0.2);
-}
-
-.progress-bar {
-    height: 100%;
-    background: var(--primary-color);
-    width: 0%;
-    transition: width 0.3s linear;
-}
-
 .audio-overlay {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
 #start-playback {
-    padding: 20px 40px;
-    font-size: 1.5rem;
-    background: var(--primary-color);
-    border-radius: 50px;
-    transition: var(--transition);
-}
-
-#start-playback:hover {
-    transform: scale(1.1);
-    background: var(--primary-dark);
+padding: 15px 30px;
+font-size: 1.2rem;
+background: var(--primary-color);
+color: white;
+border: none;
+border-radius: 30px;
+cursor: pointer;
 }
 
 .player-container {
@@ -109,7 +102,7 @@ header {
 }
 
 .logo:hover img {
-    transform: rotate(5deg) scale(1.05);
+    transform: rotate(15deg) scale(1.05);
 }
 
 .logo h1 {
@@ -123,8 +116,8 @@ header {
 }
 
 .logo img {
-    width: 80px;
-    height: 80px;
+    width: 250px;
+    height: 250px;
     object-fit: contain;
     filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
     transition: var(--transition);
@@ -245,10 +238,7 @@ background: var(--accent-color);
 }
 
 .player-buttons {
-    display: flex !important; /* Переопределяем display: none */
-    margin-top: 1rem;
-    gap: 1rem;
-    justify-content: center;
+    display: none;
 }
 
 .player-buttons button {
@@ -567,114 +557,79 @@ grid-template-columns: 1fr;
 }
 
 @media (max-width: 480px) {
-    /* Общие настройки шрифтов */
-    body {
-        font-size: 14px;
-        line-height: 1.4;
-        padding: 10px;
+    .album-art {
+        max-width: 250px;
     }
 
-    /* Шапка */
-    .logo h1 {
-        font-size: 1.5rem;
-    }
-    .logo p {
-        font-size: 0.8rem;
+    .track-info h2 {
+        font-size: 1.1rem;
     }
 
-    /* Основной плеер */
+    .track-info p {
+        font-size: 0.85rem;
+    }
+
+    /* Еще более компактный вид */
     .player-container {
         padding: 0.8rem;
-        margin: 0;
-        width: 100%;
     }
 
-    /* Обложка альбома */
-    .album-art {
-        width: 150px;
-        height: 150px;
-        margin: 0 auto 0.5rem;
-    }
-
-    /* Информация о треке */
-    .track-info h2 {
-        font-size: 1rem;
-        margin-bottom: 0.3rem;
-    }
-    .track-info p {
-        font-size: 0.8rem;
-        margin-bottom: 0.3rem;
-    }
-
-    /* Прогресс-бар */
-    .track-progress {
-        margin-top: 0.5rem;
-    }
-    .track-progress span {
-        font-size: 0.7rem;
-    }
-
-    /* Блоки с треками */
     .track-details {
-        padding: 0.8rem;
-        margin-top: 0.8rem;
+        padding: 0.6rem;
     }
-    .now-playing h3,
-    .up-next h3,
-    .recent-tracks h3 {
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-    }
+}
 
-    /* История треков */
-    #history-list li {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-    grid-template-columns: 1fr;
-    }
+/* Кнопки управления */
+.player-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
 
-    /* Кнопки управления */
-    .player-buttons {
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
+/* Регулятор громкости */
+.volume-control {
+    max-width: 100%;
+    width: 100%;
+    justify-content: center;
+}
 
-    /* Регулятор громкости */
-    .volume-control {
-        max-width: 120px;
-    }
+/* Прогресс-бар */
+.track-progress {
+    flex-direction: column;
+    gap: 0.5rem;
+}
 
-    /* Статус и подвал */
-    #stream-status {
+/* История треков */
+#history-list li {
+padding: 0.8rem;
+font-size: 0.9rem;
+grid-template-columns: 1fr;
+text-align: center;
+}
+
+#history-list li::before {
+display: none;
+}
+
+/* Бейдж слушателей */
+.now-playing-badge {
+    bottom: 10px;
+    right: 10px;
+    padding: 6px 10px;
     font-size: 0.8rem;
-    }
-    footer {
-        font-size: 0.75rem;
-        padding-top: 0.8rem;
-    }
-
-    /* Бейдж слушателей */
-    .now-playing-badge {
-        bottom: 5px;
-        right: 5px;
-        padding: 4px 8px;
-        font-size: 0.7rem;
-    }
 }
 
-/* Для очень маленьких экранов */
-@media (max-width: 360px) {
-    body {
-        font-size: 13px;
-    }
-    .album-art {
-        width: 120px;
-        height: 120px;
-    }
-    #history-list li {
-    padding: 0.4rem;
-    }
+/* Общие отступы */
+.player-container {
+    padding: 1.2rem;
 }
+
+.track-details {
+    padding: 1rem;
+}
+
+}
+
 /* Дополнительные улучшения для очень маленьких экранов */
 @media (max-width: 360px) {
     .logo img {

@@ -20,6 +20,7 @@ class RadioPlayer {
              duration: document.getElementById('duration')
          };
  
+        
          this.config = {
              streams: [
                  { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
@@ -55,6 +56,7 @@ class RadioPlayer {
              }
          };
  
+         this.elements.audio.autoplay = true;
          this.init();
      }
  
@@ -66,13 +68,6 @@ class RadioPlayer {
      }
  
      setupEventListeners() {
-         this.elements.playBtn.addEventListener('click', () => this.togglePlayback());
- 
-         this.elements.volumeSlider.addEventListener('input', () => {
-             this.elements.audio.volume = this.elements.volumeSlider.value;
-             this.elements.audio.muted = false;
-             this.updateVolumeIcon();
-         });
  
          this.elements.volumeBtn.addEventListener('click', () => {
              this.elements.audio.muted = !this.elements.audio.muted;
@@ -211,7 +206,7 @@ class RadioPlayer {
      await this.connectToStream();
      this.elements.audio.play().catch(console.error);
  }
-     
+ 
      updateUI(data) {
          this.updateCurrentTrack(data.now_playing);
  
@@ -363,17 +358,6 @@ class RadioPlayer {
              this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
          } else {
              this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-         }
-     }
- 
-     togglePlayback() {
-         if (this.state.isPlaying) {
-             this.elements.audio.pause();
-         } else {
-             this.elements.audio.play().catch(error => {
-                 console.error("Ошибка воспроизведения:", error);
-                 this.setStatus("Ошибка воспроизведения", true);
-             });
          }
      }
  

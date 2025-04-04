@@ -70,17 +70,15 @@ class RadioPlayer {
         this.startDiagnostics();
     }
 
-    setupEventListeners() {
-
-            try {
-                await this.connectToStream();
-                document.getElementById('audio-overlay').style.display = 'none';
-                this.elements.audio.play();
-            } catch {
-                document.getElementById('audio-overlay').style.display = 'flex';
-            }
-        });
-        
+    async setupEventListeners() {
+        try {
+            await this.connectToStream();
+            document.getElementById('audio-overlay').style.display = 'none';
+            this.elements.audio.play();
+        } catch {
+            document.getElementById('audio-overlay').style.display = 'flex';
+        }
+    
         // Обработчики громкости
         if (this.elements.volumeSlider) {
             this.elements.volumeSlider.addEventListener('input', () => {
@@ -89,21 +87,20 @@ class RadioPlayer {
                 this.updateVolumeIcon();
             });
         }
-
+    
         if (this.elements.volumeBtn) {
             this.elements.volumeBtn.addEventListener('click', () => {
                 this.elements.audio.muted = !this.elements.audio.muted;
                 this.updateVolumeIcon();
             });
         }
-
-
+    
         // Обработчик кнопки запуска
         document.getElementById('start-playback')?.addEventListener('click', async () => {
             try {
                 document.getElementById('audio-overlay').style.display = 'none';
                 await this.connectToStream();
-
+    
                 if (this.state.audioContext?.state === 'suspended') {
                     await this.state.audioContext.resume();
                 }
@@ -111,6 +108,21 @@ class RadioPlayer {
                 document.getElementById('audio-overlay').style.display = 'flex';
             }
         });
+
+
+        // Обработчик кнопки запуска
+        document.getElementById('start-playback')?.addEventListener('click', async () => {
+            try {
+                document.getElementById('audio-overlay').style.display = 'none';
+                await this.connectToStream();
+        
+                if (this.state.audioContext?.state === 'suspended') {
+                    await this.state.audioContext.resume();
+                }
+            } catch {
+                document.getElementById('audio-overlay').style.display = 'flex';
+            }
+        }); 
 
         this.elements.audio.addEventListener('error', (e) => {
             console.error("Audio error:", e);
@@ -157,7 +169,7 @@ class RadioPlayer {
         return null;
     }
 
-async connectToStream() {
+    async connectToStream() {
     try {
         const stream = await this.findWorkingStream();
         if (!stream) throw new Error("Нет доступных потоков");
@@ -178,7 +190,7 @@ async connectToStream() {
         this.handleConnectionError(error);
     }
     console.log("Подключение к потоку:", stream.url);
-}
+    }
 
     async testStream(url) {
         try {

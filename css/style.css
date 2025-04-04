@@ -162,8 +162,8 @@
  
  .album-art {
      position: relative;
-     width: 300px;
-     height: 300px;
+     width: 400px;
+     height: 400px;
      margin: 0 auto;
      border-radius: 50%;
      overflow: hidden;

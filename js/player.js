@@ -1,5 +1,7 @@
 class RadioPlayer {
     constructor() {
+        this.elements.audio.preload = 'none';
+        this.elements.audio.autoplay = false;
         this.elements = {
             audio: document.getElementById('radio-stream'),
             statusEl: document.getElementById('stream-status'),
@@ -15,6 +17,7 @@ class RadioPlayer {
             progressBar: document.getElementById('progress-bar'),
             duration: document.getElementById('duration'),
             startPlayback: document.getElementById('start-playback')
+
         };
 
         // Проверка элементов
@@ -174,12 +177,31 @@ async connectToStream() {
         }
 
         document.getElementById('audio-overlay').style.display = 'none';
-
+        
+        // Обновляем URL только при необходимости
         if (this.elements.audio.src !== stream.url) {
             this.elements.audio.src = stream.url;
-            await this.elements.audio.load().catch(() => {});
+            
+            // Используем обновленную обработку загрузки
+            await new Promise((resolve, reject) => {
+                this.elements.audio.load();
+                this.elements.audio.oncanplaythrough = resolve;
+                this.elements.audio.onerror = reject;
+                setTimeout(() => reject(new Error("Таймаут загрузки")), 10000);
+            });
         }
 
+        console.log("Подключение к потоку:", stream.url);
+        this.setStatus("В эфире", false);
+    } catch (error) {
+        console.error("Ошибка подключения:", error);
+        document.getElementById('audio-overlay').style.display = 'flex';
+        this.handleConnectionError(error);
+    }
+}
+
+        
+        
         // Переносим play() в обработчик пользовательского взаимодействия
         console.log("Подключение к потоку:", stream.url);
         this.setStatus("В эфире", false);

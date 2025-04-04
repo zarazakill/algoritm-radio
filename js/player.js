@@ -380,22 +380,22 @@ async updateTrackInfo() {
              this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
          }
      }
- 
+
      handleConnectionError(error) {
          console.error("Ошибка подключения:", error);
-         this.state.diagnostics.connectionErrors++;
-         this.state.diagnostics.lastError = error.message;
-
-         this.setStatus("Переподключение...", true);
- 
-         const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
-         this.state.retryCount++;
- 
+         this.setStatus(`Ошибка: ${error.message}`, true);
+    
+         // Автоматический реконнект с экспоненциальной задержкой
+         const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
          setTimeout(() => {
              this.connectToStream();
+             this.state.retryCount++;
          }, delay);
+    
+         // Показать оверлей при ошибке
+         document.getElementById('audio-overlay').style.display = 'flex';
      }
- 
+     
      handleNetworkIssue() {
          if (this.state.networkQuality === 'good') {
              this.state.networkQuality = 'degraded';

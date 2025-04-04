@@ -2,7 +2,6 @@ class RadioPlayer {
      constructor() {
          this.elements = {
              audio: document.getElementById('radio-stream'),
-             playBtn: document.getElementById('play-btn'),
              statusEl: document.getElementById('stream-status'),
              volumeSlider: document.getElementById('volume-slider'),
              volumeBtn: document.getElementById('volume-btn'),

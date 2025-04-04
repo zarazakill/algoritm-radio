@@ -30,15 +30,16 @@
         </header>
 
         <main>
-<div class="player-container continuous-stream">
-    <!-- Упрощенная структура для мобильных -->
-    <div class="album-art">
-        <picture>
-            <source srcset="img/album-art/default.webp" type="image/webp">
-            <img id="current-art" src="img/album-art/default.jpg" alt="Current track" loading="lazy">
-        </picture>
-            <div class="audio-overlay" id="audio-overlay">
-                <button id="start-playback">▶️ Запустить радио</button>
+            <audio id="radio-stream"></audio>
+                <div class="player-container continuous-stream">
+                <!-- Упрощенная структура для мобильных -->
+                <div class="album-art">
+                <picture>
+                    <source srcset="img/album-art/default.webp" type="image/webp">
+                    <img id="current-art" src="img/album-art/default.jpg" alt="Current track" loading="lazy">
+                </picture>
+                <div class="audio-overlay" id="audio-overlay">
+                <button id="start-playback">Запустить радио</button>
             </div>
                 <div class="player-buttons">
                     <div class="volume-control">

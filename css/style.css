@@ -4,7 +4,7 @@
     --secondary-color: #a29bfe;
     --dark-color: #1a1a2e;
     --darker-color: #16213e;
-    
+
     --light-color: #f5f6fa;
     --accent-color: #fd79a8;
     --success-color: #00b894;
@@ -47,31 +47,21 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: none;
+    background: rgba(0,0,0,0.7);
+    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
 }
 
-.play-button {
-    padding: 15px 30px;
-    font-size: 1.2rem;
-    background: #6c5ce7;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-}
-
 #start-playback {
-    padding: 15px 30px;
-    font-size: 1.2rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
+padding: 15px 30px;
+font-size: 1.2rem;
+background: var(--primary-color);
+color: white;
+border: none;
+border-radius: 30px;
+cursor: pointer;
 }
 
 .player-container {
@@ -222,33 +212,33 @@ main {
 }
 
 #progress-bar {
-    flex: 1;
-    height: 5px;
-    -webkit-appearance: none;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    outline: none;
-    overflow: hidden;
+flex: 1;
+height: 5px;
+-webkit-appearance: none;
+background: rgba(255, 255, 255, 0.2);
+border-radius: 5px;
+outline: none;
+overflow: hidden;
 }
 
 #progress-bar::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: -407px 0 0 400px var(--primary-color);
-    transition: var(--transition);
+-webkit-appearance: none;
+width: 15px;
+height: 15px;
+border-radius: 50%;
+background: var(--primary-color);
+cursor: pointer;
+box-shadow: -407px 0 0 400px var(--primary-color);
+transition: var(--transition);
 }
 
 #progress-bar::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    background: var(--accent-color);
+transform: scale(1.2);
+background: var(--accent-color);
 }
 
 .player-buttons {
-display: none;
+    display: none;
 }
 
 .player-buttons button {
@@ -262,7 +252,7 @@ display: none;
     justify-content: center;
     border-radius: 50%;
 }
-   
+
 .volume-control {
     display: flex;
     align-items: center;
@@ -272,38 +262,38 @@ display: none;
 }
 
 #volume-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.1rem;
+width: 40px;
+height: 40px;
+font-size: 1.1rem;
 }
 
 #volume-btn:hover {
-    color: var(--accent-color);
-    background: rgba(255, 255, 255, 0.1);
+color: var(--accent-color);
+background: rgba(255, 255, 255, 0.1);
 }
 
 #volume-slider {
-    flex: 1;
-    height: 5px;
-    -webkit-appearance: none;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    outline: none;
+flex: 1;
+height: 5px;
+-webkit-appearance: none;
+background: rgba(255, 255, 255, 0.2);
+border-radius: 5px;
+outline: none;
 }
 
 #volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    transition: var(--transition);
+-webkit-appearance: none;
+width: 15px;
+height: 15px;
+border-radius: 50%;
+background: var(--primary-color);
+cursor: pointer;
+transition: var(--transition);
 }
 
 #volume-slider::-webkit-slider-thumb:hover {
-    background: var(--accent-color);
-    transform: scale(1.2);
+background: var(--accent-color);
+transform: scale(1.2);
 }
 
 /* Блок информации о треках */
@@ -379,28 +369,28 @@ display: none;
 }
 
 #history-list {
-    list-style: none;
-    padding: 0;
+list-style: none;
+padding: 0;
 }
 
 #history-list li {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    padding: 10px;
-    align-items: center;
+display: grid;
+grid-template-columns: 1fr auto;
+gap: 8px;
+padding: 10px;
+align-items: center;
 }
 
 #history-list li:hover {
-    background: rgba(108, 92, 231, 0.1);
-    border-left-color: var(--primary-color);
+background: rgba(108, 92, 231, 0.1);
+border-left-color: var(--primary-color);
 }
 
 #history-list li::before {
-    content: '♫';
-    margin-right: 10px;
-    color: var(--primary-color);
-    font-size: 0.8rem;
+content: '♫';
+margin-right: 10px;
+color: var(--primary-color);
+font-size: 0.8rem;
 }
 
 .new-track {
@@ -449,8 +439,8 @@ footer {
 }
 
 #stream-status {
-    font-weight: 600;
-    transition: var(--transition);
+font-weight: 600;
+transition: var(--transition);
 }
 
 .status-success {
@@ -524,111 +514,169 @@ footer {
         padding: 1rem;
         max-width: 100%;
     }
-    
+
     .album-art {
         width: 200px;
         height: 200px;
     }
-    
+
 }
-    
-    .track-details {
-        padding: 0.8rem;
-        margin-top: 1rem;
-    }
-    
-    .track-info-box {
-        padding: 0.6rem;
-    }
-    
-    .now-playing, .up-next, .recent-tracks {
-        margin-bottom: 1rem;
-    }
-    
-    /* Компактный список истории */
-    #history-list li {
-        padding: 0.6rem;
-        font-size: 0.85rem;
-        grid-template-columns: 1fr;
-    }
-    
-    /* Уменьшаем отступы */
-    .container {
-        padding: 0 10px;
-    }
-    
-    /* Бейдж слушателей */
-    .now-playing-badge {
-        bottom: 10px;
-        right: 10px;
-        padding: 5px 8px;
-        font-size: 0.75rem;
-    }
+
+.track-details {
+    padding: 0.8rem;
+    margin-top: 1rem;
+}
+
+.track-info-box {
+    padding: 0.6rem;
+}
+
+.now-playing, .up-next, .recent-tracks {
+    margin-bottom: 1rem;
+}
+
+/* Компактный список истории */
+#history-list li {
+padding: 0.6rem;
+font-size: 0.85rem;
+grid-template-columns: 1fr;
+}
+
+/* Уменьшаем отступы */
+.container {
+    padding: 0 10px;
+}
+
+/* Бейдж слушателей */
+.now-playing-badge {
+    bottom: 10px;
+    right: 10px;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+}
 }
 
 @media (max-width: 480px) {
-    /* Компактные элементы управления */
-    .volume-control {
-        display: flex;
-        align-items: center;
+    /* Общие настройки шрифтов */
+    body {
+        font-size: 14px;
+        line-height: 1.4;
+        padding: 10px;
+    }
+
+    /* Шапка */
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+    .logo p {
+        font-size: 0.8rem;
+    }
+
+    /* Основной плеер */
+    .player-container {
+        padding: 0.8rem;
+        margin: 0;
         width: 100%;
-        max-width: 200px;
-        margin: 0.5rem auto;
     }
-    
-    #volume-slider {
-        flex-grow: 1;
-        margin: 0 0.5rem;
-    }
-    
-    #volume-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 1rem;
-    }
-    
-    /* Компактный оверлей */
-    .audio-overlay {
-        padding: 1rem;
-    }
-    
-    #start-playback {
-        padding: 10px 20px;
-        font-size: 1rem;
-    }
-    
-    /* Уменьшенные размеры */
+
+    /* Обложка альбома */
     .album-art {
-        width: 180px;
-        height: 180px;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 0.5rem;
     }
-    
+
+    /* Информация о треке */
     .track-info h2 {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
     }
-    
     .track-info p {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
     }
-    
+
+    /* Прогресс-бар */
+    .track-progress {
+        margin-top: 0.5rem;
+    }
+    .track-progress span {
+        font-size: 0.7rem;
+    }
+
+    /* Блоки с треками */
     .track-details {
         padding: 0.8rem;
+        margin-top: 0.8rem;
+    }
+    .now-playing h3,
+    .up-next h3,
+    .recent-tracks h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* История треков */
+    #history-list li {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    grid-template-columns: 1fr;
+    }
+
+    /* Кнопки управления */
+    .player-buttons {
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Регулятор громкости */
+    .volume-control {
+        max-width: 120px;
+    }
+
+    /* Статус и подвал */
+    #stream-status {
+    font-size: 0.8rem;
+    }
+    footer {
+        font-size: 0.75rem;
+        padding-top: 0.8rem;
+    }
+
+    /* Бейдж слушателей */
+    .now-playing-badge {
+        bottom: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        font-size: 0.7rem;
     }
 }
 
 /* Для очень маленьких экранов */
 @media (max-width: 360px) {
+    body {
+        font-size: 13px;
+    }
     .album-art {
-        width: 150px;
-        height: 150px;
+        width: 120px;
+        height: 120px;
     }
-    
-    #start-playback {
-        padding: 8px 16px;
-        font-size: 0.9rem;
+    #history-list li {
+    padding: 0.4rem;
     }
-    
+}
+/* Дополнительные улучшения для очень маленьких экранов */
+@media (max-width: 360px) {
+    .logo img {
+        width: 120px;
+        height: 120px;
+    }
+
     .track-info h2 {
-        font-size: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .track-info p {
+        font-size: 0.85rem;
     }
 }

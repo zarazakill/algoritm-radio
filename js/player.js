@@ -140,7 +140,7 @@ async connectToStream() {
         
         // Установка флага готовности
         this.elements.audio.oncanplay = () => {
-            this.setStatus("Готов к воспроизведению");
+            this.setStatus("воспроизвожу");
         };
 
     } catch (error) {

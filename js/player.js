@@ -100,18 +100,6 @@ class RadioPlayer {
              this.updateVolumeIcon();
          });
  
-         this.elements.audio.addEventListener('playing', () => {
-             this.state.isPlaying = true;
-             this.setStatus("Онлайн");
-             this.elements.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-         });
- 
-         this.elements.audio.addEventListener('pause', () => {
-             this.state.isPlaying = false;
-             this.setStatus("Пауза");
-             this.elements.playBtn.innerHTML = '<i class="fas fa-play"></i>';
-         });
- 
          this.elements.audio.addEventListener('error', () => {
              this.handleConnectionError(new Error("Audio element error"));
          });
@@ -131,11 +119,7 @@ class RadioPlayer {
                  this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
              }
          });
- 
-         this.elements.audio.addEventListener('canplay', () => {
-             if (this.elements.playBtn) this.elements.playBtn.disabled = false;
-         });
- 
+  
          document.addEventListener('visibilitychange', () => {
              if (document.hidden) {
                  this.handleBackgroundTab();

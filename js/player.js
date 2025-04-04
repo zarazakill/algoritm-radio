@@ -72,7 +72,6 @@ class RadioPlayer {
 
     setupEventListeners() {
 
-        document.getElementById('start-playback').addEventListener('click', async () => {
             try {
                 await this.connectToStream();
                 document.getElementById('audio-overlay').style.display = 'none';

@@ -12,7 +12,7 @@ class RadioPlayer {
              trackTitle: document.getElementById('track-title'),
              trackArtist: document.getElementById('track-artist'),
              currentTime: document.getElementById('current-time'),
-             progressBar: document.getElementById('progress-bar'),
+           //progressBar: document.getElementById('progress-bar'),
              duration: document.getElementById('duration')
          };
                document.getElementById('start-playback').addEventListener('click', async () => {

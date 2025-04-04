@@ -24,7 +24,7 @@
                  </div>
                  <picture>
                      <source srcset="img/logo.webp" type="image/webp">
-                     <img src="img/logo.png" alt="AlgoRitm-StreAM" width="80" height="80">
+                     <img src="img/logo.png" alt="AlgoRitm-stream" width="80" height="80">
                  </picture>
              </div>
          </header>
@@ -35,20 +35,18 @@
                      <picture>
                          <source srcset="img/album-art/default.webp" type="image/webp">
                          <img id="current-art" src="img/album-art/default.jpg" alt="Current track" width="300" height="300" loading="lazy">
+                         <button id="play-btn" aria-label="Воспроизвести/пауза"><i class="fas fa-play"></i></button>
                      </picture>
                      </div>
                  <div class="player-controls">
                      <div class="track-info">
                          <h2 id="track-title">Загрузка...</h2>
-                         <p id="track-artist">AlgoRitm-StreAM</p>
+                         <p id="track-artist">AlgoRitm-stream</p>
                          <div class="track-progress">
                              <span id="current-time">0:00</span>
                              <input type="range" id="progress-bar" value="0" aria-label="Прогресс трека">
                              <span id="duration">0:00</span>
                          </div>
-                     </div>
-                     <div id="audio-overlay" class="audio-overlay">
-                         <button id="start-playback">Включить радио</button>
                      </div>
                      <div class="player-buttons">
                              <div class="volume-control">
@@ -96,7 +94,7 @@
          </footer>
      </div>
 
-     <audio id="radio-stream" autoplay></audio>
+     <audio id="radio-stream" preload="none" aria-hidden="true"></audio>
 
      <script src="js/player.js" defer></script>
      <div class="now-playing-badge">

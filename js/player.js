@@ -198,18 +198,24 @@ async togglePlayback() {
  }
      
 async updateTrackInfo() {
-    if (!this.state.currentApiUrl) return;
+    if (!this.state.currentApiUrl) {
+        this.state.currentApiUrl = await this.findWorkingApi();
+        if (!this.state.currentApiUrl) return;
+    }
 
     try {
-        const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
-        // Добавьте проверку статуса
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
+        const response = await this.fetchWithTimeout(this.state.currentApiUrl, 2000);
         const data = await response.json();
         this.updateUI(data);
         this.state.lastUpdateTime = Date.now();
+        
+        // Форсированное обновление при первом подключении
+        if (this.firstUpdate) {
+            this.updateUI(data);
+            this.firstUpdate = false;
+        }
     } catch (error) {
-        console.error("Ошибка обновления треков:", error);
+        console.error("Ошибка обновления:", error);
         this.state.currentApiUrl = await this.findWorkingApi();
     }
 }

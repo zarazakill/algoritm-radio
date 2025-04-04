@@ -138,12 +138,10 @@ document.getElementById('start-playback')?.addEventListener('click', async () =>
         });
 
         this.elements.audio.addEventListener('timeupdate', () => {
-            if (this.elements.currentTime && this.elements.progressBar) {
-                this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
-                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
-            }
+        const progress = (this.elements.audio.currentTime / this.elements.audio.duration) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
         });
-
+        
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.handleBackgroundTab();

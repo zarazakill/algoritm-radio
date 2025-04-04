@@ -157,44 +157,28 @@ class RadioPlayer {
         return null;
     }
 
-    async connectToStream() {
-        try {
-            const stream = await this.findWorkingStream();
-            if (!stream) {
-                this.setStatus("Нет активных потоков", true);
-                throw new Error("Нет доступных потоков");
-            }
+async connectToStream() {
+    try {
+        const stream = await this.findWorkingStream();
+        if (!stream) throw new Error("Нет доступных потоков");
 
-            // Всегда обновляем интерфейс при успешном подключении
-            document.getElementById('audio-overlay').style.display = 'none';
+        // Всегда скрываем оверлей при попытке подключения
+        document.getElementById('audio-overlay').style.display = 'none'; 
 
-            // Обновляем источник только если он изменился
-            if (this.elements.audio.src !== stream.url) {
-                this.elements.audio.src = stream.url;
-                this.state.currentStream = stream;
-                this.state.retryCount = 0;
-                this.setStatus("Подключение...");
-
-                // Добавляем обработчик canplaythrough
-                await new Promise((resolve, reject) => {
-                    this.elements.audio.oncanplaythrough = resolve;
-                    this.elements.audio.onerror = reject;
-                });
-            }
-
-            // Запускаем API-синхронизацию
-            this.state.currentApiUrl = await this.findWorkingApi();
-            await this.togglePlayback();
-            this.setStatus("В эфире", false);
-            this.state.networkQuality = 'good';
-            this.adjustForNetworkQuality();
-
-        } catch (error) {
-            // Не скрываем оверлей при ошибке
-            this.handleConnectionError(error);
-            throw error;
+        if (this.elements.audio.src !== stream.url) {
+            this.elements.audio.src = stream.url;
+            // Добавьте принудительную загрузку источника
+            await this.elements.audio.load(); 
         }
+
+        await this.elements.audio.play();
+        this.setStatus("В эфире", false);
+    } catch (error) {
+        document.getElementById('audio-overlay').style.display = 'flex'; 
+        this.handleConnectionError(error);
     }
+    console.log("Подключение к потоку:", stream.url);
+}
 
     async testStream(url) {
         try {
@@ -243,6 +227,7 @@ class RadioPlayer {
         // Автозапуск без проверок
         await this.connectToStream();
         this.elements.audio.play().catch(console.error);
+        console.error("Ошибка воспроизведения:", error);
     }
 
     updateUI(data) {

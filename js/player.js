@@ -59,16 +59,12 @@ class RadioPlayer {
         this.init();
     }
 
-    async init() {
-        this.setupEventListeners();
-        this.initAudioContext();
-        try {
-            await this.connectToStream();
-        } catch (error) {
-            console.error("Ошибка инициализации:", error);
-        }
-        this.startDiagnostics();
-    }
+async init() {
+    this.setupEventListeners();
+    this.initAudioContext();
+    // Удаляем автоматический connectToStream
+    this.startDiagnostics();
+}
 
     async setupEventListeners() {
         try {
@@ -96,18 +92,21 @@ class RadioPlayer {
         }
     
         // Обработчик кнопки запуска
-        document.getElementById('start-playback')?.addEventListener('click', async () => {
-            try {
-                document.getElementById('audio-overlay').style.display = 'none';
-                await this.connectToStream();
-    
-                if (this.state.audioContext?.state === 'suspended') {
-                    await this.state.audioContext.resume();
-                }
-            } catch {
-                document.getElementById('audio-overlay').style.display = 'flex';
-            }
-        });
+document.getElementById('start-playback')?.addEventListener('click', async () => {
+    try {
+        // Явная инициализация перед воспроизведением
+        await this.connectToStream();
+        
+        // Запуск только после пользовательского взаимодействия
+        if (this.state.audioContext?.state === 'suspended') {
+            await this.state.audioContext.resume();
+        }
+        
+        await this.elements.audio.play();
+    } catch (error) {
+        document.getElementById('audio-overlay').style.display = 'flex';
+    }
+});
 
 
         // Обработчик кнопки запуска
@@ -169,47 +168,42 @@ class RadioPlayer {
         return null;
     }
 
-    async connectToStream() {
+async connectToStream() {
     try {
         const stream = await this.findWorkingStream();
-        if (!stream) throw new Error("Нет доступных потоков");
+        if (!stream) {
+            throw new Error("Нет доступных потоков");
+        }
 
-        // Всегда скрываем оверлей при попытке подключения
-        document.getElementById('audio-overlay').style.display = 'none'; 
+        document.getElementById('audio-overlay').style.display = 'none';
 
         if (this.elements.audio.src !== stream.url) {
             this.elements.audio.src = stream.url;
-            // Добавьте принудительную загрузку источника
-            await this.elements.audio.load(); 
+            await this.elements.audio.load().catch(() => {});
         }
 
-        await this.elements.audio.play();
+        // Переносим play() в обработчик пользовательского взаимодействия
+        console.log("Подключение к потоку:", stream.url);
         this.setStatus("В эфире", false);
     } catch (error) {
-        document.getElementById('audio-overlay').style.display = 'flex'; 
+        console.error("Ошибка подключения:", error);
+        document.getElementById('audio-overlay').style.display = 'flex';
         this.handleConnectionError(error);
     }
-    console.log("Подключение к потоку:", stream.url);
+}
+
+async testStream(url) {
+    try {
+        const response = await fetch(url, {
+            method: 'HEAD',
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+        return response.ok;
+    } catch {
+        return false;
     }
-
-    async testStream(url) {
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 5000); // Увеличиваем таймаут
-
-            // Пробуем GET-запрос вместо HEAD для лучшей совместимости
-            const response = await fetch(url, {
-                method: 'GET',
-                mode: 'no-cors',
-                signal: controller.signal
-            });
-
-            clearTimeout(timeout);
-            return response.status < 400 || response.type === 'opaque';
-        } catch {
-            return false;
-        }
-    }
+}
 
 
     setupAudioBuffer() {
@@ -235,12 +229,14 @@ class RadioPlayer {
         }
     }
 
-    async togglePlayback() {
-        // Автозапуск без проверок
+async togglePlayback() {
+    try {
         await this.connectToStream();
-        this.elements.audio.play().catch(console.error);
+        await this.elements.audio.play();
+    } catch (error) {
         console.error("Ошибка воспроизведения:", error);
     }
+}
 
     updateUI(data) {
         this.updateCurrentTrack(data.now_playing);

@@ -55,8 +55,9 @@
  }
  
  #start-playback {
-     padding: 15px 30px;
-     font-size: 1.2rem;
+     position: center;
+     padding: 12px 24px;
+     font-size: 1rem;
      background: var(--primary-color);
      color: white;
      border: none;
@@ -500,7 +501,6 @@
 }
 
 .loading-status {
-    position: center;
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin-top: 10px;

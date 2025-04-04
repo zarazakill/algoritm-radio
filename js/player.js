@@ -146,7 +146,7 @@ async connectToStream() {
     } catch (error) {
         this.handleConnectionError(error);
     }
-}
+
 });
 
     } catch (error) {

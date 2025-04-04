@@ -237,9 +237,12 @@
      background: var(--accent-color);
  }
  
- .player-buttons {
- display: none;
- }
+.player-buttons {
+    display: flex !important;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
  
  .player-buttons button {
      background: none;

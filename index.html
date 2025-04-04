@@ -31,17 +31,19 @@
          </header>
  
          <main>
-<div id="audio-overlay" class="audio-overlay">
-    <div class="loader"></div>
-    <button id="start-playback">Включить радио</button>
-    <p class="loading-status">Инициализация плеера...</p>
-</div>
              <div class="player-container continuous-stream">
                  <div class="album-art">
                      <picture>
                          <source srcset="img/album-art/default.webp" type="image/webp">
                          <img id="current-art" src="img/album-art/default.jpg" alt="Current track" width="300" height="300" loading="lazy">
                      </picture>
+                     <div id="audio-overlay" class="audio-overlay">
+                         <div class="loader-container">
+                         <div class="loader"></div>
+                         <button id="start-playback">Включить радио</button>
+                     </div>
+    <p class="loading-status" style="display: none;">Инициализация плеера...</p>
+</div>
                      </div>
                  <div class="player-controls">
                      <div class="track-info">

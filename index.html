@@ -31,22 +31,12 @@
 
         <main>
 <div class="player-container continuous-stream">
-    <!-- Добавьте этот блок перед album-art -->
-    <div id="audio-overlay" class="audio-overlay">
-        <button id="start-playback">Включить радио</button>
-    </div>
-
+    <!-- Упрощенная структура для мобильных -->
     <div class="album-art">
         <picture>
             <source srcset="img/album-art/default.webp" type="image/webp">
             <img id="current-art" src="img/album-art/default.jpg" alt="Current track" loading="lazy">
         </picture>
-    </div>
-
-    <!-- Добавьте блок управления громкостью -->
-    <div class="volume-control">
-        <button id="volume-btn" aria-label="Громкость"><i class="fas fa-volume-up"></i></button>
-        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.65" aria-label="Уровень громкости">
     </div>
 
     <div class="track-info">
@@ -91,12 +81,12 @@
         </footer>
     </div>
 
+    <audio id="radio-stream" autoplay></audio>
+
     <script src="js/player.js" defer></script>
     <div class="now-playing-badge">
     <span class="online-status"></span>
     <span id="listeners-count">0 слушателей</span>
-</div>
-    <div id="audio-overlay" class="audio-overlay" style="display: flex;">
 </div>
 </body>
 </html>

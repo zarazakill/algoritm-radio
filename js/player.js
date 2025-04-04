@@ -13,7 +13,8 @@ class RadioPlayer {
             trackArtist: document.getElementById('track-artist'),
             currentTime: document.getElementById('current-time'),
             progressBar: document.getElementById('progress-bar'),
-            duration: document.getElementById('duration')
+            duration: document.getElementById('duration'),
+            startPlayback: document.getElementById('start-playback')
         };
 
         // Проверка элементов
@@ -70,6 +71,17 @@ class RadioPlayer {
     }
 
     setupEventListeners() {
+
+        document.getElementById('start-playback').addEventListener('click', async () => {
+            try {
+                await this.connectToStream();
+                document.getElementById('audio-overlay').style.display = 'none';
+                this.elements.audio.play();
+            } catch {
+                document.getElementById('audio-overlay').style.display = 'flex';
+            }
+        });
+        
         // Обработчики громкости
         if (this.elements.volumeSlider) {
             this.elements.volumeSlider.addEventListener('input', () => {

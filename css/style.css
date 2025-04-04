@@ -41,6 +41,19 @@ body {
     flex-direction: column;
 }
 
+.progress-bar-container {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.3s linear;
+}
+
 .audio-overlay {
     display: none;
 }

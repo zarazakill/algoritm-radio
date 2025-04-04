@@ -503,13 +503,11 @@
 }
 
 .loading-status {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-top: 10px;
     position: absolute;
-    bottom: 30%;
-    text-align: center;
+    bottom: 20%;
     width: 100%;
+    text-align: center;
+    transition: opacity 0.3s;
 }
 
  /* Анимации */

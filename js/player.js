@@ -14,9 +14,11 @@ class RadioPlayer {
              trackArtist: document.getElementById('track-artist'),
              currentTime: document.getElementById('current-time'),
              progressBar: document.getElementById('progress-bar'),
-             duration: document.getElementById('duration'),
-             document.getElementById('start-playback').addEventListener('click', () => {
-                 document.getElementById('audio-overlay').style.display = 'none';
+             duration: document.getElementById('duration')
+         };
+
+               document.getElementById('start-playback').addEventListener('click', () => {
+               document.getElementById('audio-overlay').style.display = 'none';
                  this.elements.audio.play()
                      .then(() => {
              if (this.state.audioContext) {
@@ -25,8 +27,7 @@ class RadioPlayer {
          })
          .catch(console.error);
  });
-         };
-        
+          
  
          // Перенесённый обработчик кнопки
          document.getElementById('start-playback')?.addEventListener('click', () => {

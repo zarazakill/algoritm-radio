@@ -144,17 +144,13 @@ async connectToStream() {
         };
 
     } catch (error) {
-        this.handleConnectionError(error);
-    }
-
-});
-
-    } catch (error) {
         this.setStatus("Ошибка подключения", true);
         this.handleConnectionError(error);
     }
 }
- 
+
+});
+
      async findWorkingStream() {
          const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
  

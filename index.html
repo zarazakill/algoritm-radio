@@ -38,10 +38,12 @@
             <img id="current-art" src="img/album-art/default.jpg" alt="Current track" loading="lazy">
         </picture>
     </div>
-
+<div id="audio-overlay" style="display: none;">
+    <button id="start-playback">Запустить радио</button>
+</div>
     <div class="track-info">
         <h2 id="track-title">Загрузка...</h2>
-        <p id="track-artist">AlgoRitm-stream</p>
+        <p id="track-artist">AlgoRitm-StreAM</p>
         <div class="track-progress">
             <span id="current-time">0:00</span>
             <input type="range" id="progress-bar" value="0">
@@ -80,8 +82,6 @@
             </div>
         </footer>
     </div>
-
-    <audio id="radio-stream" autoplay></audio>
 
     <script src="js/player.js" defer></script>
     <div class="now-playing-badge">

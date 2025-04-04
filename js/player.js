@@ -124,35 +124,29 @@ class RadioPlayer {
          });
      }
  
- async connectToStream() {
+async connectToStream() {
     try {
         this.setStatus("Подключение...");
         this.state.currentStream = await this.findWorkingStream();
-
+        
         if (!this.state.currentStream) {
             throw new Error("Все потоки недоступны");
         }
 
+        // Сброс предыдущего источника
+        this.elements.audio.src = '';
         this.elements.audio.src = this.state.currentStream.url;
-        this.setStatus("Подключено");
-
-        this.elements.audio.src = this.state.currentStream.url;
-        // Уберите autoplay из HTML и добавьте обработку пользовательского взаимодействия
-        this.elements.audio.autoplay = false; 
+        this.elements.audio.load();
         
-        // Явная обработка воспроизведения
-document.getElementById('start-playback').addEventListener('click', async () => {
-    document.getElementById('audio-overlay').style.display = 'none';
-    try {
-        if (!this.state.currentStream) {
-            await this.connectToStream();
-        }
-        await this.elements.audio.play();
-        this.state.isPlaying = true;
+        // Установка флага готовности
+        this.elements.audio.oncanplay = () => {
+            this.setStatus("Готов к воспроизведению");
+        };
+
     } catch (error) {
         this.handleConnectionError(error);
-        this.state.isPlaying = false;
     }
+}
 });
 
     } catch (error) {

@@ -215,7 +215,7 @@
      min-width: 40px;
  }
  
- #progress-bar {
+/* #progress-bar {
      flex: 1;
      height: 5px;
      -webkit-appearance: none;
@@ -239,7 +239,7 @@
  #progress-bar::-webkit-slider-thumb:hover {
      transform: scale(1.2);
      background: var(--accent-color);
- }
+ } */
  
 .player-buttons {
     display: flex !important;

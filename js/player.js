@@ -1,5 +1,8 @@
 class RadioPlayer {
     constructor() {
+        this.elements.audio.autoplay = true;
+        this.init();
+
         this.elements = {
             audio: document.getElementById('radio-stream'),
             playBtn: document.getElementById('play-btn'),
@@ -21,6 +24,7 @@ class RadioPlayer {
             streams: [
                 { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
                 { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
+                { url: "http://wwcat.hopto.org:8000/radio", priority: 3 }
             ],
             apiEndpoints: [
                 "https://wwcat.duckdns.org:8443/api/nowplaying/1"
@@ -50,7 +54,7 @@ class RadioPlayer {
                 lastError: null
             }
         };
-        this.elements.audio.autoplay = true;
+
         this.init();
     }
 
@@ -62,15 +66,13 @@ class RadioPlayer {
     }
 
     setupEventListeners() {
+        this.elements.playBtn.addEventListener('click', () => this.togglePlayback());
 
-        const handleFirstInteraction = () => {
-            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-                this.state.audioContext.resume();
-            }
-            document.removeEventListener('click', handleFirstInteraction);
-        };
-
-        document.addEventListener('click', handleFirstInteraction);
+        this.elements.volumeSlider.addEventListener('input', () => {
+            this.elements.audio.volume = this.elements.volumeSlider.value;
+            this.elements.audio.muted = false;
+            this.updateVolumeIcon();
+        });
 
         this.elements.volumeBtn.addEventListener('click', () => {
             this.elements.audio.muted = !this.elements.audio.muted;
@@ -142,360 +144,344 @@ class RadioPlayer {
                 this.setStatus("Готов к воспроизведению");
             } else {
                 throw new Error("Все потоки недоступны");
-                async connectToStream() {
-                    try {
-                        this.setStatus("Подключение...");
-                        this.state.currentStream = await this.findWorkingStream();
+            }
+        } catch (error) {
+            this.handleConnectionError(error);
+        }
+    }
 
-                        if (this.state.currentStream) {
-                            this.elements.audio.src = this.state.currentStream.url;
-                            this.elements.audio.load();
+    async findWorkingStream() {
+        const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
 
-                            // Пытаемся запустить автоматически
-                            const playPromise = this.elements.audio.play();
-
-                            if (playPromise !== undefined) {
-                                playPromise.catch(error => {
-                                    // Автовоспроизведение заблокировано
-                                    this.setStatus("Нажмите для запуска", true);
-                                });
-                            }
-                        } catch (error) {
-                            this.handleConnectionError(error);
-                        }
-                    } catch (error) {
-                        this.handleConnectionError(error);
-                    }
+        for (const stream of sortedStreams) {
+            try {
+                if (await this.testStream(stream.url)) {
+                    return stream;
                 }
+            } catch (error) {
+                console.warn(`Поток недоступен: ${stream.url}`, error);
+            }
+        }
+        return null;
+    }
 
-                async findWorkingStream() {
-                    const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
+    async testStream(url) {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3000);
 
-                    for (const stream of sortedStreams) {
-                        try {
-                            if (await this.testStream(stream.url)) {
-                                return stream;
-                            }
-                        } catch (error) {
-                            console.warn(`Поток недоступен: ${stream.url}`, error);
-                        }
-                    }
-                    return null;
+            const response = await fetch(url, {
+                method: 'HEAD',
+                mode: 'no-cors',
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    setupAudioBuffer() {
+        if (!this.state.audioContext) return;
+
+        const source = this.state.audioContext.createMediaElementSource(this.elements.audio);
+        const analyser = this.state.audioContext.createAnalyser();
+        source.connect(analyser);
+        analyser.connect(this.state.audioContext.destination);
+    }
+
+    async updateTrackInfo() {
+        if (!this.state.currentApiUrl) return;
+
+        try {
+            const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
+            const data = await response.json();
+            this.updateUI(data);
+            this.state.lastUpdateTime = Date.now();
+        } catch (error) {
+            console.error("Ошибка обновления треков:", error);
+            this.state.currentApiUrl = await this.findWorkingApi();
+        }
+    }
+
+    async togglePlayback() {
+        // Автозапуск без проверок
+        await this.connectToStream();
+        this.elements.audio.play().catch(console.error);
+    }
+
+    updateUI(data) {
+        this.updateCurrentTrack(data.now_playing);
+
+        if (data.playing_next) {
+            this.updateNextTrack(data.playing_next);
+        }
+
+        if (data.song_history) {
+            this.updateHistory(data.song_history);
+        }
+
+        if (data.listeners && data.listeners.current) {
+            this.updateListenersCount(data.listeners.current);
+        }
+    }
+
+    updateCurrentTrack(nowPlaying) {
+        const track = nowPlaying.song;
+        const html = `
+        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+        <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
+        `;
+
+        if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+
+        // Добавленные строки для обновления заголовка и исполнителя:
+        if (this.elements.trackTitle) {
+            this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
+        }
+        if (this.elements.trackArtist) {
+            this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
+        }
+        if (this.elements.duration) {
+            this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
+        }
+    }
+
+    updateNextTrack(playingNext) {
+        const track = playingNext.song;
+        const html = `
+        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+        `;
+
+        if (this.elements.nextTrackEl) this.elements.nextTrackEl.innerHTML = html;
+    }
+
+    updateTrackUI(data) {
+        try {
+            this.updateCurrentTrack(data.now_playing);
+
+            if (data.playing_next) {
+                this.updateNextTrack(data.playing_next);
+            }
+
+            if (data.song_history && Array.isArray(data.song_history)) {
+                this.updateHistory(data.song_history);
+            }
+
+            if (data.listeners && data.listeners.current) {
+                this.updateListenersCount(data.listeners.current);
+            }
+        } catch (e) {
+            console.error("Ошибка обработки данных:", e);
+        }
+    }
+
+    updateHistory(history) {
+        if (!this.elements.historyList || !history) return;
+
+        this.elements.historyList.innerHTML = '';
+
+        const recentTracks = history.slice(0, 5);
+
+        recentTracks.forEach((item, index) => {
+            const li = document.createElement('li');
+            if (index === 0) li.classList.add('new-track');
+
+            const song = item.song || {};
+            const title = song.title || 'Неизвестный трек';
+            const artist = song.artist || 'Неизвестный исполнитель';
+            const duration = item.duration ? this.formatTime(item.duration) : '';
+
+            li.innerHTML = `
+            <span class="track-title">${title}</span>
+            <span class="track-artist">${artist}</span>
+            ${duration ? `<span class="track-time">${duration}</span>` : ''}
+            `;
+
+            this.elements.historyList.appendChild(li);
+        });
+    }
+
+    updateListenersCount(count) {
+        if (this.elements.listenersCount) {
+            this.elements.listenersCount.textContent = `${count} ${this.pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
+        }
+    }
+
+    setStatus(text, isError = false) {
+        if (this.elements.statusEl) {
+            this.elements.statusEl.textContent = text;
+            this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
+        }
+    }
+
+    async findWorkingApi() {
+        for (const apiUrl of this.config.apiEndpoints) {
+            try {
+                const response = await this.fetchWithTimeout(apiUrl, 3000);
+                if (response.ok) return apiUrl;
+            } catch (error) {
+                console.warn(`API недоступен: ${apiUrl}`, error);
+            }
+        }
+        return null;
+    }
+
+    fetchWithTimeout(url, timeout, options = {}) {
+        return Promise.race([
+            fetch(url, options),
+                            new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
+                            )
+        ]);
+    }
+
+    formatTime(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    pluralize(number, words) {
+        return words[
+            (number % 100 > 4 && number % 100 < 20) ? 2
+            : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
+        ];
+    }
+
+    updateVolumeIcon() {
+        if (!this.elements.volumeBtn) return;
+
+        if (this.elements.audio.muted || this.elements.audio.volume === 0) {
+            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+        } else if (this.elements.audio.volume < 0.5) {
+            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+        } else {
+            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        }
+    }
+
+    togglePlayback() {
+        if (this.state.isPlaying) {
+            this.elements.audio.pause();
+        } else {
+            this.elements.audio.play().catch(error => {
+                console.error("Ошибка воспроизведения:", error);
+                this.setStatus("Ошибка воспроизведения", true);
+            });
+        }
+    }
+
+    handleConnectionError(error) {
+        console.error("Ошибка подключения:", error);
+        this.state.diagnostics.connectionErrors++;
+        this.state.diagnostics.lastError = error.message;
+
+        this.setStatus("Ошибка подключения", true);
+        this.elements.playBtn.disabled = true;
+
+        const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
+        this.state.retryCount++;
+
+        setTimeout(() => {
+            this.connectToStream();
+        }, delay);
+    }
+
+    handleNetworkIssue() {
+        if (this.state.networkQuality === 'good') {
+            this.state.networkQuality = 'degraded';
+            this.state.diagnostics.qualityChanges++;
+            this.adjustForNetworkQuality();
+        }
+    }
+
+    adjustForNetworkQuality() {
+        switch (this.state.networkQuality) {
+            case 'degraded':
+                clearInterval(this.state.updateIntervalId);
+                this.state.updateIntervalId = setInterval(
+                    () => this.updateTrackInfo(),
+                                                          this.config.updateInterval * 2
+                );
+                break;
+            case 'good':
+            default:
+                clearInterval(this.state.updateIntervalId);
+                this.state.updateIntervalId = setInterval(
+                    () => this.updateTrackInfo(),
+                                                          this.config.updateInterval
+                );
+        }
+    }
+
+    handleBackgroundTab() {
+        if (this.state.audioContext) {
+            this.state.audioContext.suspend().catch(console.error);
+        }
+
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+                                                  this.config.updateInterval * 3
+        );
+    }
+
+    handleForegroundTab() {
+        if (this.state.audioContext) {
+            this.state.audioContext.resume().catch(console.error);
+        }
+
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+                                                  this.config.updateInterval
+        );
+
+        if (this.state.isPlaying) {
+            this.elements.audio.play().catch(console.error);
+        }
+    }
+
+    initAudioContext() {
+        try {
+            this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            document.addEventListener('click', () => {
+                if (this.state.audioContext.state === 'suspended') {
+                    this.state.audioContext.resume();
                 }
+            }, { once: true });
+        } catch (error) {
+            console.error("Ошибка инициализации AudioContext:", error);
+        }
+    }
 
-                async testStream(url) {
-                    try {
-                        const controller = new AbortController();
-                        const timeout = setTimeout(() => controller.abort(), 3000);
+    startDiagnostics() {
+        if (!this.config.diagnostics.enabled) return;
 
-                        const response = await fetch(url, {
-                            method: 'HEAD',
-                            mode: 'no-cors',
-                            signal: controller.signal
-                        });
+        setInterval(() => {
+            console.log('Диагностика плеера:', {
+                networkQuality: this.state.networkQuality,
+                bufferingEvents: this.state.diagnostics.bufferingEvents,
+                connectionErrors: this.state.diagnostics.connectionErrors,
+                qualityChanges: this.state.diagnostics.qualityChanges,
+                lastError: this.state.diagnostics.lastError,
+                currentStream: this.state.currentStream?.url,
+                isPlaying: this.state.isPlaying,
+                volume: this.elements.audio.volume,
+                muted: this.elements.audio.muted
+            });
+        }, this.config.diagnostics.logInterval);
+    }
+}
 
-                        clearTimeout(timeout);
-                        return true;
-                    } catch {
-                        return false;
-                    }
-                }
-
-                setupAudioBuffer() {
-                    if (!this.state.audioContext) return;
-
-                    const source = this.state.audioContext.createMediaElementSource(this.elements.audio);
-                    const analyser = this.state.audioContext.createAnalyser();
-                    source.connect(analyser);
-                    analyser.connect(this.state.audioContext.destination);
-                }
-
-                async updateTrackInfo() {
-                    if (!this.state.currentApiUrl) return;
-
-                    try {
-                        const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
-                        const data = await response.json();
-                        this.updateUI(data);
-                        this.state.lastUpdateTime = Date.now();
-                    } catch (error) {
-                        console.error("Ошибка обновления треков:", error);
-                        this.state.currentApiUrl = await this.findWorkingApi();
-                    }
-                }
-
-                async togglePlayback() {
-                    // Автозапуск без проверок
-                    await this.connectToStream();
-                    this.elements.audio.play().catch(console.error);
-                }
-
-                updateUI(data) {
-                    this.updateCurrentTrack(data.now_playing);
-
-                    if (data.playing_next) {
-                        this.updateNextTrack(data.playing_next);
-                    }
-
-                    if (data.song_history) {
-                        this.updateHistory(data.song_history);
-                    }
-
-                    if (data.listeners && data.listeners.current) {
-                        this.updateListenersCount(data.listeners.current);
-                    }
-                }
-
-                updateCurrentTrack(nowPlaying) {
-                    const track = nowPlaying.song;
-                    const html = `
-                    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-                    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-                    <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
-                    `;
-
-                    if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
-
-                    // Добавленные строки для обновления заголовка и исполнителя:
-                    if (this.elements.trackTitle) {
-                        this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
-                    }
-                    if (this.elements.trackArtist) {
-                        this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
-                    }
-                    if (this.elements.duration) {
-                        this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
-                    }
-                }
-
-                updateNextTrack(playingNext) {
-                    const track = playingNext.song;
-                    const html = `
-                    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-                    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-                    `;
-
-                    if (this.elements.nextTrackEl) this.elements.nextTrackEl.innerHTML = html;
-                }
-
-                updateTrackUI(data) {
-                    try {
-                        this.updateCurrentTrack(data.now_playing);
-
-                        if (data.playing_next) {
-                            this.updateNextTrack(data.playing_next);
-                        }
-
-                        if (data.song_history && Array.isArray(data.song_history)) {
-                            this.updateHistory(data.song_history);
-                        }
-
-                        if (data.listeners && data.listeners.current) {
-                            this.updateListenersCount(data.listeners.current);
-                        }
-                    } catch (e) {
-                        console.error("Ошибка обработки данных:", e);
-                    }
-                }
-
-                updateHistory(history) {
-                    if (!this.elements.historyList || !history) return;
-
-                    this.elements.historyList.innerHTML = '';
-
-                    const recentTracks = history.slice(0, 5);
-
-                    recentTracks.forEach((item, index) => {
-                        const li = document.createElement('li');
-                        if (index === 0) li.classList.add('new-track');
-
-                        const song = item.song || {};
-                        const title = song.title || 'Неизвестный трек';
-                        const artist = song.artist || 'Неизвестный исполнитель';
-                        const duration = item.duration ? this.formatTime(item.duration) : '';
-
-                        li.innerHTML = `
-                        <span class="track-title">${title}</span>
-                        <span class="track-artist">${artist}</span>
-                        ${duration ? `<span class="track-time">${duration}</span>` : ''}
-                        `;
-
-                        this.elements.historyList.appendChild(li);
-                    });
-                }
-
-                updateListenersCount(count) {
-                    if (this.elements.listenersCount) {
-                        this.elements.listenersCount.textContent = `${count} ${this.pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
-                    }
-                }
-
-                setStatus(text, isError = false) {
-                    if (this.elements.statusEl) {
-                        this.elements.statusEl.textContent = text;
-                        this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
-                    }
-                }
-
-                async findWorkingApi() {
-                    for (const apiUrl of this.config.apiEndpoints) {
-                        try {
-                            const response = await this.fetchWithTimeout(apiUrl, 3000);
-                            if (response.ok) return apiUrl;
-                        } catch (error) {
-                            console.warn(`API недоступен: ${apiUrl}`, error);
-                        }
-                    }
-                    return null;
-                }
-
-                fetchWithTimeout(url, timeout, options = {}) {
-                    return Promise.race([
-                        fetch(url, options),
-                                        new Promise((_, reject) =>
-                                        setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
-                                        )
-                    ]);
-                }
-
-                formatTime(seconds) {
-                    if (isNaN(seconds)) return "0:00";
-                    const mins = Math.floor(seconds / 60);
-                    const secs = Math.floor(seconds % 60);
-                    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                }
-
-                pluralize(number, words) {
-                    return words[
-                        (number % 100 > 4 && number % 100 < 20) ? 2
-                        : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
-                    ];
-                }
-
-                updateVolumeIcon() {
-                    if (!this.elements.volumeBtn) return;
-
-                    if (this.elements.audio.muted || this.elements.audio.volume === 0) {
-                        this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                    } else if (this.elements.audio.volume < 0.5) {
-                        this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
-                    } else {
-                        this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                    }
-                }
-
-                handleConnectionError(error) {
-                    console.error("Ошибка подключения:", error);
-                    this.state.diagnostics.connectionErrors++;
-                    this.state.diagnostics.lastError = error.message;
-
-                    this.setStatus("Ошибка подключения", true);
-                    this.elements.playBtn.disabled = true;
-
-                    const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
-                    this.state.retryCount++;
-
-                    setTimeout(() => {
-                        this.connectToStream();
-                    }, delay);
-                }
-
-                handleNetworkIssue() {
-                    if (this.state.networkQuality === 'good') {
-                        this.state.networkQuality = 'degraded';
-                        this.state.diagnostics.qualityChanges++;
-                        this.adjustForNetworkQuality();
-                    }
-                }
-
-                adjustForNetworkQuality() {
-                    switch (this.state.networkQuality) {
-                        case 'degraded':
-                            clearInterval(this.state.updateIntervalId);
-                            this.state.updateIntervalId = setInterval(
-                                () => this.updateTrackInfo(),
-                                                                      this.config.updateInterval * 2
-                            );
-                            break;
-                        case 'good':
-                        default:
-                            clearInterval(this.state.updateIntervalId);
-                            this.state.updateIntervalId = setInterval(
-                                () => this.updateTrackInfo(),
-                                                                      this.config.updateInterval
-                            );
-                    }
-                }
-
-                handleBackgroundTab() {
-                    if (this.state.audioContext) {
-                        this.state.audioContext.suspend().catch(console.error);
-                    }
-
-                    clearInterval(this.state.updateIntervalId);
-                    this.state.updateIntervalId = setInterval(
-                        () => this.updateTrackInfo(),
-                                                              this.config.updateInterval * 3
-                    );
-                }
-
-                handleForegroundTab() {
-                    if (this.state.audioContext) {
-                        this.state.audioContext.resume().catch(console.error);
-                    }
-
-                    clearInterval(this.state.updateIntervalId);
-                    this.state.updateIntervalId = setInterval(
-                        () => this.updateTrackInfo(),
-                                                              this.config.updateInterval
-                    );
-
-                    if (this.state.isPlaying) {
-                        this.elements.audio.play().catch(console.error);
-                    }
-                }
-
-                initAudioContext() {
-                    try {
-                        this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-                        document.addEventListener('click', () => {
-                            if (this.state.audioContext.state === 'suspended') {
-                                this.state.audioContext.resume();
-                            }
-                        }, { once: true });
-                    } catch (error) {
-                        console.error("Ошибка инициализации AudioContext:", error);
-                    }
-                    initAudioContext() {
-                        try {
-                            this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                            // Не пытаемся сразу запустить, ждем взаимодействия
-                        } catch (error) {
-                            console.error("Ошибка инициализации AudioContext:", error);
-                        }
-                    }
-
-                    startDiagnostics() {
-                        if (!this.config.diagnostics.enabled) return;
-
-                        setInterval(() => {
-                            console.log('Диагностика плеера:', {
-                                networkQuality: this.state.networkQuality,
-                                bufferingEvents: this.state.diagnostics.bufferingEvents,
-                                connectionErrors: this.state.diagnostics.connectionErrors,
-                                qualityChanges: this.state.diagnostics.qualityChanges,
-                                lastError: this.state.diagnostics.lastError,
-                                currentStream: this.state.currentStream?.url,
-                                isPlaying: this.state.isPlaying,
-                                volume: this.elements.audio.volume,
-                                muted: this.elements.audio.muted
-                            });
-                        }, this.config.diagnostics.logInterval);
-                    }
-                }
-
-                // Запуск
-                document.addEventListener('DOMContentLoaded', () => {
-                    new RadioPlayer();
-                });
+// Запуск
+document.addEventListener('DOMContentLoaded', () => {
+    new RadioPlayer();
+});

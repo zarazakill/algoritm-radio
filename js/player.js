@@ -26,19 +26,6 @@ class RadioPlayer {
          })
          .catch(console.error);
  });
-          
- 
-         // Перенесённый обработчик кнопки
-         document.getElementById('start-playback')?.addEventListener('click', () => {
-             document.getElementById('audio-overlay').style.display = 'none';
-             this.elements.audio.play()
-                 .then(() => {
-                     if (this.state.audioContext) {
-                         this.state.audioContext.resume();
-                     }
-                 })
-                 .catch(console.error);
-         });
  
          this.config = {
              streams: [
@@ -77,14 +64,15 @@ class RadioPlayer {
          this.init();
      }
  
-     async init() {
-    this.setupEventListeners();
-    this.initAudioContext();
-    await this.connectToStream();
-    this.startDiagnostics();
-    // Добавьте запуск обновления информации
-    this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
-}
+          async init() {
+              this.setupEventListeners();
+              this.initAudioContext();
+              await this.connectToStream();
+              // Добавьте инициализацию API URL
+              this.state.currentApiUrl = await this.findWorkingApi();
+              this.startDiagnostics();
+              this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
+     }     
  
      setupEventListeners() {
  
@@ -132,28 +120,27 @@ class RadioPlayer {
      }
  
  async connectToStream() {
-     try {
-         this.setStatus("Подключение...");
-         this.state.currentStream = await this.findWorkingStream();
- 
-         if (this.state.currentStream) {
-             this.elements.audio.src = this.state.currentStream.url;
-             this.elements.audio.load();
- 
-             // Пытаемся запустить автоматически
-             const playPromise = this.elements.audio.play();
- 
-             if (playPromise !== undefined) {
-                 playPromise.catch(error => {
-                     // Автовоспроизведение заблокировано
-                     this.setStatus("Нажмите для запуска", true);
-                 });
-             }
-         }
-     } catch (error) {
-         this.handleConnectionError(error);
-     }
- }
+    try {
+        this.setStatus("Подключение...");
+        this.state.currentStream = await this.findWorkingStream();
+
+        if (!this.state.currentStream) {
+            throw new Error("Все потоки недоступны");
+        }
+
+        this.elements.audio.src = this.state.currentStream.url;
+        // Уберите autoplay из HTML и добавьте обработку пользовательского взаимодействия
+        this.elements.audio.autoplay = false; 
+        
+        // Явная обработка воспроизведения после user gesture
+        document.getElementById('start-playback').addEventListener('click', () => {
+            this.elements.audio.play().catch(console.error);
+        });
+
+    } catch (error) {
+        this.handleConnectionError(error);
+    }
+}
  
      async findWorkingStream() {
          const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
@@ -196,27 +183,31 @@ class RadioPlayer {
          source.connect(analyser);
          analyser.connect(this.state.audioContext.destination);
      }
- 
-     async updateTrackInfo() {
-         if (!this.state.currentApiUrl) return;
- 
-         try {
-             const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
-             const data = await response.json();
-             this.updateUI(data);
-             this.state.lastUpdateTime = Date.now();
-         } catch (error) {
-             console.error("Ошибка обновления треков:", error);
-             this.state.currentApiUrl = await this.findWorkingApi();
-         }
-     }
- 
-     async togglePlayback() {
+
+async togglePlayback() {
      // Автозапуск без проверок
      await this.connectToStream();
      this.elements.audio.play().catch(console.error);
  }
+     
+async updateTrackInfo() {
+    if (!this.state.currentApiUrl) return;
+
+    try {
+        const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
+        // Добавьте проверку статуса
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const data = await response.json();
+        this.updateUI(data);
+        this.state.lastUpdateTime = Date.now();
+    } catch (error) {
+        console.error("Ошибка обновления треков:", error);
+        this.state.currentApiUrl = await this.findWorkingApi();
+    }
+}
  
+
      updateUI(data) {
          this.updateCurrentTrack(data.now_playing);
  
@@ -252,7 +243,13 @@ class RadioPlayer {
      }
      if (this.elements.duration) {
          this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
+          
      }
+     if (!nowPlaying) {
+        this.elements.trackTitle.textContent = 'Нет данных';
+        this.elements.trackArtist.textContent = '';
+        return;
+    }
  }
  
      updateNextTrack(playingNext) {

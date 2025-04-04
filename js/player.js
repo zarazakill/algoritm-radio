@@ -78,11 +78,13 @@ class RadioPlayer {
      }
  
      async init() {
-         this.setupEventListeners();
-         this.initAudioContext();
-         await this.connectToStream();
-         this.startDiagnostics();
-     }
+    this.setupEventListeners();
+    this.initAudioContext();
+    await this.connectToStream();
+    this.startDiagnostics();
+    // Добавьте запуск обновления информации
+    this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
+}
  
      setupEventListeners() {
  

@@ -149,8 +149,6 @@ async connectToStream() {
     }
 }
 
-});
-
      async findWorkingStream() {
          const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
  

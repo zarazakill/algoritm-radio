@@ -134,6 +134,9 @@ class RadioPlayer {
         }
 
         this.elements.audio.src = this.state.currentStream.url;
+        this.setStatus("Подключено");
+
+        this.elements.audio.src = this.state.currentStream.url;
         // Уберите autoplay из HTML и добавьте обработку пользовательского взаимодействия
         this.elements.audio.autoplay = false; 
         
@@ -143,6 +146,7 @@ class RadioPlayer {
         });
 
     } catch (error) {
+        this.setStatus("Ошибка подключения", true);
         this.handleConnectionError(error);
     }
 }
@@ -377,9 +381,8 @@ async updateTrackInfo() {
          console.error("Ошибка подключения:", error);
          this.state.diagnostics.connectionErrors++;
          this.state.diagnostics.lastError = error.message;
- 
-         this.setStatus("Ошибка подключения", true);
-         this.elements.playBtn.disabled = true;
+
+         this.setStatus("Переподключение...", true);
  
          const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
          this.state.retryCount++;

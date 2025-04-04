@@ -15,19 +15,33 @@ class RadioPlayer {
              progressBar: document.getElementById('progress-bar'),
              duration: document.getElementById('duration')
          };
-               document.getElementById('start-playback').addEventListener('click', () => {
-               document.querySelector('.loading-status').style.display = 'block';
-                 this.elements.audio.play().then(() => {
-               document.getElementById('audio-overlay').style.display = 'none';
-                 this.elements.audio.play()
-                     .then(() => {
-             if (this.state.audioContext) {
-                 this.state.audioContext.resume();
-             }
-         })
-         .catch(error => {
-        document.querySelector('.loading-status').style.display = 'none';
- });
+               document.getElementById('start-playback').addEventListener('click', async () => {
+            try {
+                // Показать статус загрузки
+                document.querySelector('.loading-status').style.display = 'block';
+                
+                // Инициализация подключения
+                if (!this.state.currentStream) {
+                    await this.connectToStream();
+                }
+                
+                // Запуск воспроизведения
+                await this.elements.audio.play();
+                
+                // Обновление состояния
+                this.state.isPlaying = true;
+                document.getElementById('audio-overlay').style.display = 'none';
+                
+                // Запуск AudioContext
+                if (this.state.audioContext) {
+                    await this.state.audioContext.resume();
+                }
+            } catch (error) {
+                console.error('Ошибка воспроизведения:', error);
+                document.querySelector('.loading-status').style.display = 'none';
+                this.handleConnectionError(error);
+            }
+        });
  
          this.config = {
              streams: [
@@ -126,30 +140,28 @@ class RadioPlayer {
          });
      }
  
-async connectToStream() {
-    try {
-        this.setStatus("Подключение...");
-        this.state.currentStream = await this.findWorkingStream();
-        
-        if (!this.state.currentStream) {
-            throw new Error("Все потоки недоступны");
+    async connectToStream() {
+        try {
+            this.setStatus("Подключение...");
+            this.state.currentStream = await this.findWorkingStream();
+            
+            if (!this.state.currentStream) {
+                throw new Error("Все потоки недоступны");
+            }
+
+            // Сброс и установка нового источника
+            this.elements.audio.src = this.state.currentStream.url;
+            await new Promise((resolve, reject) => {
+                this.elements.audio.onloadedmetadata = resolve;
+                this.elements.audio.onerror = reject;
+            });
+            
+            this.setStatus("Слушаем музыку");
+        } catch (error) {
+            this.setStatus("Ошибка подключения", true);
+            throw error;
         }
-
-        // Сброс предыдущего источника
-        this.elements.audio.src = '';
-        this.elements.audio.src = this.state.currentStream.url;
-        this.elements.audio.load();
-        
-        // Установка флага готовности
-        this.elements.audio.oncanplay = () => {
-            this.setStatus("слушаем музыку...");
-        };
-
-    } catch (error) {
-        this.setStatus("Ошибка подключения", true);
-        this.handleConnectionError(error);
     }
-}
 
      async findWorkingStream() {
          const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
@@ -482,6 +494,6 @@ async updateTrackInfo() {
  }
  
  // Запуск
- document.addEventListener('DOMContentLoaded', () => {
-     new RadioPlayer();
- });
+document.addEventListener('DOMContentLoaded', () => {
+    new RadioPlayer();
+});

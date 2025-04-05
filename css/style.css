@@ -617,7 +617,7 @@ body.light-theme .track-info h2 {
 }
 
 body.light-theme .track-info p {
-    color: #434b4d;
+    color: var(--dark-color);
 }
 
 body.light-theme .player-container {

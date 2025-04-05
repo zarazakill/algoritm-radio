@@ -173,15 +173,7 @@ main {
     margin-bottom: 1.5rem;
 }
 
-.track-info h2 {
-    font-size: 1.3rem;
-    margin-bottom: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text-primary);
-    font-weight: 600;
-}
+
 
 .track-info p {
     font-size: 0.95rem;

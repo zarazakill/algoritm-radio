@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentTrackEl: document.getElementById('current-track'),
                 nextTrackEl: document.getElementById('next-track'),
                 historyList: document.getElementById('history-list'),
-                listenersCount: document.getElementById('listeners-count'),
+                listenersCount: document.getElementById('current-listeners'),
                 trackTitle: document.getElementById('track-title'),
                 trackArtist: document.getElementById('track-artist'),
                 currentTime: document.getElementById('current-time'),
@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async updateTrackInfo() {
+            console.log('Получены данные слушателей:', data.listeners?.current);
             if (!this.state.currentApiUrl) {
                 this.state.currentApiUrl = await this.findWorkingApi();
                 if (!this.state.currentApiUrl) return;

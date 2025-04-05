@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reconnectDelay: 3000,
                 /* The time between checking the network in milliseconds. */
                 networkCheckInterval: 10000,
-                bufferLength: 20,
+                bufferLength: 25,
                 diagnostics: {
                     /* Enable or disable diagnostic logging. */
                     enabled: true,

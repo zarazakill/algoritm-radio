@@ -1,490 +1,600 @@
-document.addEventListener('DOMContentLoaded', () => {
-    class RadioPlayer {
-        constructor() {
-            this.elements = {
-                audio: document.getElementById('radio-stream'),
-                statusEl: document.getElementById('stream-status'),
-                volumeSlider: document.getElementById('volume-slider'),
-                volumeBtn: document.getElementById('volume-btn'),
-                currentTrackEl: document.getElementById('current-track'),
-                nextTrackEl: document.getElementById('next-track'),
-                historyList: document.getElementById('history-list'),
-                listenersCount: document.getElementById('listeners-count'),
-                trackTitle: document.getElementById('track-title'),
-                trackArtist: document.getElementById('track-artist'),
-                currentTime: document.getElementById('current-time'),
-                progressBar: document.getElementById('progress-bar'),
-                duration: document.getElementById('duration')
-            };
-
-            document.getElementById('start-playback').addEventListener('click', () => {
-                document.getElementById('audio-overlay').style.display = 'none';
-                this.elements.audio.play()
-                    .then(() => {
-                        if (this.state.audioContext) {
-                            this.state.audioContext.resume();
-                        }
-                    })
-                    .catch(console.error);
-            });
-
-            this.config = {
-                streams: [
-                    { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
-                    { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
-                ],
-                apiEndpoints: [
-                    "https://wwcat.duckdns.org:8443/api/nowplaying/1"
-                ],
-                /* The time between track info updates in milliseconds. */
-                updateInterval: 10000,
-                /* The delay before attempting to reconnect in milliseconds. */
-                reconnectDelay: 3000,
-                /* The time between checking the network in milliseconds. */
-                networkCheckInterval: 10000,
-                bufferLength: 20,
-                diagnostics: {
-                    /* Enable or disable diagnostic logging. */
-                    enabled: true,
-                    /* The interval for diagnostic logging in milliseconds. */
-                    logInterval: 60000
-                }
-            };
-
-            this.state = {
-                currentStream: null,
-                currentApiUrl: null,
-                isPlaying: false,
-                retryCount: 0,
-                networkQuality: 'good',
-                lastUpdateTime: 0,
-                audioContext: null,
-                diagnostics: {
-                    bufferingEvents: 0,
-                    connectionErrors: 0,
-                    qualityChanges: 0,
-                    lastError: null
-                }
-            };
-            this.elements.audio.autoplay = true;
-            this.init();
-        }
-
-        async init() {
-            this.setupEventListeners();
-            this.initAudioContext();
-            await this.connectToStream();
-            // Добавьте инициализацию API URL
-            this.state.currentApiUrl = await this.findWorkingApi();
-            this.startDiagnostics();
-            this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
-        }
-
-        setupEventListeners() {
-
-            const handleFirstInteraction = () => {
-                if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-                    this.state.audioContext.resume();
-                }
-                document.removeEventListener('click', handleFirstInteraction);
-            };
-
-            document.addEventListener('click', handleFirstInteraction);
-
-            this.elements.volumeBtn.addEventListener('click', () => {
-                this.elements.audio.muted = !this.elements.audio.muted;
-                this.updateVolumeIcon();
-            });
-
-            this.elements.volumeSlider.addEventListener('input', (e) => {
-                this.elements.audio.volume = e.target.value;
-                this.updateVolumeIcon();
-            });
-
-            this.elements.audio.addEventListener('error', () => {
-                this.handleConnectionError(new Error("Audio element error"));
-            });
-
-            this.elements.audio.addEventListener('stalled', () => {
-                this.handleNetworkIssue();
-            });
-
-            this.elements.audio.addEventListener('waiting', () => {
-                this.state.diagnostics.bufferingEvents++;
-                this.handleNetworkIssue();
-            });
-
-            this.elements.audio.addEventListener('timeupdate', () => {
-                if (this.elements.currentTime && this.elements.progressBar) {
-                    this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
-                    this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
-                }
-            });
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    this.handleBackgroundTab();
-                } else {
-                    this.handleForegroundTab();
-                }
-            });
-        }
-
-        async connectToStream() {
-            try {
-                this.setStatus("Подключение...");
-                this.state.currentStream = await this.findWorkingStream();
-
-                if (!this.state.currentStream) {
-                    throw new Error("Все потоки недоступны");
-                }
-
-                // Сброс предыдущего источника
-                this.elements.audio.src = '';
-                this.elements.audio.src = this.state.currentStream.url;
-                this.elements.audio.load();
-
-                // Установка флага готовности
-                this.elements.audio.oncanplay = () => {
-                    this.setStatus("слушаем музыку...");
-                };
-
-            } catch (error) {
-                this.setStatus("Ошибка подключения", true);
-                this.handleConnectionError(error);
-            }
-        }
-
-        async findWorkingStream() {
-            const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
-
-            for (const stream of sortedStreams) {
-                try {
-                    if (await this.testStream(stream.url)) {
-                        return stream;
-                    }
-                } catch (error) {
-                    console.warn(`Поток недоступен: ${stream.url}`, error);
-                }
-            }
-            return null;
-        }
-
-        async testStream(url) {
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 3000);
-
-                const response = await fetch(url, {
-                    method: 'HEAD',
-                    mode: 'no-cors',
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeout);
-                return true;
-            } catch {
-                return false;
-            }
-        }
-
-        setupAudioBuffer() {
-            if (!this.state.audioContext) return;
-
-            const source = this.state.audioContext.createMediaElementSource(this.elements.audio);
-            const analyser = this.state.audioContext.createAnalyser();
-            source.connect(analyser);
-            analyser.connect(this.state.audioContext.destination);
-        }
-
-        async togglePlayback() {
-            // Автозапуск без проверок
-            await this.connectToStream();
-            this.elements.audio.play().catch(console.error);
-        }
-
-        async updateTrackInfo() {
-            if (!this.state.currentApiUrl) {
-                this.state.currentApiUrl = await this.findWorkingApi();
-                if (!this.state.currentApiUrl) return;
-            }
-
-            try {
-                const response = await this.fetchWithTimeout(this.state.currentApiUrl, 2000);
-                const data = await response.json();
-                this.updateUI(data);
-                this.state.lastUpdateTime = Date.now();
-
-                // Форсированное обновление при первом подключении
-                if (this.firstUpdate) {
-                    this.updateUI(data);
-                    this.firstUpdate = false;
-                }
-            } catch (error) {
-                console.error("Ошибка обновления:", error);
-                this.state.currentApiUrl = await this.findWorkingApi();
-            }
-        }
-
-
-        updateUI(data) {
-            this.updateCurrentTrack(data.now_playing);
-
-            if (data.playing_next) {
-                this.updateNextTrack(data.playing_next);
-            }
-
-            if (data.song_history) {
-                this.updateHistory(data.song_history);
-            }
-
-            if (data.listeners && data.listeners.current) {
-                this.updateListenersCount(data.listeners.current);
-            }
-        }
-
-        updateCurrentTrack(nowPlaying) {
-            const track = nowPlaying.song;
-            const html = `
-        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-        <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
-        `;
-
-            if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
-
-            // Добавленные строки для обновления заголовка и исполнителя:
-            if (this.elements.trackTitle) {
-                this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
-            }
-            if (this.elements.trackArtist) {
-                this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
-            }
-            if (this.elements.duration) {
-                this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
-
-            }
-            if (!nowPlaying) {
-                this.elements.trackTitle.textContent = 'Нет данных';
-                this.elements.trackArtist.textContent = '';
-                return;
-            }
-        }
-
-        updateNextTrack(playingNext) {
-            const track = playingNext.song;
-            const html = `
-        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-        `;
-
-            if (this.elements.nextTrackEl) this.elements.nextTrackEl.innerHTML = html;
-        }
-
-        updateTrackUI(data) {
-            try {
-                this.updateCurrentTrack(data.now_playing);
-
-                if (data.playing_next) {
-                    this.updateNextTrack(data.playing_next);
-                }
-
-                if (data.song_history && Array.isArray(data.song_history)) {
-                    this.updateHistory(data.song_history);
-                }
-
-                if (data.listeners && data.listeners.current) {
-                    this.updateListenersCount(data.listeners.current);
-                }
-            } catch (e) {
-                console.error("Ошибка обработки данных:", e);
-            }
-        }
-
-        updateHistory(history) {
-            if (!this.elements.historyList || !history) return;
-
-            this.elements.historyList.innerHTML = '';
-
-            const recentTracks = history.slice(0, 5);
-
-            recentTracks.forEach((item, index) => {
-                const li = document.createElement('li');
-                if (index === 0) li.classList.add('new-track');
-
-                const song = item.song || {};
-                const title = song.title || 'Неизвестный трек';
-                const artist = song.artist || 'Неизвестный исполнитель';
-                const duration = item.duration ? this.formatTime(item.duration) : '';
-
-                li.innerHTML = `
-            <span class="track-title">${title}</span>
-            <span class="track-artist">${artist}</span>
-            ${duration ? `<span class="track-time">${duration}</span>` : ''}
-            `;
-
-                this.elements.historyList.appendChild(li);
-            });
-        }
-
-        updateListenersCount(count) {
-            if (this.elements.listenersCount) {
-                this.elements.listenersCount.textContent = `${count} ${this.pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
-            }
-        }
-
-        setStatus(text, isError = false) {
-            if (this.elements.statusEl) {
-                this.elements.statusEl.textContent = text;
-                this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
-            }
-        }
-
-        async findWorkingApi() {
-            for (const apiUrl of this.config.apiEndpoints) {
-                try {
-                    const response = await this.fetchWithTimeout(apiUrl, 3000);
-                    if (response.ok) return apiUrl;
-                } catch (error) {
-                    console.warn(`API недоступен: ${apiUrl}`, error);
-                }
-            }
-            return null;
-        }
-
-        fetchWithTimeout(url, timeout, options = {}) {
-            return Promise.race([
-                fetch(url, options),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
-                )
-            ]);
-        }
-
-        formatTime(seconds) {
-            if (isNaN(seconds)) return "0:00";
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-
-        pluralize(number, words) {
-            return words[
-                (number % 100 > 4 && number % 100 < 20) ? 2
-                    : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
-            ];
-        }
-
-        updateVolumeIcon() {
-            if (!this.elements.volumeBtn) return;
-
-            if (this.elements.audio.muted || this.elements.audio.volume === 0) {
-                this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-            } else if (this.elements.audio.volume < 0.5) {
-                this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
-            } else {
-                this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-            }
-        }
-
-        handleConnectionError(error) {
-            console.error("Ошибка подключения:", error);
-            this.setStatus(`Ошибка: ${error.message}`, true);
-
-            // Автоматический реконнект с экспоненциальной задержкой
-            const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
-            setTimeout(() => {
-                this.connectToStream();
-                this.state.retryCount++;
-            }, delay);
-
-            // Показать оверлей при ошибке
-            document.getElementById('audio-overlay').style.display = 'flex';
-        }
-
-        handleNetworkIssue() {
-            if (this.state.networkQuality === 'good') {
-                this.state.networkQuality = 'degraded';
-                this.state.diagnostics.qualityChanges++;
-                this.adjustForNetworkQuality();
-            }
-        }
-
-        adjustForNetworkQuality() {
-            switch (this.state.networkQuality) {
-                case 'degraded':
-                    clearInterval(this.state.updateIntervalId);
-                    this.state.updateIntervalId = setInterval(
-                        () => this.updateTrackInfo(),
-                        this.config.updateInterval * 2
-                    );
-                    break;
-                case 'good':
-                default:
-                    clearInterval(this.state.updateIntervalId);
-                    this.state.updateIntervalId = setInterval(
-                        () => this.updateTrackInfo(),
-                        this.config.updateInterval
-                    );
-            }
-        }
-
-        handleBackgroundTab() {
-            if (this.state.audioContext) {
-                this.state.audioContext.suspend().catch(console.error);
-            }
-
-            clearInterval(this.state.updateIntervalId);
-            this.state.updateIntervalId = setInterval(
-                () => this.updateTrackInfo(),
-                this.config.updateInterval * 3
-            );
-        }
-
-        handleForegroundTab() {
-            if (this.state.audioContext) {
-                this.state.audioContext.resume().catch(console.error);
-            }
-
-            clearInterval(this.state.updateIntervalId);
-            this.state.updateIntervalId = setInterval(
-                () => this.updateTrackInfo(),
-                this.config.updateInterval
-            );
-
-            if (this.state.isPlaying) {
-                this.elements.audio.play().catch(console.error);
-            }
-        }
-
-        initAudioContext() {
-            try {
-                this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                // Не пытаемся сразу запустить, ждем взаимодействия
-            } catch (error) {
-                console.error("Ошибка инициализации AudioContext:", error);
-            }
-        }
-
-        startDiagnostics() {
-            if (!this.config.diagnostics.enabled) return;
-
-            setInterval(() => {
-                console.log('Диагностика плеера:', {
-                    networkQuality: this.state.networkQuality,
-                    bufferingEvents: this.state.diagnostics.bufferingEvents,
-                    connectionErrors: this.state.diagnostics.connectionErrors,
-                    qualityChanges: this.state.diagnostics.qualityChanges,
-                    lastError: this.state.diagnostics.lastError,
-                    currentStream: this.state.currentStream?.url,
-                    isPlaying: this.state.isPlaying,
-                    volume: this.elements.audio.volume,
-                    muted: this.elements.audio.muted
-                });
-            }, this.config.diagnostics.logInterval);
-        }
+:root {
+    --primary-color: #6c5ce7;
+    --primary-dark: #5649c0;
+    --secondary-color: #a29bfe;
+    --dark-color: #1a1a2e;
+    --darker-color: #16213e;
+
+    --light-color: #f5f6fa;
+    --accent-color: #fd79a8;
+    --success-color: #00b894;
+    --warning-color: #fdcb6e;
+    --error-color: #d63031;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --card-bg: rgba(30, 30, 60, 0.7);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --border-radius: 20px;
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    height: 100%;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(135deg, var(--darker-color), var(--dark-color));
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 20px;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.audio-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#start-playback {
+position: center;
+padding: 12px 24px;
+font-size: 1rem;
+background: var(--primary-color);
+color: white;
+border: none;
+border-radius: 30px;
+cursor: pointer;
+}
+
+.player-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem !important;
+    gap: 1rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Шапка */
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.8s ease;
+}
+
+.logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.logo:hover img {
+    transform: rotate(15deg) scale(1.05);
+}
+
+.logo h1 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.logo img {
+    width: 250px;
+    height: 250px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
+    transition: var(--transition);
+}
+
+.logo p {
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: var(--text-secondary);
+}
+
+/* Основное содержимое */
+main {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex: 1;
+}
+
+/* Плеер */
+.player-container {
+    flex: 1;
+    min-width: min(100%, 350px);
+    max-width: 500px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.player-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+.album-art {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.album-art img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: spin 10s linear infinite; /* Добавлено */
+}
+
+.album-art.playing img {
+    animation-play-state: running;
+}
+
+.track-info {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.track-info h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.track-info p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.track-progress {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.track-progress span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    min-width: 40px;
+}
+
+#progress-bar {
+flex: 1;
+height: 5px;
+-webkit-appearance: none;
+background: rgba(255, 255, 255, 0.2);
+border-radius: 5px;
+outline: none;
+overflow: hidden;
+}
+
+#progress-bar::-webkit-slider-thumb {
+-webkit-appearance: none;
+width: 15px;
+height: 15px;
+border-radius: 50%;
+background: var(--primary-color);
+cursor: pointer;
+box-shadow: -407px 0 0 400px var(--primary-color);
+transition: var(--transition);
+}
+
+#progress-bar::-webkit-slider-thumb:hover {
+transform: scale(1.2);
+background: var(--accent-color);
+}
+
+.player-buttons {
+    display: flex !important;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.player-buttons button {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    max-width: 150px;
+}
+
+#volume-btn {
+width: 40px;
+height: 40px;
+font-size: 1.1rem;
+}
+
+#volume-btn:hover {
+color: var(--accent-color);
+background: rgba(255, 255, 255, 0.1);
+}
+
+#volume-slider {
+flex: 1;
+height: 5px;
+-webkit-appearance: none;
+background: rgba(255, 255, 255, 0.2);
+border-radius: 5px;
+outline: none;
+}
+
+#volume-slider::-webkit-slider-thumb {
+-webkit-appearance: none;
+width: 15px;
+height: 15px;
+border-radius: 50%;
+background: var(--primary-color);
+cursor: pointer;
+transition: var(--transition);
+}
+
+#volume-slider::-webkit-slider-thumb:hover {
+background: var(--accent-color);
+transform: scale(1.2);
+}
+
+/* Блок информации о треках */
+.track-details {
+    margin-top: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+    padding: 0.8rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.now-playing, .up-next, .recent-tracks {
+    margin-bottom: 1.2rem;
+}
+
+.now-playing h3, .up-next h3, .recent-tracks h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.now-playing h3::before, .up-next h3::before, .recent-tracks h3::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.track-info-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem !important;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--primary-color);
+}
+
+.track-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    grid-column: 1;
+}
+
+.track-artist {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    grid-column: 1;
+}
+
+.track-time {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    text-align: right;
+}
+
+.track-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+}
+
+.track-progress, .track-time {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+#history-list {
+list-style: none;
+padding: 0;
+}
+
+#history-list li {
+display: grid;
+grid-template-columns: 1fr auto;
+gap: 8px;
+padding: 0.4rem;
+font-size: 0.8rem;
+align-items: center;
+}
+
+#history-list li:hover {
+background: rgba(108, 92, 231, 0.1);
+border-left-color: var(--primary-color);
+}
+
+#history-list li::before {
+content: '♫';
+margin-right: 10px;
+color: var(--primary-color);
+font-size: 0.8rem;
+}
+
+.new-track {
+    animation: fadeInTrack 0.5s ease;
+    background: rgba(108, 92, 231, 0.1) !important;
+}
+
+/* Подвал */
+footer {
+    text-align: center;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.social-links a {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    transition: var(--transition);
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.social-links a:hover {
+    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+#stream-status {
+font-weight: 600;
+transition: var(--transition);
+}
+
+.status-success {
+    color: var(--success-color);
+}
+
+.status-error {
+    color: var(--error-color);
+}
+
+/* Бейдж слушателей */
+.now-playing-badge {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 10;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.online-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--success-color);
+    animation: pulse 2s infinite;
+}
+
+.album-art {
+    position: relative;
+    margin: 0 auto;
+}
+
+.loader {
+    position: center;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top: 4px solid var(--primary-color);
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+    display: none; /* Initially hide the loader */
+}
+
+.loading-status {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 10px;
+    display: none; /* Initially hide the loading status */
+}
+
+/* Анимации */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInTrack {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.playing .album-art img {
+    animation: spin 10s linear infinite;
+}
+
+@media (max-width: 768px) {
+    .player-container {
+        padding: 1rem;
+        max-width: 100%;
     }
 
-    // Запуск
-    new RadioPlayer();
-});
+    .album-art {
+        width: 180px !important;
+        height: 180px !important;
+
+    }
+
+    .track-info h2 {
+        font-size: 1.1rem;
+    }
+
+    .track-info p {
+        font-size: 0.8rem;
+    }
+
+    .track-details {
+        padding: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .track-info-box {
+        padding: 0.6rem;
+    }
+
+    .now-playing, .up-next, .recent-tracks {
+        margin-bottom: 1rem;
+    }
+
+    #history-list li {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 0 10px;
+    }
+
+    .now-playing-badge {
+        bottom: 10px;
+        right: 10px;
+        padding: 5px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .album-art {
+        max-width: 250px;
+    }
+
+    .track-info h2 {
+        font-size:
+

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentTrackEl: document.getElementById('current-track'),
                 nextTrackEl: document.getElementById('next-track'),
                 historyList: document.getElementById('history-list'),
-                listenersCount: document.getElementById('current-listeners'),
+                listenersCount: document.getElementById('listeners-count'),
                 trackTitle: document.getElementById('track-title'),
                 trackArtist: document.getElementById('track-artist'),
                 currentTime: document.getElementById('current-time'),
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reconnectDelay: 3000,
                 /* The time between checking the network in milliseconds. */
                 networkCheckInterval: 10000,
-                bufferLength: 25,
+                bufferLength: 20,
                 diagnostics: {
                     /* Enable or disable diagnostic logging. */
                     enabled: true,
@@ -70,7 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.init();
         }
 
+        /* @tweakable initial theme: light or dark */
+        static DEFAULT_THEME = 'dark';
+
         async init() {
+            this.setupThemeToggle(); 
             this.setupEventListeners();
             this.initAudioContext();
             await this.connectToStream();
@@ -78,6 +82,34 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.currentApiUrl = await this.findWorkingApi();
             this.startDiagnostics();
             this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
+        }
+
+        setupThemeToggle() {
+            const body = document.body;
+            const themeToggleBtn = document.createElement('button');
+            themeToggleBtn.classList.add('theme-toggle');
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>'; 
+
+            // Set initial theme based on localStorage or default
+            const savedTheme = localStorage.getItem('theme') || RadioPlayer.DEFAULT_THEME;
+            body.classList.add(savedTheme + '-theme');
+            this.updateThemeIcon(themeToggleBtn, savedTheme);
+
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                body.classList.remove(currentTheme + '-theme');
+                body.classList.add(newTheme + '-theme');
+                localStorage.setItem('theme', newTheme);
+                this.updateThemeIcon(themeToggleBtn, newTheme);
+            });
+
+            document.querySelector('.container').appendChild(themeToggleBtn);
+        }
+
+        updateThemeIcon(button, theme) {
+            button.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         }
 
         setupEventListeners() {

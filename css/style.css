@@ -617,7 +617,7 @@ body.light-theme .track-info h2 {
 }
 
 body.light-theme .track-info p {
-    color: var(--dark-color);
+    color: #2b2b2b;
 }
 
 body.light-theme .player-container {
@@ -632,16 +632,16 @@ body.light-theme .track-details {
 }
 
 body.light-theme .track-title {
-    color: var(--dark-color);
+    color: #2b2b2b;
 }
 
 body.light-theme .track-artist {
-    color: var(--dark-color);
+    color: #2b2b2b;
 }
 
 body.light-theme footer {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
-    color: var(--dark-color);
+    color: #2b2b2b;
 }
 
 body.light-theme .now-playing-badge {

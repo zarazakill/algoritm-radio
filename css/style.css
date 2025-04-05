@@ -4,7 +4,6 @@
     --secondary-color: #a29bfe;
     --dark-color: #1a1a2e;
     --darker-color: #16213e;
-
     --light-color: #f5f6fa;
     --accent-color: #fd79a8;
     --success-color: #00b894;
@@ -125,10 +124,7 @@ header {
     transition: var(--transition);
 }
 
-.logo p {
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    color: var(--text-secondary);
-}
+
 
 /* Основное содержимое */
 main {
@@ -613,7 +609,8 @@ body.light-theme .logo h1 {
 }
 
 body.light-theme .logo p {
-    color: #2b2b2b;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: var(--dark-color);
 }
 
 body.light-theme .track-info h2 {
@@ -678,6 +675,11 @@ body.dark-theme .logo h1 {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+body.dark-theme .logo p {
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: var(--text-primary);
 }
 
 body.dark-theme .track-info h2 {

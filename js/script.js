@@ -204,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async updateTrackInfo() {
-            console.log('Получены данные слушателей:', data.listeners?.current);
             if (!this.state.currentApiUrl) {
                 this.state.currentApiUrl = await this.findWorkingApi();
                 if (!this.state.currentApiUrl) return;

@@ -636,12 +636,12 @@ body.light-theme .track-title {
 }
 
 body.light-theme .track-artist {
-    color: #666;
+    color: var(--dark-color);
 }
 
 body.light-theme footer {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
-    color: #666;
+    color: var(--dark-color);
 }
 
 body.light-theme .now-playing-badge {

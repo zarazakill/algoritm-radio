@@ -3,29 +3,29 @@ document.addEventListener('DOMContentLoaded', () => {
         constructor() {
             this.elements = {
                 audio: document.getElementById('radio-stream'),
-                          statusEl: document.getElementById('stream-status'),
-                          volumeSlider: document.getElementById('volume-slider'),
-                          volumeBtn: document.getElementById('volume-btn'),
-                          currentTrackEl: document.getElementById('current-track'),
-                          nextTrackEl: document.getElementById('next-track'),
-                          historyList: document.getElementById('history-list'),
-                          listenersCount: document.getElementById('listeners-count'),
-                          trackTitle: document.getElementById('track-title'),
-                          trackArtist: document.getElementById('track-artist'),
-                          currentTime: document.getElementById('current-time'),
-                          progressBar: document.getElementById('progress-bar'),
-                          duration: document.getElementById('duration')
+                statusEl: document.getElementById('stream-status'),
+                volumeSlider: document.getElementById('volume-slider'),
+                volumeBtn: document.getElementById('volume-btn'),
+                currentTrackEl: document.getElementById('current-track'),
+                nextTrackEl: document.getElementById('next-track'),
+                historyList: document.getElementById('history-list'),
+                listenersCount: document.getElementById('listeners-count'),
+                trackTitle: document.getElementById('track-title'),
+                trackArtist: document.getElementById('track-artist'),
+                currentTime: document.getElementById('current-time'),
+                progressBar: document.getElementById('progress-bar'),
+                duration: document.getElementById('duration')
             };
 
             document.getElementById('start-playback').addEventListener('click', () => {
                 document.getElementById('audio-overlay').style.display = 'none';
                 this.elements.audio.play()
-                .then(() => {
-                    if (this.state.audioContext) {
-                        this.state.audioContext.resume();
-                    }
-                })
-                .catch(console.error);
+                    .then(() => {
+                        if (this.state.audioContext) {
+                            this.state.audioContext.resume();
+                        }
+                    })
+                    .catch(console.error);
             });
 
             this.config = {
@@ -246,10 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCurrentTrack(nowPlaying) {
             const track = nowPlaying.song;
             const html = `
-            <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-            <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-            <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
-            `;
+        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+        <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
+        `;
 
             if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
 
@@ -274,9 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNextTrack(playingNext) {
             const track = playingNext.song;
             const html = `
-            <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-            <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-            `;
+        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+        `;
 
             if (this.elements.nextTrackEl) this.elements.nextTrackEl.innerHTML = html;
         }
@@ -318,10 +318,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const duration = item.duration ? this.formatTime(item.duration) : '';
 
                 li.innerHTML = `
-                <span class="track-title">${title}</span>
-                <span class="track-artist">${artist}</span>
-                ${duration ? `<span class="track-time">${duration}</span>` : ''}
-                `;
+            <span class="track-title">${title}</span>
+            <span class="track-artist">${artist}</span>
+            ${duration ? `<span class="track-time">${duration}</span>` : ''}
+            `;
 
                 this.elements.historyList.appendChild(li);
             });
@@ -355,9 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchWithTimeout(url, timeout, options = {}) {
             return Promise.race([
                 fetch(url, options),
-                                new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
-                                )
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
+                )
             ]);
         }
 
@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pluralize(number, words) {
             return words[
                 (number % 100 > 4 && number % 100 < 20) ? 2
-                : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
+                    : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
             ];
         }
 
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearInterval(this.state.updateIntervalId);
                     this.state.updateIntervalId = setInterval(
                         () => this.updateTrackInfo(),
-                                                              this.config.updateInterval * 2
+                        this.config.updateInterval * 2
                     );
                     break;
                 case 'good':
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearInterval(this.state.updateIntervalId);
                     this.state.updateIntervalId = setInterval(
                         () => this.updateTrackInfo(),
-                                                              this.config.updateInterval
+                        this.config.updateInterval
                     );
             }
         }
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(this.state.updateIntervalId);
             this.state.updateIntervalId = setInterval(
                 () => this.updateTrackInfo(),
-                                                      this.config.updateInterval * 3
+                this.config.updateInterval * 3
             );
         }
 
@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(this.state.updateIntervalId);
             this.state.updateIntervalId = setInterval(
                 () => this.updateTrackInfo(),
-                                                      this.config.updateInterval
+                this.config.updateInterval
             );
 
             if (this.state.isPlaying) {

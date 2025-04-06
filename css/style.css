@@ -450,7 +450,7 @@ footer {
 }
 
 .playing .album-art img {
-    animation: spin 15s linear infinite;
+    animation: spin 20s linear infinite;
 }
 
 @media (max-width: 768px) {
@@ -514,7 +514,7 @@ footer {
     }
 }
 
-/* Light Theme */
+/* светлая */
 body.light-theme {
     background: linear-gradient(135deg, #e0e5ec, #ffffff);
     color: var(--dark-color);
@@ -559,9 +559,8 @@ body.light-theme .track-info {
 
 body.light-theme .track-info p {
     font-size: 0.95rem;
-    color: var(--text-secondary);
+    color: var(--dark-color);
     margin-bottom: 0.5rem;
-    color: #2b2b2b;
 }
 
 body.light-theme .track-progress {
@@ -569,21 +568,20 @@ body.light-theme .track-progress {
     align-items: center;
     gap: 5px;
     margin-top: 5px;
-    color: #2b2b2b;
+    color: var(--dark-color);
 }
 
 body.light-theme .track-progress span {
     font-size: 0.85rem;
-    color: var(--text-secondary);
     min-width: 40px;
-    color: #2b2b2b;
+    color: var(--dark-color);
 }
 
 body.light-theme #progress-bar {
     flex: 1;
     height: 5px;
     -webkit-appearance: none;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 200, 150, 0.2);
     border-radius: 5px;
     outline: none;
     overflow: hidden;

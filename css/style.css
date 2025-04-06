@@ -633,7 +633,7 @@ body.dark-theme {
 }
 
 body.dark-theme .logo h1 {
-    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    background: linear-gradient(to right, #007fff, #e60548);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

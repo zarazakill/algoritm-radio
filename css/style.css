@@ -620,16 +620,16 @@ body.light-theme .track-details {
 }
 
 body.light-theme .track-title {
-    color: #2b2b2b;
+    color: var(--dark-color);
 }
 
 body.light-theme .track-artist {
-    color: #2b2b2b;
+    color: var(--dark-color);
 }
 
 body.light-theme footer {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
-    color: #2b2b2b;
+    color: var(--dark-color);
 }
 
 body.light-theme .now-playing-badge {
@@ -642,16 +642,17 @@ body.light-theme .now-playing-badge {
 body.light-theme .now-playing h3,
 body.light-theme .up-next h3,
 body.light-theme .recent-tracks h3 {
-    color: #3498db;
+    color: var(--dark-color);
 }
 
 body.light-theme .now-playing h3::before,
 body.light-theme .up-next h3::before,
 body.light-theme .recent-tracks h3::before {
-    background: #3498db;
+    background: var(--dark-color);
 }
 
-/* Dark Theme */
+/*Тёмная*/
+
 body.dark-theme {
     background: linear-gradient(135deg, var(--darker-color), var(--dark-color));
     color: var(--text-primary);

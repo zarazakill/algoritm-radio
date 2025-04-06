@@ -2,7 +2,7 @@
     --primary-color: #6c5ce7;
     --primary-dark: #5649c0;
     --secondary-color: #a29bfe;
-    --dark-color: #252850;
+    --dark-color: #454c96;
     --darker-color: #16213e;
 
     --light-color: #f5f6fa;
@@ -33,7 +33,7 @@ body {
     font-family: 'Montserrat', sans-serif;
     min-height: 100vh;
     line-height: 1.1;
-    padding: 1px;
+    padding: 2px;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
@@ -620,7 +620,7 @@ body.light-theme .logo h1 {
     color: transparent;
 }
 body.light-theme .now-playing-badge {
-    background: var(--card-bg);
+    background: rgba(175, 218, 251, 0.8);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: 98acd6;
@@ -628,7 +628,7 @@ body.light-theme .now-playing-badge {
 
 /* Темная */
 body.dark-theme {
-    background: linear-gradient(175deg, var(--darker-color), var(--dark-color));
+    background: linear-gradient(to left, var(--darker-color), var(--dark-color));
     color: var(--text-primary);
 }
 

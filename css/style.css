@@ -615,10 +615,11 @@ body.light-theme #progress-bar {
 
 body.light-theme .logo h1 {
     background: linear-gradient(to right, #e60548, #007fff);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    filter: brightness(1.1);
 }
 body.light-theme .now-playing-badge {
     background: rgba(175, 218, 251, 0.8);
@@ -635,10 +636,11 @@ body.dark-theme {
 
 body.dark-theme .logo h1 {
     background: linear-gradient(to right, #007fff, #e60548);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+    filter: brightness(1.1);
 }
 
 body.dark-theme .track-info h2 {

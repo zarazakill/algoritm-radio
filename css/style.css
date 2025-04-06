@@ -260,21 +260,17 @@ main {
 }
 
 .track-info-box {
-    background: rgba(255, 255, 255, 0.05);
     padding: 0.5rem !important;
     border-radius: 10px;
     margin-bottom: 0.5rem;
-    border-left: 3px solid var(--primary-color);
 }
 
 .track-title {
     font-weight: 500;
-    color: var(--text-primary);
     grid-column: 1;
 }
 
 .track-artist {
-    color: var(--text-secondary);
     font-size: 0.85em;
     grid-column: 1;
 }
@@ -282,14 +278,12 @@ main {
 .track-time {
     grid-column: 2;
     grid-row: 1 / span 2;
-    color: var(--text-secondary);
     font-size: 0.8em;
     text-align: right;
 }
 
 .track-name {
     font-weight: 600;
-    color: var(--text-primary);
     display: block;
     margin-bottom: 0.3rem;
     font-size: 1rem;
@@ -297,7 +291,6 @@ main {
 
 .track-progress, .track-time {
     font-size: 0.85rem;
-    color: var(--text-secondary);
 }
 
 #history-list {
@@ -650,6 +643,42 @@ body.light-theme .recent-tracks h3::before {
     background: var(--text-primary);
 }
 
+
+body.dark-theme .track-info-box {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid var(--primary-color);
+}
+
+body.dark-theme .track-title {
+    color: var(--dark-color);
+}
+
+body.dark-theme .track-artist {
+    color: var(--dark-color);
+}
+
+body.dark-theme .track-time {
+    color: var(--dark-color);
+
+}
+
+body.dark-theme .track-name {
+    color: var(--dark-color);
+}
+
+body.dark-theme .track-progress, .track-time {
+    color: var(--dark-color);
+}
+
+body.dark-theme #history-list li:hover {
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--dark-color);
+}
+
+body.dark-theme #history-list li::before {
+    color: var(--dark-color);
+}
+
 /*Тёмная*/
 
 body.dark-theme {
@@ -772,6 +801,41 @@ body.dark-theme .now-playing h3::before,
 body.dark-theme .up-next h3::before,
 body.dark-theme .recent-tracks h3::before {
     background: var(--primary-color);
+}
+
+body.dark-theme .track-info-box {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid var(--primary-color);
+}
+
+body.dark-theme .track-title {
+    color: var(--text-primary);
+}
+
+body.dark-theme .track-artist {
+    color: var(--text-secondary);
+}
+
+body.dark-theme .track-time {
+    color: var(--text-secondary);
+
+}
+
+body.dark-theme .track-name {
+    color: var(--text-primary);
+}
+
+body.dark-theme .track-progress, .track-time {
+    color: var(--text-secondary);
+}
+
+body.dark-theme #history-list li:hover {
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--primary-color);
+}
+
+body.dark-theme #history-list li::before {
+    color: var(--primary-color);
 }
 
 /* Theme Toggle Button */

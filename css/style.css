@@ -599,7 +599,7 @@ footer {
 
 /* Светлая */
 body.light-theme {
-    background: linear-gradient(to right, #afdafc, #7fc7ff);
+    background: linear-gradient(to right, #7fc7ff, #0082e6);
     color: var(--dark-color);
   
 }

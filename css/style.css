@@ -614,7 +614,7 @@ body.light-theme #progress-bar {
 }
 
 body.light-theme .logo h1 {
-    background: linear-gradient(to right, #e60548, #007fff);
+    background: linear-gradient(to right, #e60548, #ccffff);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

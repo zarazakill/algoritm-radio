@@ -594,7 +594,7 @@ body.light-theme #progress-bar::-webkit-slider-thumb {
     width: 15px;
     height: 15px;
     border-radius: 50%;
-    background: var(--primary-color);
+    background: var(--dark-color);
     cursor: pointer;
     box-shadow: -407px 0 0 400px var(--primary-color);
     transition: var(--transition);
@@ -602,7 +602,7 @@ body.light-theme #progress-bar::-webkit-slider-thumb {
 
 body.light-theme #progress-bar::-webkit-slider-thumb:hover {
     transform: scale(1.2);
-    background: var(--accent-color);
+    background: var(--dark-color);
 }
 
 body.light-theme .track-details {
@@ -611,16 +611,16 @@ body.light-theme .track-details {
 }
 
 body.light-theme .track-title {
-    color: var(--dark-color);
+    color: var(--primary-color);
 }
 
 body.light-theme .track-artist {
-    color: var(--dark-color);
+    color: var(--primary-color);
 }
 
 body.light-theme footer {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
-    color: var(--dark-color);
+    color: var(--primary-color);
 }
 
 body.light-theme .now-playing-badge {
@@ -644,38 +644,38 @@ body.light-theme .recent-tracks h3::before {
 }
 
 
-body.dark-theme .track-info-box {
+body.light-theme .track-info-box {
     background: rgba(255, 255, 255, 0.05);
     border-left: 3px solid var(--primary-color);
 }
 
-body.dark-theme .track-title {
-    color: var(--dark-color);
+body.light-theme .track-title {
+    color: var(--primary-color);
 }
 
-body.dark-theme .track-artist {
-    color: var(--dark-color);
+body.light-theme .track-artist {
+    color: var(--primary-color);
 }
 
-body.dark-theme .track-time {
-    color: var(--dark-color);
+body.light-theme .track-time {
+    color: var(--primary-color);
 
 }
 
-body.dark-theme .track-name {
-    color: var(--dark-color);
+body.light-theme .track-name {
+    color: var(--primary-color);
 }
 
-body.dark-theme .track-progress, .track-time {
-    color: var(--dark-color);
+body.light-theme .track-progress, .track-time {
+    color: var(--primary-color);
 }
 
-body.dark-theme #history-list li:hover {
+body.light-theme #history-list li:hover {
     background: rgba(108, 92, 231, 0.1);
     border-left-color: var(--dark-color);
 }
 
-body.dark-theme #history-list li::before {
+body.light-theme #history-list li::before {
     color: var(--dark-color);
 }
 

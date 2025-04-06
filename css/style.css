@@ -2,8 +2,9 @@
     --primary-color: #6c5ce7;
     --primary-dark: #5649c0;
     --secondary-color: #a29bfe;
-    --dark-color: #1a1a2e;
+    --dark-color: #252850;
     --darker-color: #16213e;
+
     --light-color: #f5f6fa;
     --accent-color: #fd79a8;
     --success-color: #00b894;
@@ -13,8 +14,8 @@
     --text-secondary: rgba(255, 255, 255, 0.7);
     --card-bg: rgba(30, 30, 60, 0.7);
     --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --border-radius: 20px;
-    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --border-radius: 15px;
+    --transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 * {
@@ -30,11 +31,9 @@ html {
 
 body {
     font-family: 'Montserrat', sans-serif;
-    background: linear-gradient(135deg, var(--darker-color), var(--dark-color));
-    color: var(--text-primary);
     min-height: 100vh;
-    line-height: 1.6;
-    padding: 20px;
+    line-height: 1.1;
+    padding: 10px;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
@@ -55,12 +54,12 @@ body {
 
 #start-playback {
     position: center;
-    padding: 12px 24px;
+    padding: 15px 30px;
     font-size: 1rem;
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 30px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -76,7 +75,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 15px;
+    padding: 0 0px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -106,12 +105,27 @@ header {
     transform: rotate(15deg) scale(1.05);
 }
 
+.logo h1 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
 .logo img {
     width: 250px;
     height: 250px;
     object-fit: contain;
     filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
     transition: var(--transition);
+}
+
+.logo p {
+    font-size: clamp(1rem, 2vw, 2rem);
+    color: var(--text-secondary);
 }
 
 /* Основное содержимое */
@@ -166,6 +180,66 @@ main {
 
 .album-art.playing img {
     animation-play-state: running;
+}
+
+.track-info {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.track-info h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.track-info p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.track-progress {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.track-progress span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    min-width: 40px;
+}
+
+#progress-bar {
+    flex: 1;
+    height: 5px;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    outline: none;
+    overflow: hidden;
+}
+
+#progress-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    box-shadow: -407px 0 0 400px var(--primary-color);
+    transition: var(--transition);
+}
+
+#progress-bar::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-color);
 }
 
 .player-buttons {
@@ -244,6 +318,7 @@ main {
 }
 
 .now-playing h3, .up-next h3, .recent-tracks h3 {
+    color: var(--primary-color);
     margin-bottom: 0.5rem;
     font-size: 1rem;
     display: flex;
@@ -255,22 +330,27 @@ main {
     content: '';
     width: 8px;
     height: 8px;
+    background: var(--primary-color);
     border-radius: 50%;
     display: inline-block;
 }
 
 .track-info-box {
+    background: rgba(255, 255, 255, 0.05);
     padding: 0.5rem !important;
     border-radius: 10px;
     margin-bottom: 0.5rem;
+    border-left: 3px solid var(--primary-color);
 }
 
 .track-title {
     font-weight: 500;
+    color: var(--text-primary);
     grid-column: 1;
 }
 
 .track-artist {
+    color: var(--text-secondary);
     font-size: 0.85em;
     grid-column: 1;
 }
@@ -278,12 +358,14 @@ main {
 .track-time {
     grid-column: 2;
     grid-row: 1 / span 2;
+    color: var(--text-secondary);
     font-size: 0.8em;
     text-align: right;
 }
 
 .track-name {
     font-weight: 600;
+    color: var(--text-primary);
     display: block;
     margin-bottom: 0.3rem;
     font-size: 1rem;
@@ -291,6 +373,7 @@ main {
 
 .track-progress, .track-time {
     font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 #history-list {
@@ -316,7 +399,7 @@ main {
     content: '♫';
     margin-right: 10px;
     color: var(--primary-color);
-    font-size: 1.5rem;
+    font-size: 0.8rem;
 }
 
 .new-track {
@@ -417,14 +500,14 @@ footer {
     height: 40px;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
-    display: none; /* Initially hide the loader */
+    display: none;
 }
 
 .loading-status {
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin-top: 10px;
-    display: none; /* Initially hide the loading status */
+    display: none; 
 }
 
 /* Анимации */
@@ -450,7 +533,7 @@ footer {
 }
 
 .playing .album-art img {
-    animation: spin 20s linear infinite;
+    animation: spin 10s linear infinite;
 }
 
 @media (max-width: 768px) {
@@ -514,240 +597,45 @@ footer {
     }
 }
 
-/* светлая */
+/* Светлая */
 body.light-theme {
-    background: linear-gradient(135deg, #e0e5ec, #ffffff);
+    background: linear-gradient(175deg, #00bfff, #ffffff);
     color: var(--dark-color);
 }
 
- body.light-theme .logo h1 {
-    font-size: clamp(1.8rem, 5vw, 2.5rem);
-    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-body.light-theme .logo p {
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    color: var(--dark-color);
-}
-
-body.light-theme .track-info h2 {
-    color: var(--dark-color);
-}
-
-body.light-theme .track-info p {
-    color: #2b2b2b;
-}
-
-body.light-theme .player-container {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .track-info {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: var(--primary-color);
-}
-
-
-
-body.light-theme .track-info p {
-    font-size: 0.95rem;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-body.light-theme .track-progress {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 5px;
-    color: var(--primary-color);
-}
-
-body.light-theme .track-progress span {
-    font-size: 0.85rem;
-    min-width: 40px;
-    color: var(--primary-color);
+body.light-theme {
+    --primary-light-bg-start: #00bfff;
+    --light-bg-end: #ffffff;
 }
 
 body.light-theme #progress-bar {
-    flex: 1;
-    height: 5px;
-    -webkit-appearance: none;
-    background: rgba(0, 200, 150, 0.2);
-    border-radius: 5px;
-    outline: none;
-    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
 }
 
-body.light-theme #progress-bar::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: -407px 0 0 400px var(--primary-color);
-    transition: var(--transition);
+body.light-theme .logo h1 {
+    background: linear-gradient(to right, #3498db, #9b59b6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
-
-body.light-theme #progress-bar::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    background: var(--primary-color);
-}
-
-body.light-theme .track-details {
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .track-title {
-    color: var(--primary-color);
-}
-
-body.light-theme .track-artist {
-    color: var(--primary-color);
-}
-
-body.light-theme footer {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    color: var(--primary-color);
-}
-
 body.light-theme .now-playing-badge {
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: var(--primary-color);
+    background: var(--card-bg);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: 98acd6;
 }
 
-body.light-theme .now-playing h3,
-body.light-theme .up-next h3,
-body.light-theme .recent-tracks h3 {
-    color: var(--primary-color);
-}
-
-body.light-theme .now-playing h3::before,
-body.light-theme .up-next h3::before,
-body.light-theme .recent-tracks h3::before {
-    color: var(--primary-color);
-    background: var(--text-primary);
-}
-
-
-body.light-theme .track-info-box {
-    background: rgba(255, 255, 255, 0.05);
-    border-left: 3px solid var(--primary-color);
-}
-
-body.light-theme .track-title {
-    color: var(--primary-color);
-}
-
-body.light-theme .track-artist {
-    color: var(--primary-color);
-}
-
-body.light-theme .track-time {
-    color: var(--primary-color);
-
-}
-
-body.light-theme .track-name {
-    color: var(--primary-color);
-}
-
-body.light-theme .track-progress, .track-time {
-    color: var(--primary-color);
-}
-
-body.light-theme #history-list li:hover {
-    background: rgba(108, 92, 231, 0.1);
-    border-left-color: var(--dark-color);
-}
-
-body.light-theme #history-list li::before {
-    color: var(--primary-color);
-}
-
-/*Тёмная*/
-
+/* Темная */
 body.dark-theme {
-    background: linear-gradient(135deg, var(--darker-color), var(--dark-color));
+    background: linear-gradient(175deg, var(--darker-color), var(--dark-color));
     color: var(--text-primary);
 }
 
 body.dark-theme .logo h1 {
-    font-size: clamp(1.8rem, 5vw, 2.5rem);
     background: linear-gradient(to right, var(--primary-color), var(--accent-color));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-body.dark-theme .logo p {
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    color: var(--text-primary);
-}
-
-body.dark-theme .track-info {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-}
-
-body.dark-theme .track-info p {
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-
-body.dark-theme .track-progress {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 5px;
-}
-
-body.dark-theme .track-progress span {
-    font-size: 0.85rem;
-    min-width: 40px;
-    color: var(--text-primary);
-}
-
-body.dark-theme #progress-bar {
-    flex: 1;
-    height: 5px;
-    -webkit-appearance: none;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    outline: none;
-    overflow: hidden;
-}
-
-body.dark-theme #progress-bar::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: -407px 0 0 400px var(--primary-color);
-    transition: var(--transition);
-}
-
-body.dark-theme #progress-bar::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    background: var(--accent-color);
 }
 
 body.dark-theme .track-info h2 {
@@ -799,41 +687,6 @@ body.dark-theme .now-playing h3::before,
 body.dark-theme .up-next h3::before,
 body.dark-theme .recent-tracks h3::before {
     background: var(--primary-color);
-}
-
-body.dark-theme .track-info-box {
-    background: rgba(255, 255, 255, 0.05);
-    border-left: 3px solid var(--primary-color);
-}
-
-body.dark-theme .track-title {
-    color: var(--text-primary);
-}
-
-body.dark-theme .track-artist {
-    color: var(--text-secondary);
-}
-
-body.dark-theme .track-time {
-    color: var(--text-secondary);
-
-}
-
-body.dark-theme .track-name {
-    color: var(--text-primary);
-}
-
-body.dark-theme .track-progress, .track-time {
-    color: var(--text-secondary);
-}
-
-body.dark-theme #history-list li:hover {
-    background: rgba(108, 92, 231, 0.1);
-    border-left-color: var(--primary-color);
-}
-
-body.dark-theme #history-list li::before {
-    color: var(--primary-color);
 }
 
 /* Theme Toggle Button */

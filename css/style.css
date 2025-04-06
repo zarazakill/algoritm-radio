@@ -533,7 +533,7 @@ footer {
 }
 
 .playing .album-art img {
-    animation: spin 10s linear infinite;
+    animation: spin 20s linear infinite;
 }
 
 @media (max-width: 768px) {

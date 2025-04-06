@@ -614,7 +614,8 @@ body.light-theme #progress-bar {
 }
 
 body.light-theme .logo h1 {
-    background: linear-gradient(to right, #3498db, #9b59b6);
+    background: linear-gradient(to right, #e60548, #007fff);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -634,6 +635,7 @@ body.dark-theme {
 
 body.dark-theme .logo h1 {
     background: linear-gradient(to right, #007fff, #e60548);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

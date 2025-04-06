@@ -244,7 +244,6 @@ main {
 }
 
 .now-playing h3, .up-next h3, .recent-tracks h3 {
-    color: var(--primary-color);
     margin-bottom: 0.5rem;
     font-size: 1rem;
     display: flex;
@@ -256,7 +255,6 @@ main {
     content: '';
     width: 8px;
     height: 8px;
-    background: var(--primary-color);
     border-radius: 50%;
     display: inline-block;
 }
@@ -648,7 +646,8 @@ body.light-theme .recent-tracks h3 {
 body.light-theme .now-playing h3::before,
 body.light-theme .up-next h3::before,
 body.light-theme .recent-tracks h3::before {
-    background: var(--dark-color);
+    color: var(--dark-color);
+    background: var(--text-primary);
 }
 
 /*Тёмная*/

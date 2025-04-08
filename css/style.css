@@ -127,6 +127,19 @@ header {
     color: var(--text-secondary);
 }
 
+#stream-status {
+font-weight: 600;
+transition: var(--transition);
+}
+
+.status-success {
+    color: var(--success-color);
+}
+
+.status-error {
+    color: var(--error-color);
+}
+
 /* Основное содержимое */
 main {
     display: flex;
@@ -444,19 +457,6 @@ footer {
     color: var(--primary-color);
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
-}
-
-#stream-status {
-font-weight: 600;
-transition: var(--transition);
-}
-
-.status-success {
-    color: var(--success-color);
-}
-
-.status-error {
-    color: var(--error-color);
 }
 
 /* Бейдж слушателей */

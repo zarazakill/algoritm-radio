@@ -1,4 +1,3 @@
-import { RadioConfig } from './player/config.js';
 import { RadioPlayer } from './player/radio-player.js';
 
 document.addEventListener('DOMContentLoaded', () => {

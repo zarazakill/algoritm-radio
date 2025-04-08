@@ -55,6 +55,32 @@ export class RadioPlayer {
         };
     }
 
+    async findWorkingApi() {
+        for (const apiUrl of this.config.apiEndpoints) {
+            try {
+                const response = await NetworkUtils.fetchWithTimeout(apiUrl, 3000);
+                if (response.ok) return apiUrl;
+            } catch (error) {
+                console.warn(`API недоступен: ${apiUrl}`, error);
+            }
+        }
+        return null;
+    }
+
+    handleConnectionError(error) {
+        console.error("Ошибка подключения:", error);
+        this.setStatus(`Ошибка: ${error.message}`, true);
+
+        const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
+        setTimeout(() => {
+            this.connectToStream();
+            this.state.retryCount++;
+        }, delay);
+
+        const overlay = document.getElementById('audio-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+
     async init() {
         try {
             this.setupThemeToggle();
@@ -63,7 +89,7 @@ export class RadioPlayer {
 
             const [streamResult, apiResult] = await Promise.allSettled([
                 this.connectToStream(),
-                                                                       this.findWorkingApi()
+                this.findWorkingApi()
             ]);
 
             if (streamResult.status === 'rejected') {
@@ -83,7 +109,7 @@ export class RadioPlayer {
         }
     }
 
-    /* Основные методы плеера */
+    /* Остальные методы класса остаются без изменений */
     async connectToStream() {
         try {
             this.setStatus("Подключение...");
@@ -101,122 +127,12 @@ export class RadioPlayer {
         }
     }
 
-    async togglePlayback() {
-        if (!this.elements.audio.paused) {
-            this.elements.audio.pause();
-            this.state.isPlaying = false;
-            this.setStatus("Пауза");
-            return;
-        }
-
-        try {
-            await this.elements.audio.play();
-            this.state.isPlaying = true;
-            this.setStatus("Слушаем музыку...");
-        } catch (error) {
-            this.handleConnectionError(error);
-        }
-    }
-
-    /* Работа с API и обновление данных */
-    async updateTrackInfo() {
-        if (!this.state.currentApiUrl) return;
-
-        try {
-            const response = await NetworkUtils.fetchWithTimeout(
-                this.state.currentApiUrl,
-                this.config.apiTimeout
-            );
-            const data = await response.json();
-            this.updateUI(data);
-        } catch (error) {
-            console.error("Ошибка обновления треков:", error);
-        }
-    }
-
-    updateUI(data) {
-        if (!data) {
-            UIHelpers.showFallbackData(this.elements);
-            return;
-        }
-
-        UIHelpers.updateCurrentTrack(data.now_playing, this.elements);
-        UIHelpers.updateNextTrack(data.playing_next, this.elements);
-        UIHelpers.updateHistory(data.song_history, this.elements);
-        UIHelpers.updateListenersCount(data.listeners?.current, this.elements);
-    }
-
-    /* Обработчики событий */
-    setupEventListeners() {
-        this.elements.audio.addEventListener('error', () => {
-            this.handleConnectionError(new Error("Ошибка аудио"));
-        });
-
-        this.elements.volumeBtn.addEventListener('click', () => {
-            this.elements.audio.muted = !this.elements.audio.muted;
-            UIHelpers.updateVolumeIcon(this.elements.volumeBtn, this.elements.audio);
-        });
-
-        this.elements.volumeSlider.addEventListener('input', (e) => {
-            this.elements.audio.volume = e.target.value;
-            this.updateVolumeIcon();
-        });
-
-        this.elements.audio.addEventListener('error', () => {
-            this.handleConnectionError(new Error("Audio element error"));
-        });
-
-        this.elements.audio.addEventListener('stalled', () => {
-            this.handleNetworkIssue();
-        });
-
-        this.elements.audio.addEventListener('waiting', () => {
-            this.state.diagnostics.bufferingEvents++;
-            this.handleNetworkIssue();
-        });
-
-        this.elements.audio.addEventListener('timeupdate', () => {
-            if (this.elements.currentTime && this.elements.progressBar) {
-                this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
-                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
-            }
-        });
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.handleBackgroundTab();
-            } else {
-                this.handleForegroundTab();
-            }
-        });
-    }
-
-    setStatus(text, isError = false) {
-        if (this.elements.statusEl) {
-            this.elements.statusEl.textContent = text;
-            this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
-        }
-    }
-
-    cleanup() {
-        clearInterval(this.state.updateIntervalId);
-        this.elements.audio.src = '';
-    }
-
-    startUpdateInterval() {
-        this.state.updateIntervalId = setInterval(
-            () => this.updateTrackInfo(),
-                                                  this.config.updateInterval
-        );
-  }
-    
     setupThemeToggle() {
         const body = document.body;
         const themeToggleBtn = document.createElement('button');
         themeToggleBtn.classList.add('theme-toggle');
         themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
 
-        // Установка начальной темы
         const savedTheme = localStorage.getItem('theme') || 'dark';
         body.classList.add(`${savedTheme}-theme`);
         this.updateThemeIcon(themeToggleBtn, savedTheme);

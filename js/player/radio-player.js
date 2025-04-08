@@ -239,6 +239,3 @@ export class RadioPlayer {
             : '<i class="fas fa-sun"></i>';
     }
 }
-        
-    }
-}

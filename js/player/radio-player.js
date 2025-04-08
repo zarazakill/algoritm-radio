@@ -1,7 +1,7 @@
-import { RadioConfig } from './config.js';
-import { UIHelpers } from './ui-helpers.js';
-import { NetworkUtils } from './network-utils.js';
-import { AudioController } from './audio-controller.js';
+import { RadioConfig } from './player/config.js';
+import { UIHelpers } from './player/ui-helpers.js';
+import { NetworkUtils } from './player/network-utils.js';
+import { AudioController } from './player/audio-controller.js';
 
 export class RadioPlayer {
     constructor(config = RadioConfig) {

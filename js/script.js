@@ -1,15 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     class RadioPlayer {
         constructor() {
-            // Проверяем наличие основных элементов в DOM перед инициализацией
-            const audioElement = document.getElementById('radio-stream');
-            if (!audioElement) {
-                console.error('Аудио элемент не найден! Проверьте наличие элемента с id="radio-stream"');
-                return;
-            }
-
+            // Проверяем наличие основных элементов
             this.elements = {
-                audio: audioElement,
+                audio: document.getElementById('radio-stream'),
                 statusEl: document.getElementById('stream-status'),
                 volumeSlider: document.getElementById('volume-slider'),
                 volumeBtn: document.getElementById('volume-btn'),
@@ -21,30 +15,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 trackArtist: document.getElementById('track-artist'),
                 currentTime: document.getElementById('current-time'),
                 progressBar: document.getElementById('progress-bar'),
-                duration: document.getElementById('duration')
+                duration: document.getElementById('duration'),
+                startButton: document.getElementById('start-playback'),
+                overlay: document.getElementById('audio-overlay')
             };
 
-
-             // Проверяем кнопку воспроизведения
-            const startButton = document.getElementById('start-playback');
-            if (startButton) {
-                startButton.addEventListener('click', () => {
-                    const overlay = document.getElementById('audio-overlay');
-                    if (overlay) overlay.style.display = 'none';
-                    
-                    this.elements.audio.play()
-                        .then(() => {
-                            if (this.state.audioContext) {
-                                this.state.audioContext.resume();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Ошибка воспроизведения:', error);
-                            this.setStatus("Ошибка воспроизведения", true);
-                        });
-                });
+            // Проверяем критически важные элементы
+            if (!this.elements.audio || !this.elements.startButton) {
+                console.error('Не найдены обязательные элементы!');
+                return;
             }
-           
+
+            // Инициализация состояния
+            this.state = {
+                currentStream: null,
+                currentApiUrl: null,
+                isPlaying: false,
+                retryCount: 0,
+                networkQuality: 'good',
+                lastUpdateTime: 0,
+                audioContext: null,
+                diagnostics: {
+                    bufferingEvents: 0,
+                    connectionErrors: 0,
+                    qualityChanges: 0,
+                    lastError: null
+                },
+                // Добавляем флаг первого взаимодействия
+                userInteracted: false
+            };
+
+            // Конфигурация
             this.config = {
                 streams: [
                     { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
@@ -63,27 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            this.state = {
-                currentStream: null,
-                currentApiUrl: null,
-                isPlaying: false,
-                retryCount: 0,
-                networkQuality: 'good',
-                lastUpdateTime: 0,
-                audioContext: null,
-                diagnostics: {
-                    bufferingEvents: 0,
-                    connectionErrors: 0,
-                    qualityChanges: 0,
-                    lastError: null
-                }
-            };
-            
-            this.elements.audio.autoplay = true;
+            // Настройка аудио
+            this.elements.audio.autoplay = false; // Отключаем autoplay из-за политики браузеров
+            this.elements.audio.muted = false; // По умолчанию не muted
+            this.elements.audio.preload = 'none';
+
+            // Инициализация
             this.init();
         }
         
-        /* @tweakable initial theme: light or dark */
+        /* Тема по умолчанию тёмная */
         static DEFAULT_THEME = 'dark';
         
         async init() {
@@ -168,16 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         setupEventListeners() {
-
-            if (!this.elements.audio) {
-                console.error('Аудио элемент не доступен для настройки событий');
-                return;
-            }
-
+            // Обработчик первого взаимодействия пользователя
             const handleFirstInteraction = () => {
+                this.state.userInteracted = true;
+                
+                // Пробуем возобновить AudioContext если он есть
                 if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-                    this.state.audioContext.resume();
+                    this.state.audioContext.resume().catch(console.error);
                 }
+                
                 document.removeEventListener('click', handleFirstInteraction);
             };
 
@@ -189,31 +178,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.updateVolumeIcon();
                 });
             }
-            
-            this.elements.volumeSlider.addEventListener('input', (e) => {
-                this.elements.audio.volume = e.target.value;
-                this.updateVolumeIcon();
+
+            if (this.elements.volumeSlider) {
+                this.elements.volumeSlider.addEventListener('input', (e) => {
+                    this.elements.audio.volume = e.target.value;
+                    this.updateVolumeIcon();
+                });
+            }
+
+            // Обработчики событий аудио
+            this.elements.audio.addEventListener('error', (e) => {
+                console.error('Audio error:', e);
+                this.handleConnectionError(new Error("Ошибка аудиоэлемента"));
             });
-            
-            this.elements.audio.addEventListener('error', () => {
-                this.handleConnectionError(new Error("Audio element error"));
-            });
-            
+
             this.elements.audio.addEventListener('stalled', () => {
                 this.handleNetworkIssue();
             });
-            
+
             this.elements.audio.addEventListener('waiting', () => {
                 this.state.diagnostics.bufferingEvents++;
                 this.handleNetworkIssue();
             });
-            
-            this.elements.audio.addEventListener('timeupdate', () => {
-                if (this.elements.currentTime && this.elements.progressBar) {
-                    this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
-                    this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
-                }
+
+            this.elements.audio.addEventListener('canplay', () => {
+                this.setStatus("Готов к воспроизведению");
             });
+
+            this.elements.audio.addEventListener('playing', () => {
+                this.setStatus("Слушаем музыку...");
+                this.state.isPlaying = true;
+            });
+
+            this.elements.audio.addEventListener('pause', () => {
+                this.setStatus("Пауза");
+                this.state.isPlaying = false;
+            });
+            
             
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
@@ -291,47 +292,48 @@ document.addEventListener('DOMContentLoaded', () => {
             analyser.connect(this.state.audioContext.destination);
         }
         
-        async togglePlayback() {
+async togglePlayback() {
             try {
-                // Если уже воспроизводится - ставим на паузу
-                if (!this.elements.audio.paused) {
+                if (this.state.isPlaying) {
+                    // Если уже воспроизводится - ставим на паузу
                     this.elements.audio.pause();
-                    this.state.isPlaying = false;
-                    this.setStatus("Пауза");
                     return;
                 }
-                
-                // Проверяем, есть ли текущий поток
+
+                // Если нет текущего потока - подключаемся
                 if (!this.state.currentStream) {
                     await this.connectToStream();
                 }
+
+                // Проверяем, было ли взаимодействие с пользователем
+                if (!this.state.userInteracted) {
+                    // Если нет - показываем оверлей с кнопкой
+                    if (this.elements.overlay) {
+                        this.elements.overlay.style.display = 'flex';
+                    }
+                    throw new Error('Требуется действие пользователя');
+                }
+
+                // Пробуем воспроизвести
+                await this.elements.audio.play();
                 
-                // Проверяем autoplay policy браузера
-                const playPromise = this.elements.audio.play();
+                // Если есть AudioContext - возобновляем его
+                if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+                    await this.state.audioContext.resume();
+                }
+
+            } catch (error) {
+                console.error("Ошибка переключения воспроизведения:", error);
                 
-                if (playPromise !== undefined) {
-                    await playPromise
-                    .then(() => {
-                        this.state.isPlaying = true;
-                        this.setStatus("Слушаем музыку...");
-                    })
-                    .catch(error => {
-                        // Обрабатываем ошибку autoplay
-                        if (error.name === 'NotAllowedError') {
-                            this.setStatus("Нажмите для запуска", true);
-                            document.getElementById('audio-overlay').style.display = 'flex';
-                        }
-                        console.error("Ошибка воспроизведения:", error);
-                        throw error; // Пробрасываем ошибку дальше
-                    });
+                // Обрабатываем ошибку autoplay
+                if (error.name === 'NotAllowedError') {
+                    this.setStatus("Нажмите для запуска", true);
+                    if (this.elements.overlay) {
+                        this.elements.overlay.style.display = 'flex';
+                    }
                 }
                 
-                // Обновляем интерфейс
-                this.updateVolumeIcon();
-                
-            } catch (error) {
-                this.setStatus("Ошибка: " + (error.message || "Неизвестная ошибка"), true);
-                this.handleConnectionError(error);
+                throw error;
             }
         }
         

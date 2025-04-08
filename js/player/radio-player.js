@@ -208,5 +208,36 @@ export class RadioPlayer {
             () => this.updateTrackInfo(),
                                                   this.config.updateInterval
         );
+
+setupThemeToggle() {
+    const body = document.body;
+    const themeToggleBtn = document.createElement('button');
+    themeToggleBtn.classList.add('theme-toggle');
+    themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+
+    // Установка начальной темы
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    body.classList.add(`${savedTheme}-theme`);
+    this.updateThemeIcon(themeToggleBtn, savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      body.classList.replace(`${currentTheme}-theme`, `${newTheme}-theme`);
+      localStorage.setItem('theme', newTheme);
+      this.updateThemeIcon(themeToggleBtn, newTheme);
+    });
+
+    document.querySelector('.container').appendChild(themeToggleBtn);
+  }
+
+  updateThemeIcon(button, theme) {
+    button.innerHTML = theme === 'dark' 
+      ? '<i class="fas fa-moon"></i>' 
+      : '<i class="fas fa-sun"></i>';
+  }
+}
+        
     }
 }

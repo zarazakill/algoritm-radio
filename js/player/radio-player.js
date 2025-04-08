@@ -84,7 +84,7 @@ export class RadioPlayer {
     async init() {
         try {
             this.setupThemeToggle();
-            this.setupEventListeners();
+            this.setupEventListeners(); // Этот метод теперь существует
             this.state.audioContext = AudioController.initAudioContext();
 
             const [streamResult, apiResult] = await Promise.allSettled([
@@ -105,11 +105,74 @@ export class RadioPlayer {
             this.startUpdateInterval();
         } catch (error) {
             console.error('Ошибка инициализации:', error);
-            this.cleanup();
+            this.cleanup(); // Этот метод теперь существует
         }
     }
 
-    /* Остальные методы класса остаются без изменений */
+     setupEventListeners() {
+        // Обработчик ошибок аудио
+        this.elements.audio.addEventListener('error', () => {
+            this.handleConnectionError(new Error("Ошибка аудио элемента"));
+        });
+
+        // Кнопка громкости
+        this.elements.volumeBtn.addEventListener('click', () => {
+            this.elements.audio.muted = !this.elements.audio.muted;
+            this.updateVolumeIcon();
+        });
+
+        // Слайдер громкости
+        this.elements.volumeSlider.addEventListener('input', (e) => {
+            this.elements.audio.volume = e.target.value;
+            this.updateVolumeIcon();
+        });
+
+        // Обработчики состояния сети
+        this.elements.audio.addEventListener('stalled', () => {
+            this.handleNetworkIssue();
+        });
+
+        this.elements.audio.addEventListener('waiting', () => {
+            this.state.diagnostics.bufferingEvents++;
+            this.handleNetworkIssue();
+        });
+
+        // Обновление времени воспроизведения
+        this.elements.audio.addEventListener('timeupdate', () => {
+            if (this.elements.currentTime && this.elements.progressBar) {
+                this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
+                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
+            }
+        });
+
+        // Поведение при сворачивании вкладки
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.handleBackgroundTab();
+            } else {
+                this.handleForegroundTab();
+            }
+        });
+    }
+
+    cleanup() {
+        // Очистка интервалов
+        if (this.state.updateIntervalId) {
+            clearInterval(this.state.updateIntervalId);
+        }
+        
+        // Остановка аудио
+        if (this.elements.audio) {
+            this.elements.audio.pause();
+            this.elements.audio.src = '';
+        }
+        
+        // Закрытие AudioContext
+        if (this.state.audioContext) {
+            this.state.audioContext.close();
+        }
+    }
+
     async connectToStream() {
         try {
             this.setStatus("Подключение...");

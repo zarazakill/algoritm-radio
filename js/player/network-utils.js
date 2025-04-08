@@ -51,8 +51,9 @@ export class NetworkUtils {
     static async fetchWithTimeout(url, timeout) {
         return Promise.race([
             fetch(url),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
+            new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Таймаут подключения')), timeout);
+            })
         ]);
     }
 }

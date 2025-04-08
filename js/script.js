@@ -1,33 +1,50 @@
 document.addEventListener('DOMContentLoaded', () => {
     class RadioPlayer {
         constructor() {
+            // Проверяем наличие основных элементов в DOM перед инициализацией
+            const audioElement = document.getElementById('radio-stream');
+            if (!audioElement) {
+                console.error('Аудио элемент не найден! Проверьте наличие элемента с id="radio-stream"');
+                return;
+            }
+
             this.elements = {
-                audio: document.getElementById('radio-stream'),
-                          statusEl: document.getElementById('stream-status'),
-                          volumeSlider: document.getElementById('volume-slider'),
-                          volumeBtn: document.getElementById('volume-btn'),
-                          currentTrackEl: document.getElementById('current-track'),
-                          nextTrackEl: document.getElementById('next-track'),
-                          historyList: document.getElementById('history-list'),
-                          listenersCount: document.getElementById('listeners-count'),
-                          trackTitle: document.getElementById('track-title'),
-                          trackArtist: document.getElementById('track-artist'),
-                          currentTime: document.getElementById('current-time'),
-                          progressBar: document.getElementById('progress-bar'),
-                          duration: document.getElementById('duration')
+                audio: audioElement,
+                statusEl: document.getElementById('stream-status'),
+                volumeSlider: document.getElementById('volume-slider'),
+                volumeBtn: document.getElementById('volume-btn'),
+                currentTrackEl: document.getElementById('current-track'),
+                nextTrackEl: document.getElementById('next-track'),
+                historyList: document.getElementById('history-list'),
+                listenersCount: document.getElementById('listeners-count'),
+                trackTitle: document.getElementById('track-title'),
+                trackArtist: document.getElementById('track-artist'),
+                currentTime: document.getElementById('current-time'),
+                progressBar: document.getElementById('progress-bar'),
+                duration: document.getElementById('duration')
             };
-            
-            document.getElementById('start-playback').addEventListener('click', () => {
-                document.getElementById('audio-overlay').style.display = 'none';
-                this.elements.audio.play()
-                .then(() => {
-                    if (this.state.audioContext) {
-                        this.state.audioContext.resume();
-                    }
-                })
-                .catch(console.error);
-            });
-            
+
+
+             // Проверяем кнопку воспроизведения
+            const startButton = document.getElementById('start-playback');
+            if (startButton) {
+                startButton.addEventListener('click', () => {
+                    const overlay = document.getElementById('audio-overlay');
+                    if (overlay) overlay.style.display = 'none';
+                    
+                    this.elements.audio.play()
+                        .then(() => {
+                            if (this.state.audioContext) {
+                                this.state.audioContext.resume();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка воспроизведения:', error);
+                            this.setStatus("Ошибка воспроизведения", true);
+                        });
+                });
+            }
+           
             this.config = {
                 streams: [
                     { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
@@ -36,21 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiEndpoints: [
                     "https://wwcat.duckdns.org:8443/api/nowplaying/1"
                 ],
-                /* The time between track info updates in milliseconds. */
                 updateInterval: 10000,
-                /* The delay before attempting to reconnect in milliseconds. */
                 reconnectDelay: 3000,
-                /* The time between checking the network in milliseconds. */
                 networkCheckInterval: 10000,
                 bufferLength: 20,
                 diagnostics: {
-                    /* Enable or disable diagnostic logging. */
                     enabled: true,
-                    /* The interval for diagnostic logging in milliseconds. */
                     logInterval: 60000
                 }
             };
-            
+
             this.state = {
                 currentStream: null,
                 currentApiUrl: null,
@@ -66,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     lastError: null
                 }
             };
+            
             this.elements.audio.autoplay = true;
             this.init();
         }
@@ -155,20 +168,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         setupEventListeners() {
-            
+
+            if (!this.elements.audio) {
+                console.error('Аудио элемент не доступен для настройки событий');
+                return;
+            }
+
             const handleFirstInteraction = () => {
                 if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
                     this.state.audioContext.resume();
                 }
                 document.removeEventListener('click', handleFirstInteraction);
             };
-            
+
             document.addEventListener('click', handleFirstInteraction);
-            
-            this.elements.volumeBtn.addEventListener('click', () => {
-                this.elements.audio.muted = !this.elements.audio.muted;
-                this.updateVolumeIcon();
-            });
+
+            if (this.elements.volumeBtn) {
+                this.elements.volumeBtn.addEventListener('click', () => {
+                    this.elements.audio.muted = !this.elements.audio.muted;
+                    this.updateVolumeIcon();
+                });
+            }
             
             this.elements.volumeSlider.addEventListener('input', (e) => {
                 this.elements.audio.volume = e.target.value;
@@ -695,4 +715,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Запуск
     new RadioPlayer();
-});с
+});

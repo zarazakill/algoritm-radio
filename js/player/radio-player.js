@@ -55,6 +55,103 @@ export class RadioPlayer {
         };
     }
 
+    /* Добавляем все недостающие методы */
+
+    setStatus(text, isError = false) {
+        if (this.elements.statusEl) {
+            this.elements.statusEl.textContent = text;
+            this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
+        }
+    }
+
+    formatTime(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    updateVolumeIcon() {
+        if (!this.elements.volumeBtn) return;
+        
+        if (this.elements.audio.muted || this.elements.audio.volume === 0) {
+            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+        } else if (this.elements.audio.volume < 0.5) {
+            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+        } else {
+            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        }
+    }
+
+    handleNetworkIssue() {
+        if (this.state.networkQuality === 'good') {
+            this.state.networkQuality = 'degraded';
+            this.state.diagnostics.qualityChanges++;
+            this.adjustForNetworkQuality();
+        }
+    }
+
+    adjustForNetworkQuality() {
+        clearInterval(this.state.updateIntervalId);
+        const interval = this.state.networkQuality === 'degraded' 
+            ? this.config.updateInterval * 2 
+            : this.config.updateInterval;
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+            interval
+        );
+    }
+
+    handleBackgroundTab() {
+        if (this.state.audioContext) {
+            this.state.audioContext.suspend().catch(console.error);
+        }
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+            this.config.updateInterval * 3
+        );
+    }
+
+    handleForegroundTab() {
+        if (this.state.audioContext) {
+            this.state.audioContext.resume().catch(console.error);
+        }
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+            this.config.updateInterval
+        );
+        if (this.state.isPlaying) {
+            this.elements.audio.play().catch(console.error);
+        }
+    }
+
+    startDiagnostics() {
+        if (!this.config.diagnostics.enabled) return;
+
+        setInterval(() => {
+            console.log('Диагностика плеера:', {
+                networkQuality: this.state.networkQuality,
+                bufferingEvents: this.state.diagnostics.bufferingEvents,
+                connectionErrors: this.state.diagnostics.connectionErrors,
+                qualityChanges: this.state.diagnostics.qualityChanges,
+                lastError: this.state.diagnostics.lastError,
+                currentStream: this.state.currentStream?.url,
+                isPlaying: this.state.isPlaying,
+                volume: this.elements.audio.volume,
+                muted: this.elements.audio.muted
+            });
+        }, this.config.diagnostics.logInterval);
+    }
+
+    startUpdateInterval() {
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+            this.config.updateInterval
+        );
+    }
+
     async findWorkingApi() {
         for (const apiUrl of this.config.apiEndpoints) {
             try {

@@ -1,3 +1,5 @@
+import { RadioPlayer } from './player/player.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализация плеера
     const player = new RadioPlayer();

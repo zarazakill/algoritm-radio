@@ -39,8 +39,6 @@ export class RadioPlayer {
         this.elements.audio.autoplay = true;
     }
 
-    static DEFAULT_THEME = 'dark';
-
     async init() {
         this.setupThemeToggle();
         this.setupEventListeners();
@@ -471,3 +469,5 @@ export class RadioPlayer {
         }, this.config.diagnostics.logInterval);
     }
 }
+// Экспорт конфигурации
+this.config = RadioPlayerConfig;

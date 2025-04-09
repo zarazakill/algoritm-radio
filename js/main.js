@@ -1,4 +1,4 @@
-import { RadioPlayer } from './player.js';
+import { RadioPlayer } from './player/player.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const player = new RadioPlayer();

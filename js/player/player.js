@@ -19,8 +19,7 @@ export class RadioPlayer {
         };
 
             this.config = RadioPlayerConfig;
-        };
-
+ 
             this.state = {
             currentStream: null,
             currentApiUrl: null,

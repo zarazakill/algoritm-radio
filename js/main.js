@@ -1,22 +1,34 @@
 import { RadioPlayer } from './player/player.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     try {
         const player = new RadioPlayer();
         
-        document.getElementById('start-playback')?.addEventListener('click', () => {
-            document.getElementById('audio-overlay').style.display = 'none';
-            player.elements.audio.play()
-                .then(() => {
-                    if (player.state.audioContext) {
-                        player.state.audioContext.resume();
+        // Добавляем проверку перед добавлением обработчика
+        const startBtn = document.getElementById('start-playback');
+        if (startBtn) {
+            startBtn.addEventListener('click', async () => {
+                try {
+                    document.getElementById('audio-overlay').style.display = 'none';
+                    await player.elements.audio.play();
+                    
+                    if (player.state.audioContext?.state === 'suspended') {
+                        await player.state.audioContext.resume();
                     }
-                })
-                .catch(console.error);
-        });
+                } catch (error) {
+                    console.error("Playback error:", error);
+                    player.setStatus(`Ошибка: ${error.message}`, true);
+                }
+            });
+        }
         
-        player.init();
+        await player.init();
     } catch (error) {
-        console.error("Failed to initialize player:", error);
+        console.error("Fatal initialization error:", error);
+        const statusEl = document.getElementById('stream-status');
+        if (statusEl) {
+            statusEl.textContent = `Ошибка инициализации: ${error.message}`;
+            statusEl.className = 'status-error';
+        }
     }
 });

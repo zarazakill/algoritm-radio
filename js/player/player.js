@@ -4,6 +4,12 @@ import { UIHelpers } from './ui-helpers.js';
 
 export class RadioPlayer {
     constructor() {
+            const requiredElements = ['radio-stream', 'stream-status', 'volume-slider'];
+    for (const id of requiredElements) {
+        if (!document.getElementById(id)) {
+            throw new Error(`Не найден элемент #${id}`);
+        }
+    }
         this.elements = {
             audio: document.getElementById('radio-stream'),
             statusEl: document.getElementById('stream-status'),
@@ -148,48 +154,53 @@ async init() {
 
 async connectToStream() {
     try {
-        this.setStatus("Подключение...");
-        
-        // Добавляем проверку на существование элементов
-        if (!this.elements.audio) {
-            throw new Error("Аудио элемент не найден");
+        // 1. Проверка элементов DOM
+        if (!this.elements.audio || !this.elements.statusEl) {
+            throw new Error("Не найдены необходимые DOM элементы");
         }
 
-        this.state.currentStream = await this.findWorkingStream();
+        this.setStatus("Подключение...");
         
+        // 2. Поиск рабочего потока с таймаутом
+        this.state.currentStream = await Promise.race([
+            this.findWorkingStream(),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
+        ]);
+
         if (!this.state.currentStream) {
             throw new Error("Все потоки недоступны");
         }
 
-        // Сбрасываем текущий источник
+        // 3. Сброс и установка нового источника
         this.elements.audio.src = '';
         this.elements.audio.src = this.state.currentStream.url;
         
-        // Ожидаем загрузки аудио с таймаутом
+        // 4. Ожидание готовности аудио
         await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
+            const timer = setTimeout(() => {
                 reject(new Error("Таймаут загрузки аудио"));
-            }, 10000); // 10 секунд таймаут
+            }, 10000);
 
             this.elements.audio.oncanplay = () => {
-                clearTimeout(timeout);
+                clearTimeout(timer);
                 resolve();
             };
             
-            this.elements.audio.onerror = () => {
-                clearTimeout(timeout);
-                reject(new Error("Ошибка загрузки аудио"));
+            this.elements.audio.onerror = (e) => {
+                clearTimeout(timer);
+                reject(new Error(`Аудио ошибка: ${e.target.error.message}`));
             };
             
             this.elements.audio.load();
         });
-        
-        this.setStatus("Слушаем музыку...");
+
+        this.setStatus("Соединение установлено");
         return true;
         
     } catch (error) {
-        console.error("Ошибка подключения к потоку:", error);
-        this.setStatus("Ошибка подключения: " + error.message, true);
+        console.error("Ошибка подключения:", error);
+        this.setStatus(`Ошибка: ${error.message}`, true);
         this.handleConnectionError(error);
         return false;
     }

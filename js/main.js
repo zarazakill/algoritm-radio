@@ -5,22 +5,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const player = new RadioPlayer();
         
         // Добавляем проверку перед добавлением обработчика
-        const startBtn = document.getElementById('start-playback');
-        if (startBtn) {
-            startBtn.addEventListener('click', async () => {
-                try {
-                    document.getElementById('audio-overlay').style.display = 'none';
-                    await player.elements.audio.play();
-                    
-                    if (player.state.audioContext?.state === 'suspended') {
-                        await player.state.audioContext.resume();
-                    }
-                } catch (error) {
-                    console.error("Playback error:", error);
-                    player.setStatus(`Ошибка: ${error.message}`, true);
-                }
+document.getElementById('start-playback')?.addEventListener('click', async () => {
+    try {
+        document.getElementById('audio-overlay').style.display = 'none';
+        
+        // Добавляем проверку и ожидание завершения загрузки
+        if (player.elements.audio.readyState < 2) { // 2 = HAVE_ENOUGH_DATA
+            await new Promise(resolve => {
+                player.elements.audio.addEventListener('canplay', resolve, { once: true });
             });
         }
+        
+        await player.elements.audio.play();
+        
+        if (player.state.audioContext?.state === 'suspended') {
+            await player.state.audioContext.resume();
+        }
+    } catch (error) {
+        console.error("Playback error:", error);
+        player.setStatus(`Ошибка воспроизведения: ${error.message}`, true);
+    }
+});
         
         await player.init();
     } catch (error) {

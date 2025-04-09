@@ -469,5 +469,5 @@ export class RadioPlayer {
         }, this.config.diagnostics.logInterval);
     }
 }
-// Экспорт конфигурации
-this.config = RadioPlayerConfig;
+
+export { RadioPlayer };

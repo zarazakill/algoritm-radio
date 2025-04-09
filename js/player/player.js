@@ -41,15 +41,34 @@ export class RadioPlayer {
     }
 
 
-    async init() {
+async init() {
+    try {
+        // Добавляем проверку готовности DOM
+        if (!document.getElementById('radio-stream')) {
+            throw new Error("Не найдены необходимые DOM элементы");
+        }
+
         this.setupThemeToggle();
         this.setupEventListeners();
         this.initAudioContext();
-        await this.connectToStream();
+        
+        // Пробуем подключиться несколько раз при необходимости
+        let attempts = 3;
+        while (attempts > 0) {
+            if (await this.connectToStream()) break;
+            attempts--;
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
         this.state.currentApiUrl = await this.findWorkingApi();
         this.startDiagnostics();
         this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
+        
+    } catch (error) {
+        console.error("Ошибка инициализации плеера:", error);
+        this.setStatus("Критическая ошибка: " + error.message, true);
     }
+}
 
     setupThemeToggle() {
         const body = document.body;
@@ -127,28 +146,54 @@ export class RadioPlayer {
         });
     }
 
-    async connectToStream() {
-        try {
-            this.setStatus("Подключение...");
-            this.state.currentStream = await this.findWorkingStream();
+async connectToStream() {
+    try {
+        this.setStatus("Подключение...");
+        
+        // Добавляем проверку на существование элементов
+        if (!this.elements.audio) {
+            throw new Error("Аудио элемент не найден");
+        }
 
-            if (!this.state.currentStream) {
-                throw new Error("Все потоки недоступны");
-            }
+        this.state.currentStream = await this.findWorkingStream();
+        
+        if (!this.state.currentStream) {
+            throw new Error("Все потоки недоступны");
+        }
 
-            this.elements.audio.src = '';
-            this.elements.audio.src = this.state.currentStream.url;
-            this.elements.audio.load();
+        // Сбрасываем текущий источник
+        this.elements.audio.src = '';
+        this.elements.audio.src = this.state.currentStream.url;
+        
+        // Ожидаем загрузки аудио с таймаутом
+        await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error("Таймаут загрузки аудио"));
+            }, 10000); // 10 секунд таймаут
 
             this.elements.audio.oncanplay = () => {
-                this.setStatus("слушаем музыку...");
+                clearTimeout(timeout);
+                resolve();
             };
-
-        } catch (error) {
-            this.setStatus("Ошибка подключения", true);
-            this.handleConnectionError(error);
-        }
+            
+            this.elements.audio.onerror = () => {
+                clearTimeout(timeout);
+                reject(new Error("Ошибка загрузки аудио"));
+            };
+            
+            this.elements.audio.load();
+        });
+        
+        this.setStatus("Слушаем музыку...");
+        return true;
+        
+    } catch (error) {
+        console.error("Ошибка подключения к потоку:", error);
+        this.setStatus("Ошибка подключения: " + error.message, true);
+        this.handleConnectionError(error);
+        return false;
     }
+}
 
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);

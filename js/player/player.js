@@ -469,5 +469,3 @@ export class RadioPlayer {
         }, this.config.diagnostics.logInterval);
     }
 }
-
-export { RadioPlayer };

@@ -16,35 +16,21 @@ export class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
-        document.getElementById('start-playback').addEventListener('click', () => {
-            document.getElementById('audio-overlay').style.display = 'none';
-            this.elements.audio.play()
-            .then(() => {
-                if (this.state.audioContext) {
-                    this.state.audioContext.resume();
-                }
-            })
-            .catch(console.error);
-        });
-
+        // Конфигурация
         this.config = {
             streams: [
                 { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
                 { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
             ],
-            apiEndpoints: [
-                "https://wwcat.duckdns.org:8443/api/nowplaying/1"
-            ],
-            updateInterval: 15000,
+            apiEndpoints: ["https://wwcat.duckdns.org:8443/api/nowplaying/1"],
+            updateInterval: 10000,
             reconnectDelay: 3000,
             networkCheckInterval: 10000,
             bufferLength: 20,
-            diagnostics: {
-                enabled: true,
-                logInterval: 60000
-            }
+            diagnostics: { enabled: true, logInterval: 60000 }
         };
 
+        // Состояние плеера
         this.state = {
             currentStream: null,
             currentApiUrl: null,
@@ -60,7 +46,7 @@ export class RadioPlayer {
                 lastError: null
             }
         };
-        this.elements.audio.autoplay = true;
+
         this.init();
     }
 

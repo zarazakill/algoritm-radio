@@ -1,4 +1,5 @@
 import RadioPlayerConfig from './config.js';
+import { NetworkUtils } from './network-utils.js';
 
 export class RadioPlayer {
     constructor() {
@@ -150,35 +151,10 @@ export class RadioPlayer {
 
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
-
-        for (const stream of sortedStreams) {
-            try {
-                if (await this.testStream(stream.url)) {
-                    return stream;
-                }
-            } catch (error) {
-                console.warn(`Поток недоступен: ${stream.url}`, error);
-            }
-        }
-        return null;
-    }
-
-    async testStream(url) {
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 3000);
-
-            const response = await fetch(url, {
-                method: 'HEAD',
-                mode: 'no-cors',
-                signal: controller.signal
-            });
-
-            clearTimeout(timeout);
-            return true;
-        } catch {
-            return false;
-        }
+        const streamUrls = sortedStreams.map(s => s.url);
+        
+        const workingUrl = await NetworkUtils.findWorkingUrl(streamUrls);
+        return sortedStreams.find(s => s.url === workingUrl);
     }
 
     setupAudioBuffer() {
@@ -202,15 +178,13 @@ export class RadioPlayer {
         }
 
         try {
-            const response = await this.fetchWithTimeout(this.state.currentApiUrl, 2000);
+            const response = await NetworkUtils.fetchWithTimeout(
+                this.state.currentApiUrl, 
+                2000
+            );
             const data = await response.json();
             this.updateUI(data);
-            this.state.lastUpdateTime = Date.now();
-
-            if (this.firstUpdate) {
-                this.updateUI(data);
-                this.firstUpdate = false;
-            }
+            // ... остальной код ...
         } catch (error) {
             console.error("Ошибка обновления:", error);
             this.state.currentApiUrl = await this.findWorkingApi();
@@ -329,24 +303,7 @@ export class RadioPlayer {
     }
 
     async findWorkingApi() {
-        for (const apiUrl of this.config.apiEndpoints) {
-            try {
-                const response = await this.fetchWithTimeout(apiUrl, 3000);
-                if (response.ok) return apiUrl;
-            } catch (error) {
-                console.warn(`API недоступен: ${apiUrl}`, error);
-            }
-        }
-        return null;
-    }
-
-    fetchWithTimeout(url, timeout, options = {}) {
-        return Promise.race([
-            fetch(url, options),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
-            )
-        ]);
+        return NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
     }
 
     formatTime(seconds) {

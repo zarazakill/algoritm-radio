@@ -105,25 +105,29 @@ async init() {
         button.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
     }
 
-    setupEventListeners() {
-        const handleFirstInteraction = () => {
-            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-                this.state.audioContext.resume();
-            }
-            document.removeEventListener('click', handleFirstInteraction);
-        };
+setupEventListeners() {
+    // Сохраняем контекст this для обработчиков событий
+    const self = this;
 
-        document.addEventListener('click', handleFirstInteraction);
+    const handleFirstInteraction = () => {
+        if (self.state.audioContext && self.state.audioContext.state === 'suspended') {
+            self.state.audioContext.resume();
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+    };
 
-        this.elements.volumeBtn.addEventListener('click', () => {
-            this.elements.audio.muted = !this.elements.audio.muted;
-            this.updateVolumeIcon();
-        });
+    document.addEventListener('click', handleFirstInteraction);
 
-        this.elements.volumeSlider.addEventListener('input', (e) => {
-            this.elements.audio.volume = e.target.value;
-            this.updateVolumeIcon();
-        });
+    // Используем стрелочные функции для сохранения контекста
+    this.elements.volumeBtn.addEventListener('click', () => {
+        self.elements.audio.muted = !self.elements.audio.muted;
+        self.updateVolumeIcon();
+    });
+
+    this.elements.volumeSlider.addEventListener('input', (e) => {
+        self.elements.audio.volume = e.target.value;
+        self.updateVolumeIcon();
+    });
 
         this.elements.audio.addEventListener('error', () => {
             this.handleConnectionError(new Error("Audio element error"));

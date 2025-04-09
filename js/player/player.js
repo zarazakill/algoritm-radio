@@ -166,6 +166,7 @@ async connectToStream() {
             this.findWorkingStream(),
             new Promise((_, reject) => 
                 setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
+                        )
         ]);
 
         if (!this.state.currentStream) {

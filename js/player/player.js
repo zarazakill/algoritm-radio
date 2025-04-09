@@ -33,10 +33,11 @@ export class RadioPlayer {
                 connectionErrors: 0,
                 qualityChanges: 0,
                 lastError: null
+            }
         };
         this.elements.audio.autoplay = true;
     }
-}
+
 
     async init() {
         this.setupThemeToggle();

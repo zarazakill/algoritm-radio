@@ -36,6 +36,7 @@ export class RadioPlayer {
         };
         this.elements.audio.autoplay = true;
     }
+}
 
     async init() {
         this.setupThemeToggle();

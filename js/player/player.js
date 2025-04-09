@@ -1,4 +1,4 @@
-export class RadioPlayer {
+class RadioPlayer {
     constructor() {
         this.elements = {
             audio: document.getElementById('radio-stream'),
@@ -16,21 +16,24 @@ export class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
-        // Конфигурация
         this.config = {
             streams: [
                 { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
                 { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
             ],
-            apiEndpoints: ["https://wwcat.duckdns.org:8443/api/nowplaying/1"],
+            apiEndpoints: [
+                "https://wwcat.duckdns.org:8443/api/nowplaying/1"
+            ],
             updateInterval: 10000,
             reconnectDelay: 3000,
             networkCheckInterval: 10000,
             bufferLength: 20,
-            diagnostics: { enabled: true, logInterval: 60000 }
+            diagnostics: {
+                enabled: true,
+                logInterval: 60000
+            }
         };
 
-        // Состояние плеера
         this.state = {
             currentStream: null,
             currentApiUrl: null,
@@ -46,22 +49,49 @@ export class RadioPlayer {
                 lastError: null
             }
         };
-
-        this.init();
+        this.elements.audio.autoplay = true;
     }
 
+    static DEFAULT_THEME = 'dark';
+
     async init() {
+        this.setupThemeToggle();
         this.setupEventListeners();
         this.initAudioContext();
         await this.connectToStream();
-        // Добавьте инициализацию API URL
         this.state.currentApiUrl = await this.findWorkingApi();
         this.startDiagnostics();
         this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
     }
 
-    setupEventListeners() {
+    setupThemeToggle() {
+        const body = document.body;
+        const themeToggleBtn = document.createElement('button');
+        themeToggleBtn.classList.add('theme-toggle');
+        themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
 
+        const savedTheme = localStorage.getItem('theme') || RadioPlayer.DEFAULT_THEME;
+        body.classList.add(savedTheme + '-theme');
+        this.updateThemeIcon(themeToggleBtn, savedTheme);
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            body.classList.remove(currentTheme + '-theme');
+            body.classList.add(newTheme + '-theme');
+            localStorage.setItem('theme', newTheme);
+            this.updateThemeIcon(themeToggleBtn, newTheme);
+        });
+
+        document.querySelector('.container').appendChild(themeToggleBtn);
+    }
+
+    updateThemeIcon(button, theme) {
+        button.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    }
+
+    setupEventListeners() {
         const handleFirstInteraction = () => {
             if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
                 this.state.audioContext.resume();
@@ -73,6 +103,11 @@ export class RadioPlayer {
 
         this.elements.volumeBtn.addEventListener('click', () => {
             this.elements.audio.muted = !this.elements.audio.muted;
+            this.updateVolumeIcon();
+        });
+
+        this.elements.volumeSlider.addEventListener('input', (e) => {
+            this.elements.audio.volume = e.target.value;
             this.updateVolumeIcon();
         });
 
@@ -114,16 +149,16 @@ export class RadioPlayer {
                 throw new Error("Все потоки недоступны");
             }
 
+            this.elements.audio.src = '';
             this.elements.audio.src = this.state.currentStream.url;
-            // Уберите autoplay из HTML и добавьте обработку пользовательского взаимодействия
-            this.elements.audio.autoplay = false;
+            this.elements.audio.load();
 
-            // Явная обработка воспроизведения после user gesture
-            document.getElementById('start-playback').addEventListener('click', () => {
-                this.elements.audio.play().catch(console.error);
-            });
+            this.elements.audio.oncanplay = () => {
+                this.setStatus("слушаем музыку...");
+            };
 
         } catch (error) {
+            this.setStatus("Ошибка подключения", true);
             this.handleConnectionError(error);
         }
     }
@@ -171,28 +206,31 @@ export class RadioPlayer {
     }
 
     async togglePlayback() {
-        // Автозапуск без проверок
         await this.connectToStream();
         this.elements.audio.play().catch(console.error);
     }
 
     async updateTrackInfo() {
-        if (!this.state.currentApiUrl) return;
+        if (!this.state.currentApiUrl) {
+            this.state.currentApiUrl = await this.findWorkingApi();
+            if (!this.state.currentApiUrl) return;
+        }
 
         try {
-            const response = await this.fetchWithTimeout(this.state.currentApiUrl, 3000);
-            // Добавьте проверку статуса
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+            const response = await this.fetchWithTimeout(this.state.currentApiUrl, 2000);
             const data = await response.json();
             this.updateUI(data);
             this.state.lastUpdateTime = Date.now();
+
+            if (this.firstUpdate) {
+                this.updateUI(data);
+                this.firstUpdate = false;
+            }
         } catch (error) {
-            console.error("Ошибка обновления треков:", error);
+            console.error("Ошибка обновления:", error);
             this.state.currentApiUrl = await this.findWorkingApi();
         }
     }
-
 
     updateUI(data) {
         this.updateCurrentTrack(data.now_playing);
@@ -220,7 +258,6 @@ export class RadioPlayer {
 
         if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
 
-        // Добавленные строки для обновления заголовка и исполнителя:
         if (this.elements.trackTitle) {
             this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
         }
@@ -229,7 +266,6 @@ export class RadioPlayer {
         }
         if (this.elements.duration) {
             this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
-
         }
         if (!nowPlaying) {
             this.elements.trackTitle.textContent = 'Нет данных';
@@ -322,9 +358,9 @@ export class RadioPlayer {
     fetchWithTimeout(url, timeout, options = {}) {
         return Promise.race([
             fetch(url, options),
-                            new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
-                            )
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
+            )
         ]);
     }
 
@@ -356,18 +392,15 @@ export class RadioPlayer {
 
     handleConnectionError(error) {
         console.error("Ошибка подключения:", error);
-        this.state.diagnostics.connectionErrors++;
-        this.state.diagnostics.lastError = error.message;
+        this.setStatus(`Ошибка: ${error.message}`, true);
 
-        this.setStatus("Ошибка подключения", true);
-        this.elements.playBtn.disabled = true;
-
-        const delay = Math.min(this.config.reconnectDelay * (2 ** this.state.retryCount), 30000);
-        this.state.retryCount++;
-
+        const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
         setTimeout(() => {
             this.connectToStream();
+            this.state.retryCount++;
         }, delay);
+
+        document.getElementById('audio-overlay').style.display = 'flex';
     }
 
     handleNetworkIssue() {
@@ -384,7 +417,7 @@ export class RadioPlayer {
                 clearInterval(this.state.updateIntervalId);
                 this.state.updateIntervalId = setInterval(
                     () => this.updateTrackInfo(),
-                                                          this.config.updateInterval * 2
+                    this.config.updateInterval * 2
                 );
                 break;
             case 'good':
@@ -392,7 +425,7 @@ export class RadioPlayer {
                 clearInterval(this.state.updateIntervalId);
                 this.state.updateIntervalId = setInterval(
                     () => this.updateTrackInfo(),
-                                                          this.config.updateInterval
+                    this.config.updateInterval
                 );
         }
     }
@@ -405,7 +438,7 @@ export class RadioPlayer {
         clearInterval(this.state.updateIntervalId);
         this.state.updateIntervalId = setInterval(
             () => this.updateTrackInfo(),
-                                                  this.config.updateInterval * 3
+            this.config.updateInterval * 3
         );
     }
 
@@ -417,7 +450,7 @@ export class RadioPlayer {
         clearInterval(this.state.updateIntervalId);
         this.state.updateIntervalId = setInterval(
             () => this.updateTrackInfo(),
-                                                  this.config.updateInterval
+            this.config.updateInterval
         );
 
         if (this.state.isPlaying) {
@@ -428,7 +461,6 @@ export class RadioPlayer {
     initAudioContext() {
         try {
             this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            // Не пытаемся сразу запустить, ждем взаимодействия
         } catch (error) {
             console.error("Ошибка инициализации AudioContext:", error);
         }
@@ -452,8 +484,3 @@ export class RadioPlayer {
         }, this.config.diagnostics.logInterval);
     }
 }
-
-// Запуск
-document.addEventListener('DOMContentLoaded', () => {
-    new RadioPlayer();
-});

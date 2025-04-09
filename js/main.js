@@ -1,35 +1,22 @@
-document.addEventListener('DOMContentLoaded', async () => {
+import { RadioPlayer } from './player.js';
+
+document.addEventListener('DOMContentLoaded', () => {
     try {
         const player = new RadioPlayer();
         
-        // Добавляем обработчик для кнопки старта
-        const startButton = document.getElementById('start-playback');
-        if (startButton) {
-            startButton.addEventListener('click', async () => {
-                const overlay = document.getElementById('audio-overlay');
-                if (overlay) overlay.style.display = 'none';
-                
-                try {
-                    await player.elements.audio.play();
+        document.getElementById('start-playback')?.addEventListener('click', () => {
+            document.getElementById('audio-overlay').style.display = 'none';
+            player.elements.audio.play()
+                .then(() => {
                     if (player.state.audioContext) {
-                        await player.state.audioContext.resume();
+                        player.state.audioContext.resume();
                     }
-                } catch (error) {
-                    console.error("Ошибка воспроизведения:", error);
-                    player.setStatus("Ошибка запуска: " + error.message, true);
-                }
-            });
-        }
+                })
+                .catch(console.error);
+        });
         
-        // Инициализация с обработкой ошибок
-        await player.init();
-        
+        player.init();
     } catch (error) {
-        console.error("Ошибка при запуске приложения:", error);
-        const statusEl = document.getElementById('stream-status');
-        if (statusEl) {
-            statusEl.textContent = "Ошибка загрузки плеера";
-            statusEl.className = 'status-error';
-        }
+        console.error("Failed to initialize player:", error);
     }
 });

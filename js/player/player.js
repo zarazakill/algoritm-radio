@@ -26,6 +26,8 @@ export class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
+            this.abortController = new AbortController();
+        
             this.config = RadioPlayerConfig;
  
             this.state = {
@@ -138,7 +140,7 @@ async init() {
 
         this.elements.audio.addEventListener('timeupdate', () => {
             if (this.elements.currentTime && this.elements.progressBar) {
-                this.elements.currentTime.textContent = this.formatTime(this.elements.audio.currentTime);
+                this.elements.currentTime.textContent = UIHelpers.formatTime(this.elements.audio.currentTime);
                 this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
             }
         });
@@ -194,15 +196,21 @@ async connectToStream() {
             };
             
             this.elements.audio.load();
+
+                this.abortController.abort(); // Отменяем предыдущие запросы
+
+                const response = await fetch(url, { 
+        signal: this.abortController.signal 
         });
 
         this.setStatus("Соединение установлено");
         return true;
-        
+
     } catch (error) {
         console.error("Ошибка подключения:", error);
         this.setStatus(`Ошибка: ${error.message}`, true);
         this.handleConnectionError(error);
+    if (e.name !== 'AbortError') throw error;
         return false;
     }
 }
@@ -229,6 +237,13 @@ async connectToStream() {
         this.elements.audio.play().catch(console.error);
     }
 
+    async loadAudioSource(url) {
+        this.elements.audio.src = '';
+        await new Promise(resolve => setTimeout(resolve, 50)); // Даем время на разгрузку
+        this.elements.audio.src = url;
+        this.elements.audio.load();
+    }
+    
     async updateTrackInfo() {
         if (!this.state.currentApiUrl) {
             this.state.currentApiUrl = await this.findWorkingApi();

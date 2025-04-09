@@ -158,6 +158,18 @@ setupEventListeners() {
         });
     }
 
+    updateVolumeIcon() {
+    if (!this.elements.volumeBtn) return;
+
+    if (this.elements.audio.muted || this.elements.audio.volume === 0) {
+        this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+    } else if (this.elements.audio.volume < 0.5) {
+        this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+    } else {
+        this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+    }
+}
+
 async connectToStream(maxRetries = 3) {
     try {
         // 1. Проверка элементов DOM

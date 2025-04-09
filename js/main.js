@@ -1,4 +1,4 @@
-import { RadioPlayer } from './js/player/player.js';
+import { RadioPlayer } from './player/player.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализация элементов управления

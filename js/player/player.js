@@ -1,5 +1,6 @@
 import RadioPlayerConfig from './config.js';
 import { NetworkUtils } from './network-utils.js';
+import { UIHelpers } from './ui-helpers.js';
 
 export class RadioPlayer {
     constructor() {
@@ -199,12 +200,16 @@ export class RadioPlayer {
         }
 
         if (data.song_history) {
-            this.updateHistory(data.song_history);
-        }
+    updateHistory(history) {
+        if (!this.elements.historyList || !history) return;
 
-        if (data.listeners && data.listeners.current) {
-            this.updateListenersCount(data.listeners.current);
-        }
+        this.elements.historyList.innerHTML = '';
+        const recentTracks = history.slice(0, 5);
+
+        recentTracks.forEach((item, index) => {
+            const li = UIHelpers.createHistoryItem(item, index);
+            this.elements.historyList.appendChild(li);
+        });
     }
 
     updateCurrentTrack(nowPlaying) {
@@ -212,7 +217,7 @@ export class RadioPlayer {
         const html = `
         <span class="track-name">${track.title || 'Неизвестный трек'}</span>
         <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-        <span class="track-progress">${this.formatTime(nowPlaying.elapsed)} / ${this.formatTime(nowPlaying.duration)}</span>
+        <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
         `;
 
         if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
@@ -224,12 +229,7 @@ export class RadioPlayer {
             this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
         }
         if (this.elements.duration) {
-            this.elements.duration.textContent = this.formatTime(nowPlaying.duration);
-        }
-        if (!nowPlaying) {
-            this.elements.trackTitle.textContent = 'Нет данных';
-            this.elements.trackArtist.textContent = '';
-            return;
+            this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
         }
     }
 
@@ -291,7 +291,8 @@ export class RadioPlayer {
 
     updateListenersCount(count) {
         if (this.elements.listenersCount) {
-            this.elements.listenersCount.textContent = `${count} ${this.pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
+            this.elements.listenersCount.textContent = 
+                `${count} ${UIHelpers.pluralize(count, ['слушатель', 'слушателя', 'слушателей'])}`;
         }
     }
 
@@ -304,32 +305,6 @@ export class RadioPlayer {
 
     async findWorkingApi() {
         return NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
-    }
-
-    formatTime(seconds) {
-        if (isNaN(seconds)) return "0:00";
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
-
-    pluralize(number, words) {
-        return words[
-            (number % 100 > 4 && number % 100 < 20) ? 2
-            : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]
-        ];
-    }
-
-    updateVolumeIcon() {
-        if (!this.elements.volumeBtn) return;
-
-        if (this.elements.audio.muted || this.elements.audio.volume === 0) {
-            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-        } else if (this.elements.audio.volume < 0.5) {
-            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
-        } else {
-            this.elements.volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-        }
     }
 
     handleConnectionError(error) {

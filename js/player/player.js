@@ -192,25 +192,22 @@ export class RadioPlayer {
         }
     }
 
-    updateUI(data) {
-        this.updateCurrentTrack(data.now_playing);
+        updateUI(data) {
+            this.updateCurrentTrack(data.now_playing);
 
-        if (data.playing_next) {
-            this.updateNextTrack(data.playing_next);
+            if (data.playing_next) {
+                this.updateNextTrack(data.playing_next);
+            }
+
+            if (data.song_history) {
+                this.updateHistory(data.song_history);
+            }
+
+            if (data.listeners && data.listeners.current) {
+                this.updateListenersCount(data.listeners.current);
+            }
         }
 
-        if (data.song_history) {
-    updateHistory(history) {
-        if (!this.elements.historyList || !history) return;
-
-        this.elements.historyList.innerHTML = '';
-        const recentTracks = history.slice(0, 5);
-
-        recentTracks.forEach((item, index) => {
-            const li = UIHelpers.createHistoryItem(item, index);
-            this.elements.historyList.appendChild(li);
-        });
-    }
 
     updateCurrentTrack(nowPlaying) {
         const track = nowPlaying.song;
@@ -267,24 +264,10 @@ export class RadioPlayer {
         if (!this.elements.historyList || !history) return;
 
         this.elements.historyList.innerHTML = '';
-
         const recentTracks = history.slice(0, 5);
 
         recentTracks.forEach((item, index) => {
-            const li = document.createElement('li');
-            if (index === 0) li.classList.add('new-track');
-
-            const song = item.song || {};
-            const title = song.title || 'Неизвестный трек';
-            const artist = song.artist || 'Неизвестный исполнитель';
-            const duration = item.duration ? this.formatTime(item.duration) : '';
-
-            li.innerHTML = `
-            <span class="track-title">${title}</span>
-            <span class="track-artist">${artist}</span>
-            ${duration ? `<span class="track-time">${duration}</span>` : ''}
-            `;
-
+            const li = UIHelpers.createHistoryItem(item, index);
             this.elements.historyList.appendChild(li);
         });
     }

@@ -168,39 +168,47 @@ async connectToStream() {
             this.findWorkingStream(),
             new Promise((_, reject) => 
                 setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
-                        )
+            )
         ]);
 
         if (!this.state.currentStream) {
             throw new Error("Все потоки недоступны");
         }
 
-        // 3. Сброс и установка нового источника
+        // 3. Инициализация AbortController для управления запросами
+        this.abortController?.abort(); // Отменяем предыдущие запросы
+        this.abortController = new AbortController();
+
+        // 4. Сброс и установка нового источника
         this.elements.audio.src = '';
         this.elements.audio.src = this.state.currentStream.url;
         
-        // 4. Ожидание готовности аудио
+        // 5. Ожидание готовности аудио
         await new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
                 reject(new Error("Таймаут загрузки аудио"));
             }, 10000);
 
-            this.elements.audio.oncanplay = () => {
+            const cleanup = () => {
                 clearTimeout(timer);
+                this.elements.audio.removeEventListener('canplay', onCanPlay);
+                this.elements.audio.removeEventListener('error', onError);
+            };
+
+            const onCanPlay = () => {
+                cleanup();
                 resolve();
             };
-            
-            this.elements.audio.onerror = (e) => {
-                clearTimeout(timer);
-                reject(new Error(`Аудио ошибка: ${e.target.error.message}`));
+
+            const onError = (e) => {
+                cleanup();
+                reject(new Error(`Аудио ошибка: ${e.target.error?.message || 'Unknown error'}`));
             };
+
+            this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
+            this.elements.audio.addEventListener('error', onError, { once: true });
             
             this.elements.audio.load();
-
-                this.abortController.abort(); // Отменяем предыдущие запросы
-
-                const response = await fetch(url, { 
-        signal: this.abortController.signal 
         });
 
         this.setStatus("Соединение установлено");
@@ -209,8 +217,11 @@ async connectToStream() {
     } catch (error) {
         console.error("Ошибка подключения:", error);
         this.setStatus(`Ошибка: ${error.message}`, true);
-        this.handleConnectionError(error);
-    if (e.name !== 'AbortError') throw error;
+        
+        if (error.name !== 'AbortError') {
+            this.handleConnectionError(error);
+        }
+        
         return false;
     }
 }

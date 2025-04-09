@@ -154,7 +154,7 @@ async init() {
         });
     }
 
-async connectToStream() {
+async connectToStream(maxRetries = 3) {
     try {
         // 1. Проверка элементов DOM
         if (!this.elements.audio || !this.elements.statusEl) {
@@ -163,56 +163,42 @@ async connectToStream() {
 
         this.setStatus("Подключение...");
         
-        // 2. Поиск рабочего потока с таймаутом
-        this.state.currentStream = await Promise.race([
-            this.findWorkingStream(),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
-            )
-        ]);
+        // 2. Поиск рабочего потока с улучшенной обработкой ошибок
+        try {
+            this.state.currentStream = await Promise.race([
+                this.findWorkingStream(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
+            ]);
+        } catch (streamError) {
+            if (maxRetries > 0) {
+                console.warn(`Повторная попытка подключения (осталось ${maxRetries} попыток)`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                return this.connectToStream(maxRetries - 1);
+            }
+            throw streamError;
+        }
 
         if (!this.state.currentStream) {
             throw new Error("Все потоки недоступны");
         }
 
-        // 3. Инициализация AbortController для управления запросами
-        this.abortController?.abort(); // Отменяем предыдущие запросы
+        // 3. Управление прерываниями
+        this.abortController?.abort();
         this.abortController = new AbortController();
 
-        // 4. Сброс и установка нового источника
-        this.elements.audio.src = '';
-        this.elements.audio.src = this.state.currentStream.url;
-        
-        // 5. Ожидание готовности аудио
-        await new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                reject(new Error("Таймаут загрузки аудио"));
-            }, 10000);
-
-            const cleanup = () => {
-                clearTimeout(timer);
-                this.elements.audio.removeEventListener('canplay', onCanPlay);
-                this.elements.audio.removeEventListener('error', onError);
-            };
-
-            const onCanPlay = () => {
-                cleanup();
-                resolve();
-            };
-
-            const onError = (e) => {
-                cleanup();
-                reject(new Error(`Аудио ошибка: ${e.target.error?.message || 'Unknown error'}`));
-            };
-
-            this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
-            this.elements.audio.addEventListener('error', onError, { once: true });
-            
-            this.elements.audio.load();
-        });
-
-        this.setStatus("Соединение установлено");
-        return true;
+        // 4. Загрузка аудио с улучшенной обработкой
+        try {
+            await this.loadAudioWithTimeout(this.state.currentStream.url, 10000);
+            this.setStatus("Соединение установлено");
+            return true;
+        } catch (loadError) {
+            console.error("Ошибка загрузки аудио:", loadError);
+            if (maxRetries > 0) {
+                return this.connectToStream(maxRetries - 1);
+            }
+            throw loadError;
+        }
 
     } catch (error) {
         console.error("Ошибка подключения:", error);
@@ -226,6 +212,38 @@ async connectToStream() {
     }
 }
 
+async loadAudioWithTimeout(url, timeout) {
+    return new Promise((resolve, reject) => {
+        // Очистка предыдущего источника
+        this.elements.audio.src = '';
+        this.elements.audio.src = url;
+        
+        const timer = setTimeout(() => {
+            reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
+        }, timeout);
+
+        const cleanup = () => {
+            clearTimeout(timer);
+            this.elements.audio.removeEventListener('canplay', onCanPlay);
+            this.elements.audio.removeEventListener('error', onError);
+        };
+
+        const onCanPlay = () => {
+            cleanup();
+            resolve();
+        };
+
+        const onError = (e) => {
+            cleanup();
+            reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
+        };
+
+        this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
+        this.elements.audio.addEventListener('error', onError, { once: true });
+        
+        this.elements.audio.load();
+    });
+}
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
         const streamUrls = sortedStreams.map(s => s.url);

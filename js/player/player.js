@@ -1,4 +1,4 @@
-class RadioPlayer {
+export class RadioPlayer {
     constructor() {
         this.elements = {
             audio: document.getElementById('radio-stream'),

@@ -185,6 +185,7 @@ async connectToStream(maxRetries = 3) {
                 this.findWorkingStream(),
                 new Promise((_, reject) => 
                     setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
+                            )
             ]);
         } catch (streamError) {
             if (maxRetries > 0) {

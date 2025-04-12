@@ -232,17 +232,28 @@ async preloadNextTracks() {
         this.audioController.play().catch(console.error);
     }
    
+const worker = new Worker('data-worker.js');
+
 async updateTrackInfo() {
-    if (!this.state.currentApiUrl) return;
+    const cacheKey = `trackInfo_${this.state.currentStream?.url}`;
+    
+    // Пробуем взять данные из кэша
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        this.updateUI(JSON.parse(cached));
+    }
     
     try {
-        // Кэшируем запросы
-        const cacheBuster = Date.now();
         const response = await NetworkUtils.fetchWithTimeout(
-            `${this.state.currentApiUrl}?cache=${cacheBuster}`, 
+            this.state.currentApiUrl, 
             2000
         );
         const data = await response.json();
+        
+        // Кэшируем на 1 минуту
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now());
+        
         this.updateUI(data);
     } catch (error) {
         console.error("Ошибка обновления:", error);
@@ -307,7 +318,7 @@ async updateTrackInfo() {
             }
 
             if (data.song_history && Array.isArray(data.song_history)) {
-                this.updateHistory(data.song_history);
+                this.(data.song_history);
             }
 
             if (data.listeners && data.listeners.current) {
@@ -318,17 +329,19 @@ async updateTrackInfo() {
         }
     }
 
-    updateHistory(history) {
-        if (!this.elements.historyList || !history) return;
-
-        this.elements.historyList.innerHTML = '';
-        const recentTracks = history.slice(0, 5);
-
-        recentTracks.forEach((item, index) => {
-            const li = UIHelpers.createHistoryItem(item, index);
-            this.elements.historyList.appendChild(li);
-        });
-    }
+updateHistory(history) {
+    if (!this.elements.historyList) return;
+    
+    // Виртуализация списка - рендерим только видимые элементы
+    const fragment = document.createDocumentFragment();
+    history.slice(0, 10).forEach((item, index) => {
+        const li = UIHelpers.createHistoryItem(item, index);
+        fragment.appendChild(li);
+    });
+    
+    this.elements.historyList.innerHTML = '';
+    this.elements.historyList.appendChild(fragment);
+}
 
     updateListenersCount(count) {
         if (this.elements.listenersCount) {

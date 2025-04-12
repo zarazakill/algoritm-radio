@@ -21,21 +21,29 @@ export class NetworkUtils {
         }
     }
 
-    static async fetchWithTimeout(url, timeout, options = {}) {
-        // Если url - это объект, берем свойство url и мержим опции
+static async fetchWithTimeout(url, timeout, options = {}) {
+    try {
         const urlStr = typeof url === 'object' ? url.url : url;
         const mergedOptions = typeof url === 'object' ? 
             { ...url.corsOptions, ...options } : 
             options;
 
-        return Promise.race([
-            fetch(urlStr, mergedOptions),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
-            )
-        ]);
-    }
+        // Добавляем fallback для CORS
+        if (!mergedOptions.mode) {
+            mergedOptions.mode = 'cors';
+        }
 
+        return await Promise.race([
+            fetch(urlStr, mergedOptions),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Таймаут подключения')), timeout)
+        ]);
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
+    
     static async findWorkingUrl(urls, timeout = 3000) {
         for (const url of urls) {
             try {

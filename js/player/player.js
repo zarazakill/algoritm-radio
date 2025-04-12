@@ -440,20 +440,33 @@ async loadAudioWithTimeout(url, timeout) {
         }
     }
 
-startDiagnostics() {
-    if (!this.config.diagnostics.enabled) return;
+    startDiagnostics() {
+        if (!this.config.diagnostics.enabled) return;
 
-    this.state.diagnosticsIntervalId = setInterval(() => {
-        console.log('Диагностика плеера:', {
-            networkQuality: this.state.networkQuality,
-            bufferingEvents: this.state.diagnostics.bufferingEvents,
-            connectionErrors: this.state.diagnostics.connectionErrors,
-            qualityChanges: this.state.diagnostics.qualityChanges,
-            lastError: this.state.diagnostics.lastError,
-            currentStream: this.state.currentStream?.url,
-            isPlaying: this.state.isPlaying,
-            volume: this.audioController.audio.volume,  // Используем audioController
-            muted: this.audioController.audio.muted     // Используем audioController
-        });
-    }, this.config.diagnostics.logInterval);
+        this.state.diagnosticsIntervalId = setInterval(() => {
+            console.log('Диагностика плеера:', {
+                networkQuality: this.state.networkQuality,
+                bufferingEvents: this.state.diagnostics.bufferingEvents,
+                connectionErrors: this.state.diagnostics.connectionErrors,
+                qualityChanges: this.state.diagnostics.qualityChanges,
+                lastError: this.state.diagnostics.lastError,
+                currentStream: this.state.currentStream?.url,
+                isPlaying: this.state.isPlaying,
+                volume: this.audioController.audio.volume,
+                muted: this.audioController.audio.muted
+            });
+        }, this.config.diagnostics.logInterval);
+    }
+
+    destroy() {
+        if (this.state.diagnosticsIntervalId) {
+            clearInterval(this.state.diagnosticsIntervalId);
+        }
+        if (this.state.updateIntervalId) {
+            clearInterval(this.state.updateIntervalId);
+        }
+        this.audioController.destroy();
+    }
 }
+
+RadioPlayer.DEFAULT_THEME = 'dark';

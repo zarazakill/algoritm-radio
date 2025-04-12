@@ -5,7 +5,6 @@ import { AudioController } from './audio-controller.js';
 
 export class RadioPlayer {
     constructor() {
-        const worker = new Worker('./data-worker.js');
         const requiredElements = ['stream-status', 'volume-slider', 'volume-btn'];
         for (const id of requiredElements) {
             if (!document.getElementById(id)) {

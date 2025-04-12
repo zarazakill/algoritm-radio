@@ -1,34 +1,39 @@
+import { RadioPlayer } from './player/player.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const player = new RadioPlayer();
         
-        const startButton = document.getElementById('start-playback');
-        if (startButton) {
-            startButton.addEventListener('click', async () => {
-                try {
-                    // Скрываем оверлей
-                    const overlay = document.getElementById('audio-overlay');
-                    if (overlay) overlay.style.display = 'none';
-                    
-                    // Явно инициируем подключение к потоку
-                    await player.connectToStream();
-                    
-                    // Пробуем воспроизвести
-                    await player.audioController.play();
-                    
-                    // Возобновляем AudioContext если нужно
-                    if (player.state.audioContext?.state === 'suspended') {
-                        await player.state.audioContext.resume();
-                    }
-                } catch (error) {
-                    console.error("Playback error:", error);
-                    player.audioController.setStatus(`Ошибка: ${error.message}`, true);
-                }
+        // Добавляем проверку перед добавлением обработчика
+document.getElementById('start-playback')?.addEventListener('click', async () => {
+    try {
+        document.getElementById('audio-overlay').style.display = 'none';
+        
+        // Добавляем проверку и ожидание завершения загрузки
+        if (player.elements.audio.readyState < 2) { // 2 = HAVE_ENOUGH_DATA
+            await new Promise(resolve => {
+                player.elements.audio.addEventListener('canplay', resolve, { once: true });
             });
         }
         
+        await player.elements.audio.play();
+        
+        if (player.state.audioContext?.state === 'suspended') {
+            await player.state.audioContext.resume();
+        }
+    } catch (error) {
+        console.error("Playback error:", error);
+        player.setStatus(`Ошибка воспроизведения: ${error.message}`, true);
+    }
+});
+        
         await player.init();
     } catch (error) {
-        console.error("Initialization error:", error);
+        console.error("Fatal initialization error:", error);
+        const statusEl = document.getElementById('stream-status');
+        if (statusEl) {
+            statusEl.textContent = `Ошибка инициализации: ${error.message}`;
+            statusEl.className = 'status-error';
+        }
     }
 });

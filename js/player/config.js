@@ -1,33 +1,11 @@
+// Конфигурация радио-плеера
 const RadioPlayerConfig = {
     streams: [
-        { 
-            url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", 
-            priority: 1,
-            corsOptions: { 
-                mode: 'cors',
-                credentials: 'omit'
-            }
-        },
-        { 
-            url: "https://wwcat.duckdns.org:8000/radio", 
-            priority: 2,
-            corsOptions: { 
-                mode: 'cors',
-                credentials: 'omit'
-            }
-        }
+        { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
+        { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
     ],
     apiEndpoints: [
-        {
-            url: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
-            corsOptions: { 
-                mode: 'cors',
-                credentials: 'omit',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }
-        }
+        "https://wwcat.duckdns.org:8443/api/nowplaying/1"
     ],
     updateInterval: 10000,
     reconnectDelay: 3000,

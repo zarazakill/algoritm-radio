@@ -1,9 +1,21 @@
 import { UIHelpers } from './ui-helpers.js';
 
 export class AudioController {
-    constructor(audioElement, { volumeBtn, volumeSlider, currentTimeEl, progressBar }) {
+    constructor(audioElement, {
+        volumeBtn,
+        volumeSlider,
+        currentTimeEl,
+        progressBar,
+        statusEl
+    }) {
         this.audio = audioElement;
-        this.elements = { volumeBtn, volumeSlider, currentTimeEl, progressBar };
+        this.elements = {
+            volumeBtn,
+            volumeSlider,
+            currentTimeEl,
+            progressBar,
+            statusEl
+        };
         this.abortController = new AbortController();
         
         // Инициализация громкости
@@ -11,6 +23,9 @@ export class AudioController {
         if (this.elements.volumeSlider) {
             this.elements.volumeSlider.value = this.audio.volume;
         }
+        
+        // Настройка обработчиков событий
+        this.setupAudioEventListeners();
     }
 
     // Основные методы управления аудио
@@ -20,6 +35,7 @@ export class AudioController {
             return true;
         } catch (error) {
             console.error('Playback failed:', error);
+            this.setStatus(`Ошибка воспроизведения: ${error.message}`, true);
             throw error;
         }
     }
@@ -58,37 +74,12 @@ export class AudioController {
     }
 
     // Управление источником аудио
-    async setSource(url) {
+    async setSource(url, timeout = 10000) {
         try {
             this.abortController.abort();
             this.abortController = new AbortController();
 
-            await new Promise((resolve, reject) => {
-                const timer = setTimeout(() => reject(new Error('Audio load timeout')), 10000);
-
-                const cleanup = () => {
-                    clearTimeout(timer);
-                    this.audio.removeEventListener('canplay', onCanPlay);
-                    this.audio.removeEventListener('error', onError);
-                };
-
-                const onCanPlay = () => {
-                    cleanup();
-                    resolve();
-                };
-
-                const onError = (e) => {
-                    cleanup();
-                    reject(new Error(`Audio error: ${e.target.error?.message || 'Unknown'}`));
-                };
-
-                this.audio.addEventListener('canplay', onCanPlay, { once: true });
-                this.audio.addEventListener('error', onError, { once: true });
-
-                this.audio.src = url;
-                this.audio.load();
-            });
-
+            await this.loadAudioWithTimeout(url, timeout);
             return true;
         } catch (error) {
             if (error.name !== 'AbortError') {
@@ -97,6 +88,39 @@ export class AudioController {
             }
             return false;
         }
+    }
+
+    async loadAudioWithTimeout(url, timeout) {
+        return new Promise((resolve, reject) => {
+            // Очистка предыдущего источника
+            this.audio.src = '';
+            this.audio.src = url;
+            
+            const timer = setTimeout(() => {
+                reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
+            }, timeout);
+
+            const cleanup = () => {
+                clearTimeout(timer);
+                this.audio.removeEventListener('canplay', onCanPlay);
+                this.audio.removeEventListener('error', onError);
+            };
+
+            const onCanPlay = () => {
+                cleanup();
+                resolve();
+            };
+
+            const onError = (e) => {
+                cleanup();
+                reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
+            };
+
+            this.audio.addEventListener('canplay', onCanPlay, { once: true });
+            this.audio.addEventListener('error', onError, { once: true });
+            
+            this.audio.load();
+        });
     }
 
     // Прогресс воспроизведения
@@ -110,6 +134,28 @@ export class AudioController {
 
         this.audio.addEventListener('timeupdate', updateProgress);
         return () => this.audio.removeEventListener('timeupdate', updateProgress);
+    }
+
+    // Статус и обработка ошибок
+    setStatus(text, isError = false) {
+        if (this.elements.statusEl) {
+            this.elements.statusEl.textContent = text;
+            this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
+        }
+    }
+
+    setupAudioEventListeners() {
+        this.audio.addEventListener('error', () => {
+            throw new Error("Audio element error");
+        });
+
+        this.audio.addEventListener('stalled', () => {
+            throw new Error("Audio stalled");
+        });
+
+        this.audio.addEventListener('waiting', () => {
+            throw new Error("Audio buffering");
+        });
     }
 
     // Очистка

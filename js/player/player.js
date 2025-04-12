@@ -96,6 +96,7 @@ handleWorkerError(error) {
     }
 
 async init() {
+  try {
     // Основная инициализация
     const initTasks = [
         this.setupThemeToggle(),
@@ -109,6 +110,12 @@ async init() {
     // Последовательные действия
     await this.connectWithRetry(3);
     await this.initializeData();
+
+                } catch (error) {
+        console.error("Ошибка инициализации плеера:", error);
+        this.audioController.setStatus("Ошибка инициализации", true);
+        throw error;
+    }
 }
 
 async connectWithRetry(maxAttempts) {
@@ -319,22 +326,24 @@ async initWorker() {
     }
 }
 
-        updateUI(data) {
-            // Отложенный рендеринг для тяжелых элементов
-            requestAnimationFrame(() => {
-                this.updateCurrentTrack(data.now_playing);
-        
-                setTimeout(() => {
-                    if (data.playing_next) this.updateNextTrack(data.playing_next);
-                    if (data.song_history) this.updateHistory(data.song_history);
-                }, 0);
-            });
+updateUI(data) {
+    // Отложенный рендеринг для тяжелых элементов
+    requestAnimationFrame(() => {
+        this.updateCurrentTrack(data.now_playing);
 
-            // Приоритетные данные загружаем сразу
-            if (data.listeners?.current) {
-                this.updateListenersCount(data.listeners.current);
-            }
-                if (!this.worker) {
+        setTimeout(() => {
+            if (data.playing_next) this.updateNextTrack(data.playing_next);
+            if (data.song_history) this.updateHistory(data.song_history);
+        }, 0);
+    });
+
+    // Приоритетные данные загружаем сразу
+    if (data.listeners?.current) {
+        this.updateListenersCount(data.listeners.current);
+    }
+
+    // Fallback если Worker не доступен
+    if (!this.worker) {
         const processed = {
             now_playing: this.processTrack(data.now_playing),
             history: Array.isArray(data.song_history) ? 
@@ -342,9 +351,15 @@ async initWorker() {
                 []
         };
         this.renderUI(processed);
-        return;
     }
-        }
+}
+
+    renderUI(data) {
+    this.updateCurrentTrack(data.now_playing);
+    if (data.history) {
+        this.updateHistory(data.history);
+    }
+}
 
 processTrack(track) {
     if (!track) return null;

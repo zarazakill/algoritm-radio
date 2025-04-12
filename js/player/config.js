@@ -5,12 +5,11 @@ const RadioPlayerConfig = {
             priority: 1,
             corsOptions: { mode: 'cors' }
         },
-                { 
+        { 
             url: "https://wwcat.duckdns.org:8000/radio", 
             priority: 2,
             corsOptions: { mode: 'cors' }
-        },
-        // другие потоки
+        }
     ],
     apiEndpoints: [
         {

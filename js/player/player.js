@@ -76,6 +76,15 @@ async init() {
         console.error("Ошибка инициализации плеера:", error);
         this.setStatus("Критическая ошибка: " + error.message, true);
     }
+    await this.updateTrackInfo();
+        
+        // Ускоренное первое обновление
+        setTimeout(() => this.updateTrackInfo(), 2000);
+        
+    } catch (error) {
+        console.error("Ошибка инициализации плеера:", error);
+        this.setStatus("Критическая ошибка: " + error.message, true);
+    }
 }
 
     setupThemeToggle() {
@@ -290,25 +299,39 @@ async loadAudioWithTimeout(url, timeout) {
         this.elements.audio.load();
     }
     
-    async updateTrackInfo() {
-        if (!this.state.currentApiUrl) {
-            this.state.currentApiUrl = await this.findWorkingApi();
-            if (!this.state.currentApiUrl) return;
-        }
-
-        try {
-            const response = await NetworkUtils.fetchWithTimeout(
-                this.state.currentApiUrl, 
-                2000
-            );
-            const data = await response.json();
-            this.updateUI(data);
-            // ... остальной код ...
-        } catch (error) {
-            console.error("Ошибка обновления:", error);
-            this.state.currentApiUrl = await this.findWorkingApi();
-        }
+async updateTrackInfo() {
+    if (!this.state.currentApiUrl) {
+        this.state.currentApiUrl = await this.findWorkingApi();
+        if (!this.state.currentApiUrl) return;
     }
+
+    // Проверяем, когда было последнее обновление
+    const now = Date.now();
+    if (now - this.state.lastUpdateTime < this.config.updateInterval / 2) {
+        return; // Пропускаем если обновлялись недавно
+    }
+
+    try {
+        const response = await NetworkUtils.fetchWithTimeout(
+            this.state.currentApiUrl, 
+            2000
+        );
+        const data = await response.json();
+        
+        // Кэшируем данные и время последнего обновления
+        this.state.lastTrackData = data;
+        this.state.lastUpdateTime = now;
+        
+        this.updateUI(data);
+    } catch (error) {
+        console.error("Ошибка обновления:", error);
+        // Используем кэшированные данные, если есть
+        if (this.state.lastTrackData) {
+            this.updateUI(this.state.lastTrackData);
+        }
+        this.state.currentApiUrl = await this.findWorkingApi();
+    }
+}
 
         updateUI(data) {
             this.updateCurrentTrack(data.now_playing);

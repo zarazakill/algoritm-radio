@@ -72,11 +72,7 @@ async init() {
         this.startDiagnostics();
         this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
         
-    } catch (error) {
-        console.error("Ошибка инициализации плеера:", error);
-        this.setStatus("Критическая ошибка: " + error.message, true);
-    }
-    await this.updateTrackInfo();
+        await this.updateTrackInfo();
         
         // Ускоренное первое обновление
         setTimeout(() => this.updateTrackInfo(), 2000);

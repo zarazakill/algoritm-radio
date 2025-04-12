@@ -369,8 +369,22 @@ updateHistory(history) {
     }
 
 async findWorkingApi() {
-    const workingApi = await NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
-    return workingApi?.url || null;
+    try {
+        // Сначала пробуем с CORS
+        const workingApi = await NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
+        if (workingApi) return workingApi.url;
+        
+        // Если не работает, пробуем без CORS
+        const noCorsEndpoints = this.config.apiEndpoints.map(ep => ({
+            ...ep,
+            corsOptions: { mode: 'no-cors' }
+        }));
+        const fallbackApi = await NetworkUtils.findWorkingUrl(noCorsEndpoints);
+        return fallbackApi?.url || null;
+    } catch (error) {
+        console.error('Error finding working API:', error);
+        return null;
+    }
 }
 
     handleConnectionError(error) {

@@ -53,31 +53,40 @@ export class RadioPlayer {
         };
     }
 
-    async init() {
-        try {
-            this.setupThemeToggle();
-            this.setupEventListeners();
-            this.initAudioContext();
-            
-            let attempts = 3;
-            while (attempts > 0) {
-                if (await this.connectToStream()) break;
-                attempts--;
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-            
-            this.state.currentApiUrl = await this.findWorkingApi();
-            this.startDiagnostics();
-            this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
-            
-            // Перенесено после инициализации основных компонентов
-            await this.preloadNextTracks();
-            
-        } catch (error) {
-            console.error("Ошибка инициализации плеера:", error);
-            this.audioController.setStatus("Критическая ошибка: " + error.message, true);
-        }
+async init() {
+    // Основная инициализация
+    const initTasks = [
+        this.setupThemeToggle(),
+        this.setupEventListeners(),
+        this.initAudioContext()
+    ];
+    
+    // Параллельная загрузка
+    await Promise.all(initTasks);
+    
+    // Последовательные действия
+    await this.connectWithRetry(3);
+    await this.initializeData();
+}
+
+async connectWithRetry(maxAttempts) {
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+        if (await this.connectToStream()) return true;
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
     }
+    throw new Error("Не удалось подключиться после нескольких попыток");
+}
+
+async initializeData() {
+    await Promise.all([
+        this.findWorkingApi().then(url => { this.state.currentApiUrl = url; }),
+        this.updateTrackInfo(),
+        this.preloadNextTracks()
+    ]);
+    this.startDiagnostics();
+}
 
     setupThemeToggle() {
         const body = document.body;

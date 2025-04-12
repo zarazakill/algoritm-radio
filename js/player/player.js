@@ -376,22 +376,7 @@ export class RadioPlayer {
             this.config.updateInterval * 3
         );
     }
-
-    handleForegroundTab() {
-        if (this.state.audioContext) {
-            this.state.audioContext.resume().catch(console.error);
-        }
-
-        clearInterval(this.state.updateIntervalId);
-        this.state.updateIntervalId = setInterval(
-            () => this.updateTrackInfo(),
-            this.config.updateInterval
-        );
-
-    if (this.state.isPlaying) {
-        this.audioController.play().catch(console.error);
-    }
-   
+  
     initAudioContext() {
         try {
             this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -416,6 +401,22 @@ export class RadioPlayer {
                 muted: this.audioController.isMuted()
             });
         }, this.config.diagnostics.logInterval);
+    }
+
+    handleForegroundTab() {
+        if (this.state.audioContext) {
+            this.state.audioContext.resume().catch(console.error);
+        }
+
+        clearInterval(this.state.updateIntervalId);
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(),
+            this.config.updateInterval
+        );
+
+        if (this.state.isPlaying) {
+            this.audioController.play().catch(console.error);
+        }
     }
 
     destroy() {

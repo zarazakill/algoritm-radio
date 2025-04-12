@@ -2,7 +2,25 @@ import { RadioPlayer } from './player/player.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        console.log('Initializing player...');
         const player = new RadioPlayer();
+        await player.init();
+        
+        // Простая проверка работы кнопки
+        document.getElementById('start-playback').addEventListener('click', () => {
+            console.log('Play button clicked');
+            player.elements.audio.play().catch(e => console.error('Play error:', e));
+        });
+        
+    } catch (error) {
+        console.error("Initialization failed:", error);
+        const statusEl = document.getElementById('stream-status');
+        if (statusEl) {
+            statusEl.textContent = `Error: ${error.message}`;
+            statusEl.className = 'status-error';
+        }
+    }
+});
         
         // Добавляем проверку перед добавлением обработчика
 document.getElementById('start-playback')?.addEventListener('click', async () => {

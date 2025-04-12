@@ -137,17 +137,29 @@ export class RadioPlayer {
     }
 }
 
-    async connectToStream(maxRetries = 3) {
-        try {
-            this.audioController.setStatus("Подключение...");
-            
-            try {
-                this.state.currentStream = await Promise.race([
-                    this.findWorkingStream(),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
-                    )
-                ]);
+async connectToStream(maxRetries = 3) {
+    try {
+        this.audioController.setStatus("Подключение...");
+        
+        // Параллельная загрузка потока и информации о треках
+        const [stream, apiUrl] = await Promise.all([
+            this.findWorkingStream().catch(() => null),
+            this.findWorkingApi().catch(() => null)
+        ]);
+
+        if (!stream) throw new Error("Все потоки недоступны");
+        
+        this.state.currentStream = stream;
+        this.state.currentApiUrl = apiUrl;
+
+        // Параллельная загрузка аудио и данных о текущем треке
+        await Promise.all([
+            this.audioController.setSource(stream.url, 10000),
+            this.updateTrackInfo()
+        ]);
+
+        this.audioController.setStatus("Соединение установлено");
+        return true;
             } catch (streamError) {
                 if (maxRetries > 0) {
                     console.warn(`Повторная попытка подключения (осталось ${maxRetries} попыток)`);

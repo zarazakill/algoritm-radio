@@ -15,7 +15,11 @@ const RadioPlayerConfig = {
         enabled: true,
         logInterval: 60000
     },
-    DEFAULT_THEME: 'dark'
+    history: {
+        maxItems: 5,          // Максимальное количество отображаемых треков
+        cacheSize: 20,        // Сколько треков хранить в кеше
+        animationDelay: 100    // Задержка анимации между элементами (мс)
+    }
 };
 
 // Экспорт конфигурации

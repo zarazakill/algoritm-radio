@@ -27,8 +27,7 @@ const RadioPlayerConfig = {
         logInterval: 60000
     },
     DEFAULT_THEME: 'dark'
-
+};
 
 // Экспорт конфигурации
 export default RadioPlayerConfig;
-};

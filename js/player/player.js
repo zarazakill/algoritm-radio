@@ -172,63 +172,38 @@ async connectToStream(maxRetries = 3) {
 
         this.audioController.setStatus("Соединение установлено");
         return true;
-            } catch (streamError) {
-                if (maxRetries > 0) {
-                    console.warn(`Повторная попытка подключения (осталось ${maxRetries} попыток)`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    return this.connectToStream(maxRetries - 1);
-                }
-                throw streamError;
-            }
-
-            if (!this.state.currentStream) {
-                throw new Error("Все потоки недоступны");
-            }
-
-            try {
-                await this.audioController.setSource(this.state.currentStream.url, 10000);
-                this.audioController.setStatus("Соединение установлено");
-                return true;
-            } catch (loadError) {
-                console.error("Ошибка загрузки аудио:", loadError);
-                if (maxRetries > 0) {
-                    return this.connectToStream(maxRetries - 1);
-                }
-                throw loadError;
-            }
-
-        } catch (error) {
-            console.error("Ошибка подключения:", error);
-            this.audioController.setStatus(`Ошибка: ${error.message}`, true);
-            
-            if (error.name !== 'AbortError') {
-                this.handleConnectionError(error);
-            }
-            
-            return false;
-        }
-    }
-
-    async preloadNextTracks() {
-        if (!this.state.currentApiUrl) return;
+    } catch (error) {
+        console.error("Ошибка подключения:", error);
+        this.audioController.setStatus(`Ошибка: ${error.message}`, true);
         
-        try {
-            const response = await fetch(`${this.state.currentApiUrl}/next`);
-            const data = await response.json();
-            // Сохраняем данные для будущего использования
-            this.state.nextTracks = data;
-        } catch (e) {
-            console.log("Не удалось предзагрузить треки", e);
+        if (error.name !== 'AbortError') {
+            this.handleConnectionError(error);
         }
-    }
-
-    async findWorkingStream() {
-        const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
-        const streamUrls = sortedStreams.map(s => s.url);
         
-        const workingUrl = await NetworkUtils.findWorkingUrl(streamUrls);
-        return sortedStreams.find(s => s.url === workingUrl);
+        return false;
     }
+}
+
+async preloadNextTracks() {
+    if (!this.state.currentApiUrl) return;
+    
+    try {
+        const response = await fetch(`${this.state.currentApiUrl}/next`);
+        const data = await response.json();
+        // Сохраняем данные для будущего использования
+        this.state.nextTracks = data;
+    } catch (e) {
+        console.log("Не удалось предзагрузить треки", e);
+    }
+}
+
+async findWorkingStream() {
+    const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
+    const streamUrls = sortedStreams.map(s => s.url);
+    
+    const workingUrl = await NetworkUtils.findWorkingUrl(streamUrls);
+    return sortedStreams.find(s => s.url === workingUrl);
+}
 
     setupAudioBuffer() {
         if (!this.state.audioContext) return;
@@ -330,7 +305,7 @@ async updateTrackInfo() {
             }
 
             if (data.song_history && Array.isArray(data.song_history)) {
-                this.(data.song_history);
+                this.updateHistory(data.song_history);
             }
 
             if (data.listeners && data.listeners.current) {

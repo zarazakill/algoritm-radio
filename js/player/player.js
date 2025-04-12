@@ -116,27 +116,35 @@ async initializeData() {
         button.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
     }
 
-    setupEventListeners() {
-        const handleFirstInteraction = () => {
-            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-                this.state.audioContext.resume();
-            }
-            document.removeEventListener('click', handleFirstInteraction);
-        };
+setupEventListeners() {
+    const handleFirstInteraction = () => {
+        if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+            this.state.audioContext.resume();
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+    };
 
-        document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('click', handleFirstInteraction);
 
-        // Обработчики громкости теперь управляются AudioController
-        this.audioController.setupProgressUpdates();
+    // Добавьте обработчики для кнопки mute и слайдера громкости
+    document.getElementById('volume-btn').addEventListener('click', () => {
+        this.audioController.toggleMute();
+    });
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.handleBackgroundTab();
-            } else {
-                this.handleForegroundTab();
-            }
-        });
-    }
+    document.getElementById('volume-slider').addEventListener('input', (e) => {
+        this.audioController.setVolume(parseFloat(e.target.value));
+    });
+
+    this.audioController.setupProgressUpdates();
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            this.handleBackgroundTab();
+        } else {
+            this.handleForegroundTab();
+        }
+    });
+}
 
     updateVolumeIcon() {
     if (!this.elements.volumeBtn) return;

@@ -5,7 +5,7 @@ import { AudioController } from './audio-controller.js';
 
 export class RadioPlayer {
     constructor() {
-        const requiredElements = ['radio-stream', 'stream-status', 'volume-slider', 'volume-btn'];
+        const requiredElements = ['stream-status', 'volume-slider', 'volume-btn'];
         for (const id of requiredElements) {
             if (!document.getElementById(id)) {
                 throw new Error(`Не найден элемент #${id}`);
@@ -185,38 +185,6 @@ export class RadioPlayer {
         }
     }
 
-async loadAudioWithTimeout(url, timeout) {
-    return new Promise((resolve, reject) => {
-        // Очистка предыдущего источника
-        this.elements.audio.src = '';
-        this.elements.audio.src = url;
-        
-        const timer = setTimeout(() => {
-            reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
-        }, timeout);
-
-        const cleanup = () => {
-            clearTimeout(timer);
-            this.elements.audio.removeEventListener('canplay', onCanPlay);
-            this.elements.audio.removeEventListener('error', onError);
-        };
-
-        const onCanPlay = () => {
-            cleanup();
-            resolve();
-        };
-
-        const onError = (e) => {
-            cleanup();
-            reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
-        };
-
-        this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
-        this.elements.audio.addEventListener('error', onError, { once: true });
-        
-        this.elements.audio.load();
-    });
-}
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
         const streamUrls = sortedStreams.map(s => s.url);
@@ -228,7 +196,7 @@ async loadAudioWithTimeout(url, timeout) {
     setupAudioBuffer() {
         if (!this.state.audioContext) return;
 
-        const source = this.state.audioContext.createMediaElementSource(this.elements.audio);
+        const source = this.state.audioContext.createMediaElementSource(this.audioController.audio);
         const analyser = this.state.audioContext.createAnalyser();
         source.connect(analyser);
         analyser.connect(this.state.audioContext.destination);
@@ -236,16 +204,9 @@ async loadAudioWithTimeout(url, timeout) {
 
     async togglePlayback() {
         await this.connectToStream();
-        this.elements.audio.play().catch(console.error);
+        this.audioController.play().catch(console.error);
     }
-
-    async loadAudioSource(url) {
-        this.elements.audio.src = '';
-        await new Promise(resolve => setTimeout(resolve, 50)); // Даем время на разгрузку
-        this.elements.audio.src = url;
-        this.elements.audio.load();
-    }
-    
+   
     async updateTrackInfo() {
         if (!this.state.currentApiUrl) {
             this.state.currentApiUrl = await this.findWorkingApi();
@@ -427,11 +388,10 @@ async loadAudioWithTimeout(url, timeout) {
             this.config.updateInterval
         );
 
-        if (this.state.isPlaying) {
-            this.elements.audio.play().catch(console.error);
-        }
+    if (this.state.isPlaying) {
+        this.audioController.play().catch(console.error);
     }
-
+   
     initAudioContext() {
         try {
             this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -452,8 +412,8 @@ async loadAudioWithTimeout(url, timeout) {
                 lastError: this.state.diagnostics.lastError,
                 currentStream: this.state.currentStream?.url,
                 isPlaying: this.state.isPlaying,
-                volume: this.audioController.audio.volume,
-                muted: this.audioController.audio.muted
+                volume: this.audioController.getVolume(),
+                muted: this.audioController.isMuted()
             });
         }, this.config.diagnostics.logInterval);
     }

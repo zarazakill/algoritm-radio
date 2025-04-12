@@ -159,12 +159,28 @@ export class AudioController {
     }
 
     // Очистка
-destroy() {
-    if (this.state.diagnosticsIntervalId) {
-        clearInterval(this.state.diagnosticsIntervalId);
+    destroy() {
+        this.abortController.abort();
+        this.audio.src = '';
+        this.audio.removeAttribute('src');
+        
+        // Очистка всех обработчиков событий
+        this.audio.replaceWith(this.audio.cloneNode(true));
     }
-    if (this.state.updateIntervalId) {
-        clearInterval(this.state.updateIntervalId);
+    
+    // Вспомогательные методы
+    getVolume() {
+        return this.audio.volume;
     }
-    this.audioController.destroy();
+    
+    isMuted() {
+        return this.audio.muted;
+    }
+    
+    isPlaying() {
+        return !this.audio.paused && !this.audio.ended && this.audio.readyState > 2;
+    }
 }
+
+// Добавляем статические константы при необходимости
+AudioController.DEFAULT_VOLUME = 0.7;

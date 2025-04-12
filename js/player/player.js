@@ -13,6 +13,37 @@ export class RadioPlayer {
             }
         }
 
+    try {
+        // Проверяем поддержку Workers
+        if (window.Worker) {
+            this.worker = new Worker(new URL('./data-worker.js', import.meta.url));
+            this.worker.onmessage = this.handleWorkerMessage.bind(this);
+            this.worker.onerror = this.handleWorkerError.bind(this);
+        } else {
+            console.warn('Web Workers не поддерживаются в этом браузере');
+        }
+    } catch (error) {
+        console.error('Ошибка инициализации Worker:', error);
+    }
+}
+
+handleWorkerMessage(e) {
+    if (e.data.error) {
+        console.error('Ошибка из Worker:', e.data.error);
+        // Используем обычную обработку данных
+        this.updateUI(e.data.original || {});
+    } else {
+        this.updateUI(e.data);
+    }
+}
+
+handleWorkerError(error) {
+    console.error('Worker error:', error);
+    // Отключаем Worker при ошибке
+    this.worker?.terminate();
+    this.worker = null;
+}
+        
         this.audioController = new AudioController(
             document.getElementById('radio-stream'),
             {

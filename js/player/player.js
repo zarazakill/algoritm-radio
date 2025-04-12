@@ -69,6 +69,7 @@ export class RadioPlayer {
             this.state.currentApiUrl = await this.findWorkingApi();
             this.startDiagnostics();
             this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
+            this.preloadNextTracks();
             
         } catch (error) {
             console.error("Ошибка инициализации плеера:", error);
@@ -197,6 +198,18 @@ async connectToStream(maxRetries = 3) {
         }
     }
 
+async preloadNextTracks() {
+    if (!this.state.currentApiUrl) return;
+    
+    try {
+        const response = await fetch(`${this.state.currentApiUrl}/next`);
+        const data = await response.json();
+        // Можно предзагрузить аудио или сохранить данные
+    } catch (e) {
+        console.log("Не удалось предзагрузить треки", e);
+    }
+}
+
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
         const streamUrls = sortedStreams.map(s => s.url);
@@ -219,38 +232,36 @@ async connectToStream(maxRetries = 3) {
         this.audioController.play().catch(console.error);
     }
    
-    async updateTrackInfo() {
-        if (!this.state.currentApiUrl) {
-            this.state.currentApiUrl = await this.findWorkingApi();
-            if (!this.state.currentApiUrl) return;
-        }
-
-        try {
-            const response = await NetworkUtils.fetchWithTimeout(
-                this.state.currentApiUrl, 
-                2000
-            );
-            const data = await response.json();
-            this.updateUI(data);
-            // ... остальной код ...
-        } catch (error) {
-            console.error("Ошибка обновления:", error);
-            this.state.currentApiUrl = await this.findWorkingApi();
-        }
+async updateTrackInfo() {
+    if (!this.state.currentApiUrl) return;
+    
+    try {
+        // Кэшируем запросы
+        const cacheBuster = Date.now();
+        const response = await NetworkUtils.fetchWithTimeout(
+            `${this.state.currentApiUrl}?cache=${cacheBuster}`, 
+            2000
+        );
+        const data = await response.json();
+        this.updateUI(data);
+    } catch (error) {
+        console.error("Ошибка обновления:", error);
     }
+}
 
         updateUI(data) {
-            this.updateCurrentTrack(data.now_playing);
+            // Отложенный рендеринг для тяжелых элементов
+            requestAnimationFrame(() => {
+                this.updateCurrentTrack(data.now_playing);
+        
+                setTimeout(() => {
+                    if (data.playing_next) this.updateNextTrack(data.playing_next);
+                    if (data.song_history) this.updateHistory(data.song_history);
+                }, 0);
+            });
 
-            if (data.playing_next) {
-                this.updateNextTrack(data.playing_next);
-            }
-
-            if (data.song_history) {
-                this.updateHistory(data.song_history);
-            }
-
-            if (data.listeners && data.listeners.current) {
+            // Приоритетные данные загружаем сразу
+            if (data.listeners?.current) {
                 this.updateListenersCount(data.listeners.current);
             }
         }

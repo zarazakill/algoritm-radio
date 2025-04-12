@@ -68,4 +68,15 @@ export class UIHelpers {
 
         return li;
     }
+    setStatus(text, isError = false) {
+    if (this.elements.statusEl) {
+        this.elements.statusEl.textContent = text;
+        this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
+        
+        if (isError && text.includes('CORS')) {
+            // Показать дополнительную информацию о CORS
+            console.error('CORS error:', text);
+        }
+    }
+}
 }

@@ -46,7 +46,6 @@ export class RadioPlayer {
             }
         };
         this.elements.audio.autoplay = true;
-        this.historyCache = new Map(); // Для кеширования уже загруженных треков
     }
 
 
@@ -292,45 +291,25 @@ async loadAudioWithTimeout(url, timeout) {
     }
     
     async updateTrackInfo() {
-    if (!this.state.currentApiUrl) {
-        this.state.currentApiUrl = await this.findWorkingApi();
-        if (!this.state.currentApiUrl) return;
+        if (!this.state.currentApiUrl) {
+            this.state.currentApiUrl = await this.findWorkingApi();
+            if (!this.state.currentApiUrl) return;
+        }
+
+        try {
+            const response = await NetworkUtils.fetchWithTimeout(
+                this.state.currentApiUrl, 
+                2000
+            );
+            const data = await response.json();
+            this.updateUI(data);
+            // ... остальной код ...
+        } catch (error) {
+            console.error("Ошибка обновления:", error);
+            this.state.currentApiUrl = await this.findWorkingApi();
+        }
     }
 
-    try {
-        // Используем кеширование и параллельные запросы
-        const [currentData, historyData] = await Promise.all([
-            NetworkUtils.fetchWithTimeout(this.state.currentApiUrl, 2000),
-            NetworkUtils.fetchWithTimeout(`${this.state.currentApiUrl}/history`, 2000)
-        ]);
-        
-        const [current, history] = await Promise.all([
-            currentData.json(),
-            historyData.json()
-        ]);
-        
-        this.updateTrackUI({
-            now_playing: current.now_playing,
-            playing_next: current.playing_next,
-            listeners: current.listeners,
-            song_history: this.processHistory(history.data)
-        });
-        
-    } catch (error) {
-        console.error("Ошибка обновления:", error);
-        this.state.currentApiUrl = await this.findWorkingApi();
-    }
-}
-
-processHistory(history) {
-    // Фильтруем дубликаты и обновляем кеш
-    return history.filter(item => {
-        const key = `${item.song.title}-${item.song.artist}`;
-        if (this.historyCache.has(key)) return false;
-        this.historyCache.set(key, true);
-        return true;
-    });
-}
         updateUI(data) {
             this.updateCurrentTrack(data.now_playing);
 
@@ -400,43 +379,16 @@ processHistory(history) {
     }
 
     updateHistory(history) {
-    if (!this.elements.historyList || !history) return;
+        if (!this.elements.historyList || !history) return;
 
-    // Используем DocumentFragment для пакетного добавления элементов
-    const fragment = document.createDocumentFragment();
-    const recentTracks = history.slice(0, 5); // Ограничиваем количество для быстрой отрисовки
+        this.elements.historyList.innerHTML = '';
+        const recentTracks = history.slice(0, 5);
 
-    // Создаем шаблон для клонирования
-    const template = document.createElement('template');
-    template.innerHTML = `
-        <li class="history-item">
-            <span class="history-time"></span>
-            <span class="history-track">
-                <span class="history-title"></span>
-                <span class="history-artist"></span>
-            </span>
-        </li>
-    `;
-
-    recentTracks.forEach((item, index) => {
-        const clone = template.content.cloneNode(true);
-        const li = clone.querySelector('li');
-        
-        // Заполняем данные
-        li.querySelector('.history-time').textContent = UIHelpers.formatTime(item.played_at);
-        li.querySelector('.history-title').textContent = item.song.title || 'Неизвестный трек';
-        li.querySelector('.history-artist').textContent = item.song.artist || 'Неизвестный исполнитель';
-        
-        // Добавляем анимацию задержки
-        li.style.animationDelay = `${index * 0.1}s`;
-        
-        fragment.appendChild(clone);
-    });
-
-    // Очищаем и добавляем все элементы за одну операцию
-    this.elements.historyList.innerHTML = '';
-    this.elements.historyList.appendChild(fragment);
-}
+        recentTracks.forEach((item, index) => {
+            const li = UIHelpers.createHistoryItem(item, index);
+            this.elements.historyList.appendChild(li);
+        });
+    }
 
     updateListenersCount(count) {
         if (this.elements.listenersCount) {

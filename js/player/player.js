@@ -46,6 +46,7 @@ export class RadioPlayer {
             }
         };
         this.elements.audio.autoplay = true;
+        this.historyCache = new Map(); // Для кеширования уже загруженных треков
     }
 
 
@@ -291,25 +292,45 @@ async loadAudioWithTimeout(url, timeout) {
     }
     
     async updateTrackInfo() {
-        if (!this.state.currentApiUrl) {
-            this.state.currentApiUrl = await this.findWorkingApi();
-            if (!this.state.currentApiUrl) return;
-        }
-
-        try {
-            const response = await NetworkUtils.fetchWithTimeout(
-                this.state.currentApiUrl, 
-                2000
-            );
-            const data = await response.json();
-            this.updateUI(data);
-            // ... остальной код ...
-        } catch (error) {
-            console.error("Ошибка обновления:", error);
-            this.state.currentApiUrl = await this.findWorkingApi();
-        }
+    if (!this.state.currentApiUrl) {
+        this.state.currentApiUrl = await this.findWorkingApi();
+        if (!this.state.currentApiUrl) return;
     }
 
+    try {
+        // Используем кеширование и параллельные запросы
+        const [currentData, historyData] = await Promise.all([
+            NetworkUtils.fetchWithTimeout(this.state.currentApiUrl, 2000),
+            NetworkUtils.fetchWithTimeout(`${this.state.currentApiUrl}/history`, 2000)
+        ]);
+        
+        const [current, history] = await Promise.all([
+            currentData.json(),
+            historyData.json()
+        ]);
+        
+        this.updateTrackUI({
+            now_playing: current.now_playing,
+            playing_next: current.playing_next,
+            listeners: current.listeners,
+            song_history: this.processHistory(history.data)
+        });
+        
+    } catch (error) {
+        console.error("Ошибка обновления:", error);
+        this.state.currentApiUrl = await this.findWorkingApi();
+    }
+}
+
+processHistory(history) {
+    // Фильтруем дубликаты и обновляем кеш
+    return history.filter(item => {
+        const key = `${item.song.title}-${item.song.artist}`;
+        if (this.historyCache.has(key)) return false;
+        this.historyCache.set(key, true);
+        return true;
+    });
+}
         updateUI(data) {
             this.updateCurrentTrack(data.now_playing);
 

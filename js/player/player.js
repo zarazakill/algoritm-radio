@@ -379,16 +379,43 @@ async loadAudioWithTimeout(url, timeout) {
     }
 
     updateHistory(history) {
-        if (!this.elements.historyList || !history) return;
+    if (!this.elements.historyList || !history) return;
 
-        this.elements.historyList.innerHTML = '';
-        const recentTracks = history.slice(0, 5);
+    // Используем DocumentFragment для пакетного добавления элементов
+    const fragment = document.createDocumentFragment();
+    const recentTracks = history.slice(0, 5); // Ограничиваем количество для быстрой отрисовки
 
-        recentTracks.forEach((item, index) => {
-            const li = UIHelpers.createHistoryItem(item, index);
-            this.elements.historyList.appendChild(li);
-        });
-    }
+    // Создаем шаблон для клонирования
+    const template = document.createElement('template');
+    template.innerHTML = `
+        <li class="history-item">
+            <span class="history-time"></span>
+            <span class="history-track">
+                <span class="history-title"></span>
+                <span class="history-artist"></span>
+            </span>
+        </li>
+    `;
+
+    recentTracks.forEach((item, index) => {
+        const clone = template.content.cloneNode(true);
+        const li = clone.querySelector('li');
+        
+        // Заполняем данные
+        li.querySelector('.history-time').textContent = UIHelpers.formatTime(item.played_at);
+        li.querySelector('.history-title').textContent = item.song.title || 'Неизвестный трек';
+        li.querySelector('.history-artist').textContent = item.song.artist || 'Неизвестный исполнитель';
+        
+        // Добавляем анимацию задержки
+        li.style.animationDelay = `${index * 0.1}s`;
+        
+        fragment.appendChild(clone);
+    });
+
+    // Очищаем и добавляем все элементы за одну операцию
+    this.elements.historyList.innerHTML = '';
+    this.elements.historyList.appendChild(fragment);
+}
 
     updateListenersCount(count) {
         if (this.elements.listenersCount) {

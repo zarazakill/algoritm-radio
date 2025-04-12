@@ -159,9 +159,12 @@ export class AudioController {
     }
 
     // Очистка
-    destroy() {
-        this.abortController.abort();
-        this.audio.src = '';
-        this.audio.removeAttribute('src');
+destroy() {
+    if (this.state.diagnosticsIntervalId) {
+        clearInterval(this.state.diagnosticsIntervalId);
     }
+    if (this.state.updateIntervalId) {
+        clearInterval(this.state.updateIntervalId);
+    }
+    this.audioController.destroy();
 }

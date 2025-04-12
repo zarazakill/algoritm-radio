@@ -51,21 +51,34 @@ export class UIHelpers {
      * @param {number} index - Индекс в списке
      * @returns {HTMLElement} - Созданный элемент списка
      */
-    static createHistoryItem(item, index) {
-        const li = document.createElement('li');
-        if (index === 0) li.classList.add('new-track');
+static createHistoryItem(item, index) {
+    const li = document.createElement('li');
+    if (index === 0) li.classList.add('new-track');
 
-        const song = item.song || {};
-        const title = song.title || 'Неизвестный трек';
-        const artist = song.artist || 'Неизвестный исполнитель';
-        const duration = item.duration ? this.formatTime(item.duration) : '';
+    const song = item.song || {};
+    const title = song.title || 'Неизвестный трек';
+    const artist = song.artist || 'Неизвестный исполнитель';
+    const duration = item.duration ? this.formatTime(item.duration) : '';
 
-        li.innerHTML = `
-            <span class="track-title">${title}</span>
-            <span class="track-artist">${artist}</span>
-            ${duration ? `<span class="track-time">${duration}</span>` : ''}
-        `;
+    // Используем textContent вместо innerHTML для безопасности и производительности
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'track-title';
+    titleSpan.textContent = title;
 
-        return li;
+    const artistSpan = document.createElement('span');
+    artistSpan.className = 'track-artist';
+    artistSpan.textContent = artist;
+
+    li.appendChild(titleSpan);
+    li.appendChild(artistSpan);
+
+    if (duration) {
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'track-time';
+        timeSpan.textContent = duration;
+        li.appendChild(timeSpan);
     }
+
+    return li;
+}
 }

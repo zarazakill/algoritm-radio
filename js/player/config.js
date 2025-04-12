@@ -31,4 +31,3 @@ const RadioPlayerConfig = {
 
 // Экспорт конфигурации
 export default RadioPlayerConfig;
-};

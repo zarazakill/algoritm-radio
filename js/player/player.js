@@ -35,6 +35,8 @@ export class RadioPlayer {
 
         this.config = RadioPlayerConfig;
         this.state = {
+            diagnosticsIntervalId: null,
+            updateIntervalId: null,
             currentStream: null,
             currentApiUrl: null,
             isPlaying: false,

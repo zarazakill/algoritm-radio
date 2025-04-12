@@ -5,6 +5,7 @@ import { AudioController } from './audio-controller.js';
 
 export class RadioPlayer {
     constructor() {
+        const worker = new Worker('data-worker.js');
         const requiredElements = ['stream-status', 'volume-slider', 'volume-btn'];
         for (const id of requiredElements) {
             if (!document.getElementById(id)) {
@@ -219,8 +220,6 @@ async findWorkingStream() {
         this.audioController.play().catch(console.error);
     }
    
-const worker = new Worker('data-worker.js');
-
 async updateTrackInfo() {
     const cacheKey = `trackInfo_${this.state.currentStream?.url}`;
     

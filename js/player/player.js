@@ -4,55 +4,28 @@ import { UIHelpers } from './ui-helpers.js';
 import { AudioController } from './audio-controller.js';
 
 export class RadioPlayer {
-constructor() {
-    const requiredElements = ['stream-status', 'volume-slider', 'volume-btn'];
-    for (const id of requiredElements) {
-        if (!document.getElementById(id)) {
-            throw new Error(`Не найден элемент #${id}`);
+    constructor() {
+        const requiredElements = ['stream-status', 'volume-slider', 'volume-btn'];
+        for (const id of requiredElements) {
+            if (!document.getElementById(id)) {
+                throw new Error(`Не найден элемент #${id}`);
+            }
         }
-    }
 
-    // Инициализация Web Worker
-    this.worker = null;
-    if (window.Worker) {
-        try {
-            // Для GitHub Pages используем относительный путь
-            const workerUrl = './data-worker.js';
-            this.worker = new Worker(workerUrl);
-            this.worker.onmessage = this.handleWorkerMessage.bind(this);
-            this.worker.onerror = this.handleWorkerError.bind(this);
-        } catch (error) {
-            console.error('Ошибка инициализации Worker:', error);
-            this.worker = null;
-
-    this.audioController = new AudioController(
-        document.getElementById('radio-stream'),
-        {
-            volumeBtn: document.getElementById('volume-btn'),
-            volumeSlider: document.getElementById('volume-slider'),
-            currentTimeEl: document.getElementById('current-time'),
-            progressBar: document.getElementById('progress-bar'),
-            statusEl: document.getElementById('stream-status')
+        // Инициализация Web Worker
+        this.worker = null;
+        if (window.Worker) {
+            try {
+                const workerUrl = './data-worker.js';
+                this.worker = new Worker(workerUrl);
+                this.worker.onmessage = this.handleWorkerMessage.bind(this);
+                this.worker.onerror = this.handleWorkerError.bind(this);
+            } catch (error) {
+                console.error('Ошибка инициализации Worker:', error);
+                this.worker = null;
+            }
         }
-    );
 
-handleWorkerMessage(e) {
-    if (e.data.error) {
-        console.error('Ошибка из Worker:', e.data.error);
-        // Используем обычную обработку данных
-        this.updateUI(e.data.original || {});
-    } else {
-        this.updateUI(e.data);
-    }
-}
-
-handleWorkerError(error) {
-    console.error('Worker error:', error);
-    // Отключаем Worker при ошибке
-    this.worker?.terminate();
-    this.worker = null;
-}
-        
         this.audioController = new AudioController(
             document.getElementById('radio-stream'),
             {
@@ -92,6 +65,21 @@ handleWorkerError(error) {
                 lastError: null
             }
         };
+    }
+
+    handleWorkerMessage(e) {
+        if (e.data.error) {
+            console.error('Ошибка из Worker:', e.data.error);
+            this.updateUI(e.data.original || {});
+        } else {
+            this.updateUI(e.data);
+        }
+    }
+
+    handleWorkerError(error) {
+        console.error('Worker error:', error);
+        this.worker?.terminate();
+        this.worker = null;
     }
 
 async init() {

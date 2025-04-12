@@ -69,7 +69,9 @@ export class RadioPlayer {
             this.state.currentApiUrl = await this.findWorkingApi();
             this.startDiagnostics();
             this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
-            this.preloadNextTracks();
+            
+            // Перенесено после инициализации основных компонентов
+            await this.preloadNextTracks();
             
         } catch (error) {
             console.error("Ошибка инициализации плеера:", error);
@@ -198,17 +200,18 @@ async connectToStream(maxRetries = 3) {
         }
     }
 
-async preloadNextTracks() {
-    if (!this.state.currentApiUrl) return;
-    
-    try {
-        const response = await fetch(`${this.state.currentApiUrl}/next`);
-        const data = await response.json();
-        // Можно предзагрузить аудио или сохранить данные
-    } catch (e) {
-        console.log("Не удалось предзагрузить треки", e);
+    async preloadNextTracks() {
+        if (!this.state.currentApiUrl) return;
+        
+        try {
+            const response = await fetch(`${this.state.currentApiUrl}/next`);
+            const data = await response.json();
+            // Сохраняем данные для будущего использования
+            this.state.nextTracks = data;
+        } catch (e) {
+            console.log("Не удалось предзагрузить треки", e);
+        }
     }
-}
 
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);

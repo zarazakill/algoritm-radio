@@ -14,17 +14,16 @@ constructor() {
 
     // Инициализация Web Worker
     this.worker = null;
-    try {
-        if (window.Worker) {
-            this.worker = new Worker(new URL('./data-worker.js', import.meta.url));
+    if (window.Worker) {
+        try {
+            // Для GitHub Pages используем относительный путь
+            const workerUrl = './data-worker.js';
+            this.worker = new Worker(workerUrl);
             this.worker.onmessage = this.handleWorkerMessage.bind(this);
             this.worker.onerror = this.handleWorkerError.bind(this);
-        } else {
-            console.warn('Web Workers не поддерживаются в этом браузере');
-        }
-    } catch (error) {
-        console.error('Ошибка инициализации Worker:', error);
-    }
+        } catch (error) {
+            console.error('Ошибка инициализации Worker:', error);
+            this.worker = null;
 
     this.audioController = new AudioController(
         document.getElementById('radio-stream'),

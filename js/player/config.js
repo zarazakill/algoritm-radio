@@ -3,18 +3,30 @@ const RadioPlayerConfig = {
         { 
             url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", 
             priority: 1,
-            corsOptions: { mode: 'cors' }
+            corsOptions: { 
+                mode: 'cors',
+                credentials: 'omit'
+            }
         },
         { 
             url: "https://wwcat.duckdns.org:8000/radio", 
             priority: 2,
-            corsOptions: { mode: 'cors' }
+            corsOptions: { 
+                mode: 'cors',
+                credentials: 'omit'
+            }
         }
     ],
     apiEndpoints: [
         {
             url: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
-            corsOptions: { mode: 'cors' }
+            corsOptions: { 
+                mode: 'cors',
+                credentials: 'omit',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }
         }
     ],
     updateInterval: 10000,

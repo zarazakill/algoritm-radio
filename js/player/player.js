@@ -266,9 +266,8 @@ async updateTrackInfo() {
     if (!this.state.currentApiUrl) return;
     
     const cacheKey = `trackInfo_${this.state.currentStream?.url}`;
-    
-    // Пробуем взять данные из кэша
     const cached = localStorage.getItem(cacheKey);
+    
     if (cached) {
         this.updateUI(JSON.parse(cached));
     }
@@ -277,28 +276,36 @@ async updateTrackInfo() {
         const response = await NetworkUtils.fetchWithTimeout(
             this.state.currentApiUrl, 
             2000,
-            {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }
+            { headers: { 'Accept': 'application/json' } }
         );
-        
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
         const data = await response.json();
         
-        // Кэшируем на 1 минуту
+        // Кэшируем данные
         localStorage.setItem(cacheKey, JSON.stringify(data));
         localStorage.setItem(`${cacheKey}_timestamp`, Date.now());
         
-        this.updateUI(data);
+        // Отправляем данные в Worker или обрабатываем напрямую
+        if (this.worker) {
+            this.worker.postMessage(data);
+        } else {
+            this.updateUI(data);
+        }
     } catch (error) {
         console.error("Ошибка обновления:", error);
-        // Попробуем использовать кэшированные данные, если есть
-        if (cached) {
-            this.updateUI(JSON.parse(cached));
+        if (cached) this.updateUI(JSON.parse(cached));
+    }
+}
+
+async initWorker() {
+    try {
+        // Проверяем доступность файла worker
+        const response = await fetch(new URL('./data-worker.js', import.meta.url));
+        if (response.ok) {
+            this.worker = new Worker(new URL('./data-worker.js', import.meta.url));
+            // ... настройка обработчиков ...
         }
+    } catch (error) {
+        console.error('Worker file not found:', error);
     }
 }
 
@@ -317,9 +324,26 @@ async updateTrackInfo() {
             if (data.listeners?.current) {
                 this.updateListenersCount(data.listeners.current);
             }
+                if (!this.worker) {
+        const processed = {
+            now_playing: this.processTrack(data.now_playing),
+            history: Array.isArray(data.song_history) ? 
+                data.song_history.map(this.processTrack) : 
+                []
+        };
+        this.renderUI(processed);
+        return;
+    }
         }
 
-
+processTrack(track) {
+    if (!track) return null;
+    return {
+        title: track.song?.title || 'Неизвестный трек',
+        artist: track.song?.artist || 'Неизвестный исполнитель',
+        duration: track.duration ? UIHelpers.formatTime(track.duration) : ''
+    };
+}
     updateCurrentTrack(nowPlaying) {
         const track = nowPlaying.song;
         const html = `

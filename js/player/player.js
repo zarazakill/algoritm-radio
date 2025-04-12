@@ -378,17 +378,21 @@ async loadAudioWithTimeout(url, timeout) {
         }
     }
 
-    updateHistory(history) {
-        if (!this.elements.historyList || !history) return;
+updateHistory(history) {
+    if (!this.elements.historyList || !history) return;
 
-        this.elements.historyList.innerHTML = '';
-        const recentTracks = history.slice(0, 5);
+    const fragment = document.createDocumentFragment();
+    const recentTracks = history.slice(0, 5); // Ограничиваем количество треков
 
-        recentTracks.forEach((item, index) => {
-            const li = UIHelpers.createHistoryItem(item, index);
-            this.elements.historyList.appendChild(li);
-        });
-    }
+    recentTracks.forEach((item, index) => {
+        const li = UIHelpers.createHistoryItem(item, index);
+        fragment.appendChild(li);
+    });
+
+    // Очищаем и обновляем список за одну операцию
+    this.elements.historyList.innerHTML = '';
+    this.elements.historyList.appendChild(fragment);
+}
 
     updateListenersCount(count) {
         if (this.elements.listenersCount) {

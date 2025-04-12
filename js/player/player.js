@@ -110,6 +110,10 @@ async init() {
     await this.connectWithRetry(3);
     await this.initializeData();
 
+              if (this.worker === null) {
+            console.warn('Worker не доступен, используется fallback');
+        }
+      
                 } catch (error) {
         console.error("Ошибка инициализации плеера:", error);
         this.audioController.setStatus("Ошибка инициализации", true);

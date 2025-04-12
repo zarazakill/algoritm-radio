@@ -1,4 +1,3 @@
-
 :root {
     --primary-color: #bfb8f5;
     --primary-dark: #43379e;
@@ -378,29 +377,32 @@ transform: scale(1.2);
 }
 
 #history-list {
-list-style: none;
-padding: 0;
+    list-style: none;
+    padding: 0;
+    will-change: transform; /* Подсказка браузеру для оптимизации */
+    contain: content; /* Ограничивает область перерисовки */
 }
 
 #history-list li {
-display: grid;
-grid-template-columns: 1fr auto;
-gap: 8px;
-padding: 0.4rem;
-font-size: 0.8rem;
-align-items: center;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 0.4rem;
+    font-size: 0.8rem;
+    align-items: center;
+    transform: translateZ(0); /* Аппаратное ускорение */
 }
 
 #history-list li:hover {
-background: rgba(108, 92, 231, 0.1);
-border-left-color: var(--primary-color);
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--primary-color);
 }
 
 #history-list li::before {
-content: '♫';
-margin-right: 10px;
-color: var(--primary-color);
-font-size: 0.8rem;
+    content: '♫';
+    margin-right: 10px;
+    color: var(--primary-color);
+    font-size: 0.8rem;
 }
 
 .new-track {
@@ -449,8 +451,8 @@ footer {
 }
 
 #stream-status {
-font-weight: 600;
-transition: var(--transition);
+    font-weight: 600;
+    transition: var(--transition);
 }
 
 .status-success {

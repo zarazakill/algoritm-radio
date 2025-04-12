@@ -197,12 +197,15 @@ async preloadNextTracks() {
     if (!this.state.currentApiUrl) return;
     
     try {
-        const response = await fetch(`${this.state.currentApiUrl}/next`);
+        const response = await fetch(this.state.currentApiUrl, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         const data = await response.json();
-        // Сохраняем данные для будущего использования
-        this.state.nextTracks = data;
+        this.state.nextTracks = data.playing_next;
     } catch (e) {
-        console.log("Не удалось предзагрузить треки", e);
+        console.log("Не удалось загрузить данные о следующих треках", e);
     }
 }
 
@@ -229,6 +232,8 @@ async findWorkingStream() {
     }
    
 async updateTrackInfo() {
+    if (!this.state.currentApiUrl) return;
+    
     const cacheKey = `trackInfo_${this.state.currentStream?.url}`;
     
     // Пробуем взять данные из кэша
@@ -240,8 +245,16 @@ async updateTrackInfo() {
     try {
         const response = await NetworkUtils.fetchWithTimeout(
             this.state.currentApiUrl, 
-            2000
+            2000,
+            {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }
         );
+        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
         const data = await response.json();
         
         // Кэшируем на 1 минуту
@@ -251,6 +264,10 @@ async updateTrackInfo() {
         this.updateUI(data);
     } catch (error) {
         console.error("Ошибка обновления:", error);
+        // Попробуем использовать кэшированные данные, если есть
+        if (cached) {
+            this.updateUI(JSON.parse(cached));
+        }
     }
 }
 
@@ -351,9 +368,10 @@ updateHistory(history) {
         }
     }
 
-    async findWorkingApi() {
-        return NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
-    }
+async findWorkingApi() {
+    const workingApi = await NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
+    return workingApi?.url || null;
+}
 
     handleConnectionError(error) {
         console.error("Ошибка подключения:", error);

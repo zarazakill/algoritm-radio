@@ -1,36 +1,40 @@
 import RadioPlayerConfig from './config.js';
 import { NetworkUtils } from './network-utils.js';
 import { UIHelpers } from './ui-helpers.js';
+import { AudioController } from './audio-controller.js';
 
 export class RadioPlayer {
     constructor() {
-            const requiredElements = ['radio-stream', 'stream-status', 'volume-slider'];
-    for (const id of requiredElements) {
-        if (!document.getElementById(id)) {
-            throw new Error(`Не найден элемент #${id}`);
+        const requiredElements = ['radio-stream', 'stream-status', 'volume-slider', 'volume-btn'];
+        for (const id of requiredElements) {
+            if (!document.getElementById(id)) {
+                throw new Error(`Не найден элемент #${id}`);
+            }
         }
-    }
+
+        this.audioController = new AudioController(
+            document.getElementById('radio-stream'),
+            {
+                volumeBtn: document.getElementById('volume-btn'),
+                volumeSlider: document.getElementById('volume-slider'),
+                currentTimeEl: document.getElementById('current-time'),
+                progressBar: document.getElementById('progress-bar'),
+                statusEl: document.getElementById('stream-status')
+            }
+        );
+
         this.elements = {
-            audio: document.getElementById('radio-stream'),
-            statusEl: document.getElementById('stream-status'),
-            volumeSlider: document.getElementById('volume-slider'),
-            volumeBtn: document.getElementById('volume-btn'),
             currentTrackEl: document.getElementById('current-track'),
             nextTrackEl: document.getElementById('next-track'),
             historyList: document.getElementById('history-list'),
             listenersCount: document.getElementById('listeners-count'),
             trackTitle: document.getElementById('track-title'),
             trackArtist: document.getElementById('track-artist'),
-            currentTime: document.getElementById('current-time'),
-            progressBar: document.getElementById('progress-bar'),
             duration: document.getElementById('duration')
         };
 
-            this.abortController = new AbortController();
-        
-            this.config = RadioPlayerConfig;
- 
-            this.state = {
+        this.config = RadioPlayerConfig;
+        this.state = {
             currentStream: null,
             currentApiUrl: null,
             isPlaying: false,
@@ -45,38 +49,30 @@ export class RadioPlayer {
                 lastError: null
             }
         };
-        this.elements.audio.autoplay = true;
     }
 
-
-async init() {
-    try {
-        // Добавляем проверку готовности DOM
-        if (!document.getElementById('radio-stream')) {
-            throw new Error("Не найдены необходимые DOM элементы");
+    async init() {
+        try {
+            this.setupThemeToggle();
+            this.setupEventListeners();
+            this.initAudioContext();
+            
+            let attempts = 3;
+            while (attempts > 0) {
+                if (await this.connectToStream()) break;
+                attempts--;
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            this.state.currentApiUrl = await this.findWorkingApi();
+            this.startDiagnostics();
+            this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
+            
+        } catch (error) {
+            console.error("Ошибка инициализации плеера:", error);
+            this.audioController.setStatus("Критическая ошибка: " + error.message, true);
         }
-
-        this.setupThemeToggle();
-        this.setupEventListeners();
-        this.initAudioContext();
-        
-        // Пробуем подключиться несколько раз при необходимости
-        let attempts = 3;
-        while (attempts > 0) {
-            if (await this.connectToStream()) break;
-            attempts--;
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        this.state.currentApiUrl = await this.findWorkingApi();
-        this.startDiagnostics();
-        this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
-        
-    } catch (error) {
-        console.error("Ошибка инициализации плеера:", error);
-        this.setStatus("Критическая ошибка: " + error.message, true);
     }
-}
 
     setupThemeToggle() {
         const body = document.body;
@@ -105,49 +101,18 @@ async init() {
         button.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
     }
 
-setupEventListeners() {
-    // Сохраняем контекст this для обработчиков событий
-    const self = this;
-
-    const handleFirstInteraction = () => {
-        if (self.state.audioContext && self.state.audioContext.state === 'suspended') {
-            self.state.audioContext.resume();
-        }
-        document.removeEventListener('click', handleFirstInteraction);
-    };
-
-    document.addEventListener('click', handleFirstInteraction);
-
-    // Используем стрелочные функции для сохранения контекста
-    this.elements.volumeBtn.addEventListener('click', () => {
-        self.elements.audio.muted = !self.elements.audio.muted;
-        self.updateVolumeIcon();
-    });
-
-    this.elements.volumeSlider.addEventListener('input', (e) => {
-        self.elements.audio.volume = e.target.value;
-        self.updateVolumeIcon();
-    });
-
-        this.elements.audio.addEventListener('error', () => {
-            this.handleConnectionError(new Error("Audio element error"));
-        });
-
-        this.elements.audio.addEventListener('stalled', () => {
-            this.handleNetworkIssue();
-        });
-
-        this.elements.audio.addEventListener('waiting', () => {
-            this.state.diagnostics.bufferingEvents++;
-            this.handleNetworkIssue();
-        });
-
-        this.elements.audio.addEventListener('timeupdate', () => {
-            if (this.elements.currentTime && this.elements.progressBar) {
-                this.elements.currentTime.textContent = UIHelpers.formatTime(this.elements.audio.currentTime);
-                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
+    setupEventListeners() {
+        const handleFirstInteraction = () => {
+            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+                this.state.audioContext.resume();
             }
-        });
+            document.removeEventListener('click', handleFirstInteraction);
+        };
+
+        document.addEventListener('click', handleFirstInteraction);
+
+        // Обработчики громкости теперь управляются AudioController
+        this.audioController.setupProgressUpdates();
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -170,64 +135,53 @@ setupEventListeners() {
     }
 }
 
-async connectToStream(maxRetries = 3) {
-    try {
-        // 1. Проверка элементов DOM
-        if (!this.elements.audio || !this.elements.statusEl) {
-            throw new Error("Не найдены необходимые DOM элементы");
-        }
-
-        this.setStatus("Подключение...");
-        
-        // 2. Поиск рабочего потока с улучшенной обработкой ошибок
+    async connectToStream(maxRetries = 3) {
         try {
-            this.state.currentStream = await Promise.race([
-                this.findWorkingStream(),
-                new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
-                            )
-            ]);
-        } catch (streamError) {
-            if (maxRetries > 0) {
-                console.warn(`Повторная попытка подключения (осталось ${maxRetries} попыток)`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                return this.connectToStream(maxRetries - 1);
+            this.audioController.setStatus("Подключение...");
+            
+            try {
+                this.state.currentStream = await Promise.race([
+                    this.findWorkingStream(),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
+                    )
+                ]);
+            } catch (streamError) {
+                if (maxRetries > 0) {
+                    console.warn(`Повторная попытка подключения (осталось ${maxRetries} попыток)`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return this.connectToStream(maxRetries - 1);
+                }
+                throw streamError;
             }
-            throw streamError;
-        }
 
-        if (!this.state.currentStream) {
-            throw new Error("Все потоки недоступны");
-        }
-
-        // 3. Управление прерываниями
-        this.abortController?.abort();
-        this.abortController = new AbortController();
-
-        // 4. Загрузка аудио с улучшенной обработкой
-        try {
-            await this.loadAudioWithTimeout(this.state.currentStream.url, 10000);
-            this.setStatus("Соединение установлено");
-            return true;
-        } catch (loadError) {
-            console.error("Ошибка загрузки аудио:", loadError);
-            if (maxRetries > 0) {
-                return this.connectToStream(maxRetries - 1);
+            if (!this.state.currentStream) {
+                throw new Error("Все потоки недоступны");
             }
-            throw loadError;
-        }
 
-    } catch (error) {
-        console.error("Ошибка подключения:", error);
-        this.setStatus(`Ошибка: ${error.message}`, true);
-        
-        if (error.name !== 'AbortError') {
-            this.handleConnectionError(error);
+            try {
+                await this.audioController.setSource(this.state.currentStream.url, 10000);
+                this.audioController.setStatus("Соединение установлено");
+                return true;
+            } catch (loadError) {
+                console.error("Ошибка загрузки аудио:", loadError);
+                if (maxRetries > 0) {
+                    return this.connectToStream(maxRetries - 1);
+                }
+                throw loadError;
+            }
+
+        } catch (error) {
+            console.error("Ошибка подключения:", error);
+            this.audioController.setStatus(`Ошибка: ${error.message}`, true);
+            
+            if (error.name !== 'AbortError') {
+                this.handleConnectionError(error);
+            }
+            
+            return false;
         }
-        
-        return false;
     }
-}
 
 async loadAudioWithTimeout(url, timeout) {
     return new Promise((resolve, reject) => {

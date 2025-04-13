@@ -436,7 +436,10 @@ setStatus(text, isError = false) {
 
     if (isError) {
         statusEl.className = 'status-error';
-        statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${text}`;
+        statusEl.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span class="status-text">${text}</span>
+        `;
     } else {
         statusEl.className = 'status-success';
         statusEl.innerHTML = `
@@ -445,7 +448,7 @@ setStatus(text, isError = false) {
                 <span class="wave-dot"></span>
                 <span class="wave-dot"></span>
             </span>
-            ${text}
+            <span class="status-text">${text}</span>
         `;
     }
 }

@@ -1,3 +1,5 @@
+import { RadioPlayer } from './player/player.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const playButton = document.getElementById('start-playback');
     const buttonText = playButton.querySelector('.button-text');

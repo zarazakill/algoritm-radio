@@ -92,44 +92,6 @@ export class UIHelpers {
     }
 
     /**
-     * Создание элемента истории треков с улучшенной безопасностью и семантикой
-     * @param {Object} item - Данные трека
-     * @param {number} index - Индекс в списке
-     * @param {Object} [options] - Дополнительные опции
-     * @param {Function} [options.onClick] - Обработчик клика
-     * @returns {HTMLElement} - Созданный элемент списка
-     */
-static createHistoryItem(item, index, options = {}) {
-    const li = document.createElement('li');
-    li.setAttribute('role', 'listitem');
-    if (index === 0) li.classList.add('new-track');
-
-    const song = item.song || {};
-    const title = song.title || 'Неизвестный трек';
-    const artist = song.artist || 'Неизвестный исполнитель';
-    const duration = item.duration ? this.formatTime(item.duration) : '';
-
-    // Основной контейнер
-    const container = document.createElement('div');
-    container.className = 'track-container';
-    
-    // Контейнер для текстовой информации
-    const textContainer = document.createElement('div');
-    textContainer.className = 'track-text';
-    
-    li.appendChild(container);
-
-    if (typeof options.onClick === 'function') {
-        li.addEventListener('click', options.onClick);
-        li.style.cursor = 'pointer';
-        li.setAttribute('tabindex', '0');
-        li.setAttribute('role', 'button');
-    }
-
-    return li;
-}
-
-    /**
      * Экранирование HTML для безопасной вставки в DOM
      * @param {string} str - Строка для экранирования
      * @returns {string} - Экранированная строка

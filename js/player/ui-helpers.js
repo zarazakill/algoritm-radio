@@ -117,29 +117,6 @@ static createHistoryItem(item, index, options = {}) {
     const textContainer = document.createElement('div');
     textContainer.className = 'track-text';
     
-    // Название трека
-    const titleSpan = document.createElement('span');
-    titleSpan.className = 'track-title';
-    titleSpan.textContent = title;
-    
-    // Исполнитель
-    const artistSpan = document.createElement('span');
-    artistSpan.className = 'track-artist';
-    artistSpan.textContent = artist;
-    
-    // Время (располагается справа)
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'track-time';
-    timeSpan.textContent = duration;
-    
-    // Собираем структуру
-    textContainer.appendChild(titleSpan);
-    textContainer.appendChild(document.createElement('br')); // Перенос строки
-    textContainer.appendChild(artistSpan);
-    
-    container.appendChild(textContainer);
-    container.appendChild(timeSpan); // Время добавляем отдельно
-    
     li.appendChild(container);
 
     if (typeof options.onClick === 'function') {

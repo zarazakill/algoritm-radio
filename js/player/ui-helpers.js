@@ -99,53 +99,58 @@ export class UIHelpers {
      * @param {Function} [options.onClick] - Обработчик клика
      * @returns {HTMLElement} - Созданный элемент списка
      */
-    static createHistoryItem(item, index, options = {}) {
-        const li = document.createElement('li');
-        li.setAttribute('role', 'listitem');
-        if (index === 0) li.classList.add('new-track');
+static createHistoryItem(item, index, options = {}) {
+    const li = document.createElement('li');
+    li.setAttribute('role', 'listitem');
+    if (index === 0) li.classList.add('new-track');
 
-        const song = item.song || {};
-        const title = song.title || 'Неизвестный трек';
-        const artist = song.artist || 'Неизвестный исполнитель';
-        const duration = item.duration ? this.formatTime(item.duration) : '';
+    const song = item.song || {};
+    const title = song.title || 'Неизвестный трек';
+    const artist = song.artist || 'Неизвестный исполнитель';
+    const duration = item.duration ? this.formatTime(item.duration) : '';
 
-        // Создаем структуру с ARIA-атрибутами
-        const container = document.createElement('div');
-        container.className = 'track-info';
-        container.setAttribute('role', 'group');
+    // Основной контейнер
+    const container = document.createElement('div');
+    container.className = 'track-container';
+    
+    // Контейнер для текстовой информации
+    const textContainer = document.createElement('div');
+    textContainer.className = 'track-text';
+    
+    // Название трека
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'track-title';
+    titleSpan.textContent = title;
+    
+    // Исполнитель
+    const artistSpan = document.createElement('span');
+    artistSpan.className = 'track-artist';
+    artistSpan.textContent = artist;
+    
+    // Время (располагается справа)
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'track-time';
+    timeSpan.textContent = duration;
+    
+    // Собираем структуру
+    textContainer.appendChild(titleSpan);
+    textContainer.appendChild(document.createElement('br')); // Перенос строки
+    textContainer.appendChild(artistSpan);
+    
+    container.appendChild(textContainer);
+    container.appendChild(timeSpan); // Время добавляем отдельно
+    
+    li.appendChild(container);
 
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'track-title';
-        titleSpan.textContent = title;
-        titleSpan.setAttribute('aria-label', `Название: ${title}`);
-
-        const artistSpan = document.createElement('span');
-        artistSpan.className = 'track-artist';
-        artistSpan.textContent = artist;
-        artistSpan.setAttribute('aria-label', `Исполнитель: ${artist}`);
-
-        container.appendChild(titleSpan);
-        container.appendChild(artistSpan);
-
-        if (duration) {
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'track-time';
-            timeSpan.textContent = duration;
-            timeSpan.setAttribute('aria-label', `Длительность: ${duration}`);
-            container.appendChild(timeSpan);
-        }
-
-        li.appendChild(container);
-
-        if (typeof options.onClick === 'function') {
-            li.addEventListener('click', options.onClick);
-            li.style.cursor = 'pointer';
-            li.setAttribute('tabindex', '0');
-            li.setAttribute('role', 'button');
-        }
-
-        return li;
+    if (typeof options.onClick === 'function') {
+        li.addEventListener('click', options.onClick);
+        li.style.cursor = 'pointer';
+        li.setAttribute('tabindex', '0');
+        li.setAttribute('role', 'button');
     }
+
+    return li;
+}
 
     /**
      * Экранирование HTML для безопасной вставки в DOM

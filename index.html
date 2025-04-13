@@ -61,10 +61,13 @@
     </head>
 
 <body>
-
-    <div class="audio-overlay" id="audio-overlay">
-        <button id="start-playback">Запустить радио</button>
-    </div>
+    
+<div class="audio-overlay" id="audio-overlay">
+    <button id="start-playback" disabled>
+        <span class="loading-spinner"></span>
+        <span class="button-text">Инициализация плеера...</span>
+    </button>
+</div>
 
     <div class="container">
         <header>

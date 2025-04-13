@@ -20,6 +20,7 @@ const RadioPlayerConfig = {
         cacheSize: 20,        // Сколько треков хранить в кеше
         animationDelay: 100    // Задержка анимации между элементами (мс)
     }
+        DEFAULT_THEME: 'dark'
 };
 
 // Экспорт конфигурации

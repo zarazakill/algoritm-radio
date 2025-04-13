@@ -71,7 +71,7 @@ const RadioPlayerConfig = {
         maxItems: 5,
         cacheSize: 20,
         animationDelay: 100,
-        persist: false // Сохранять ли историю между сеансами
+        persist: false
     },
     themes: {
         default: 'dark',
@@ -83,20 +83,19 @@ const RadioPlayerConfig = {
         fallbackTitle: 'Радио Алгоритм',
         fallbackArtist: 'Неизвестный исполнитель'
     },
-    // Добавляем версию конфига для совместимости
     version: '1.0.0'
 };
 
-// Валидация конфигурации при разработке
-if (process.env.NODE_ENV === 'development') {
-    validateConfig(RadioPlayerConfig);
-}
-
 /**
- * Валидация конфигурации
- * @param {RadioPlayerConfig} config 
+ * Валидация конфигурации (только в development режиме)
  */
 function validateConfig(config) {
+    // Проверяем наличие глобальной переменной для определения режима
+    const isDevelopment = window.__DEBUG_MODE__ || 
+                        (typeof APP_ENV !== 'undefined' && APP_ENV === 'development');
+    
+    if (!isDevelopment) return;
+
     const requiredFields = [
         'streams', 'apiEndpoints', 'updateInterval',
         'reconnectDelay', 'bufferLength'
@@ -112,5 +111,8 @@ function validateConfig(config) {
         console.warn('No primary stream (priority 1) configured');
     }
 }
+
+// Выполняем валидацию
+validateConfig(RadioPlayerConfig);
 
 export default RadioPlayerConfig;

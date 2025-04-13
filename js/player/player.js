@@ -48,7 +48,6 @@ export class RadioPlayer {
         this.elements.audio.autoplay = true;
     }
 
-
 async init() {
     try {
         // Добавляем проверку готовности DOM
@@ -60,26 +59,36 @@ async init() {
         this.setupEventListeners();
         this.initAudioContext();
         
+        // Устанавливаем начальный статус
+        this.setStatus("Подключение к серверу...");
+        
         // Пробуем подключиться несколько раз при необходимости
-        let attempts = 3;
+        let attempts = 5;
         while (attempts > 0) {
             if (await this.connectToStream()) break;
             attempts--;
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
         
         this.state.currentApiUrl = await this.findWorkingApi();
         this.startDiagnostics();
-        this.state.updateIntervalId = setInterval(() => this.updateTrackInfo(), this.config.updateInterval);
         
+        // Первое обновление информации
         await this.updateTrackInfo();
         
-        // Ускоренное первое обновление
-        setTimeout(() => this.updateTrackInfo(), 2000);
+        // Ускоренное второе обновление через 3 секунды
+        setTimeout(() => this.updateTrackInfo(), 3000);
+        
+        // Устанавливаем интервал для регулярных обновлений
+        this.state.updateIntervalId = setInterval(
+            () => this.updateTrackInfo(), 
+            this.config.updateInterval
+        );
         
     } catch (error) {
         console.error("Ошибка инициализации плеера:", error);
-        this.setStatus("Критическая ошибка: " + error.message, true);
+        this.setStatus("Ошибка: " + error.message, true);
+        throw error; // Пробрасываем ошибку для обработки в main.js
     }
 }
 

@@ -492,21 +492,23 @@ footer {
 .connection-status {
     margin-top: 8px;
     font-size: 0.9rem;
+    display: block; /* Добавляем это свойство */
+    min-height: 24px; /* Гарантируем место для статуса */
 }
 
-.status-success {
+.status-success, .status-error {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.status-success {
     color: var(--success-color);
 }
 
 .status-error {
     color: var(--error-color);
-}
-
-.status-text {
-    font-weight: 500;
 }
 
 .wave-animation {
@@ -528,6 +530,7 @@ footer {
 .wave-dot:nth-child(1) { animation-delay: 0s; }
 .wave-dot:nth-child(2) { animation-delay: 0.3s; }
 .wave-dot:nth-child(3) { animation-delay: 0.6s; }
+
 
 /* Бейдж слушателей */
 .now-playing-badge {
@@ -602,14 +605,8 @@ footer {
 }
 
 @keyframes wave {
-    0%, 100% { 
-        height: 5px;
-        background: var(--success-color);
-    }
-    50% { 
-        height: 15px;
-        background: #42ffe9; /* Более светлый оттенок для эффекта */
-    }
+    0%, 100% { height: 5px; }
+    50% { height: 12px; }
 }
 
 .playing .album-art img {

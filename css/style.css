@@ -477,6 +477,8 @@ footer {
     transform: translateY(-2px);
 }
 
+.status-card
+
 #stream-status {
     display: inline-flex;
     align-items: center;
@@ -531,6 +533,101 @@ footer {
 .wave-dot:nth-child(2) { animation-delay: 0.3s; }
 .wave-dot:nth-child(3) { animation-delay: 0.6s; }
 
+.status-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 1rem;
+    transition: var(--transition);
+}
+
+.status-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.status-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-title {
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.status-time {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.status-message {
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.status-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-secondary);
+}
+
+/* Состояния статуса */
+.status-success .progress-fill {
+    background: var(--success-color);
+}
+
+.status-error .progress-fill {
+    background: var(--error-color);
+}
+
+.status-warning .progress-fill {
+    background: var(--warning-color);
+}
+
+.status-success .status-icon {
+    color: var(--success-color);
+}
+
+.status-error .status-icon {
+    color: var(--error-color);
+}
+
+.status-warning .status-icon {
+    color: var(--warning-color);
+}
 
 /* Бейдж слушателей */
 .now-playing-badge {
@@ -582,6 +679,7 @@ footer {
     display: none;
 }
 
+
 /* Анимации */
 @keyframes spin {
     from { transform: rotate(0deg); }
@@ -611,6 +709,10 @@ footer {
 
 .playing .album-art img {
     animation: spin 20s linear infinite;
+}
+
+.connection-pulse {
+    animation: pulse 2s infinite;
 }
 
 @media (max-width: 768px) {

@@ -76,16 +76,41 @@
                     <h1>АлгоРитм-StreAM</h1>
                     <p>¡Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности!</p>
                 </div>
-                <div class="connection-status">
-                    <span id="stream-status" class="status-success show"> <!-- Добавлен класс show -->
-                        <span class="wave-animation">
-                            <span class="wave-dot"></span>
-                            <span class="wave-dot"></span>
-                            <span class="wave-dot"></span>
-                        </span>
-                        <span class="status-text">Соединение устанавливается...</span>
+<div class="connection-status">
+    <div id="stream-status" class="status-card">
+        <div class="status-header">
+            <span class="status-icon">
+                <i class="fas fa-circle-notch fa-spin"></i>
+            </span>
+            <span class="status-title">Статус соединения</span>
+            <span class="status-time" id="status-time"></span>
+        </div>
+        <div class="status-body">
+            <div class="status-message" id="status-message">Инициализация плеера...</div>
+            <div class="status-details">
+                <div class="status-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="connection-progress"></div>
+                    </div>
+                </div>
+                <div class="status-stats">
+                    <span class="stat-item">
+                        <i class="fas fa-signal"></i>
+                        <span id="network-quality">Отличное</span>
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-sync-alt"></i>
+                        <span id="retry-count">0</span> попыток
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span id="uptime">00:00:00</span>
                     </span>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </header>
 

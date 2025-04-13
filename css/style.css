@@ -489,7 +489,15 @@ footer {
     opacity: 1;
 }
 
+.connection-status {
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
 .status-success {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     color: var(--success-color);
 }
 
@@ -497,19 +505,24 @@ footer {
     color: var(--error-color);
 }
 
+.status-text {
+    font-weight: 500;
+}
+
 .wave-animation {
     display: inline-flex;
-    align-items: center;
-    height: 20px;
+    align-items: flex-end;
+    height: 18px;
     gap: 3px;
 }
 
 .wave-dot {
-    width: 4px;
-    height: 10px;
-    background: var(--success-color);
+    width: 3px;
+    height: 8px;
+    background: currentColor;
     border-radius: 2px;
     animation: wave 1.2s ease-in-out infinite;
+    transform-origin: bottom;
 }
 
 .wave-dot:nth-child(1) { animation-delay: 0s; }

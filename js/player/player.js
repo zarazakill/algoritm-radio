@@ -434,14 +434,17 @@ setStatus(text, isError = false) {
     const statusEl = this.elements.statusEl;
     if (!statusEl) return;
 
+    // Добавляем класс show для отображения
+    statusEl.classList.add('show');
+
     if (isError) {
-        statusEl.className = 'status-error';
+        statusEl.className = 'status-error show'; // Сохраняем класс show
         statusEl.innerHTML = `
             <i class="fas fa-exclamation-circle"></i>
             <span class="status-text">${text}</span>
         `;
     } else {
-        statusEl.className = 'status-success';
+        statusEl.className = 'status-success show'; // Сохраняем класс show
         statusEl.innerHTML = `
             <span class="wave-animation">
                 <span class="wave-dot"></span>

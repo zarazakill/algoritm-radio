@@ -481,6 +481,12 @@ footer {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+#stream-status.show {
+    opacity: 1;
 }
 
 .status-success {

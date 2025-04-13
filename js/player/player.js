@@ -430,12 +430,25 @@ updateHistory(history) {
         }
     }
 
-    setStatus(text, isError = false) {
-        if (this.elements.statusEl) {
-            this.elements.statusEl.textContent = text;
-            this.elements.statusEl.className = isError ? 'status-error' : 'status-success';
-        }
+setStatus(text, isError = false) {
+    const statusEl = this.elements.statusEl;
+    if (!statusEl) return;
+
+    if (isError) {
+        statusEl.className = 'status-error';
+        statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${text}`;
+    } else {
+        statusEl.className = 'status-success';
+        statusEl.innerHTML = `
+            <span class="wave-animation">
+                <span class="wave-dot"></span>
+                <span class="wave-dot"></span>
+                <span class="wave-dot"></span>
+            </span>
+            ${text}
+        `;
     }
+}
 
     async findWorkingApi() {
         return NetworkUtils.findWorkingUrl(this.config.apiEndpoints);

@@ -52,17 +52,6 @@ body {
     z-index: 1000;
 }
 
-#start-playback {
-position: center;
-padding: 15px 30px;
-font-size: 1rem;
-background: var(--primary-color);
-color: white;
-border: none;
-border-radius: 8px;
-cursor: pointer;
-}
-
 .player-container {
     display: flex;
     flex-direction: column;
@@ -136,6 +125,44 @@ main {
     justify-content: center;
     margin-bottom: 2rem;
     flex: 1;
+}
+
+/* Кновка ПУСК */
+#start-playback {
+    position: relative;
+    padding: 15px 30px;
+    font-size: 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200px;
+}
+
+#start-playback[disabled] {
+    opacity: 0.8;
+    cursor: not-allowed;
+    background: var(--dark-color);
+}
+
+.loading-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+.button-text {
+    transition: all 0.3s ease;
 }
 
 /* Плеер */

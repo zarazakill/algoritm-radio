@@ -1,25 +1,34 @@
-import { RadioPlayer } from './player/player.js';
-
 document.addEventListener('DOMContentLoaded', async () => {
+    const playButton = document.getElementById('start-playback');
+    const buttonText = playButton.querySelector('.button-text');
+    const spinner = playButton.querySelector('.loading-spinner');
+    const overlay = document.getElementById('audio-overlay');
+
     try {
         console.log('Initializing player...');
         const player = new RadioPlayer();
+        
+        // Показываем состояние загрузки
+        playButton.disabled = true;
+        spinner.style.display = 'inline-block';
+        buttonText.textContent = 'Загрузка плеера...';
+        
         await player.init();
         
-        const playButton = document.getElementById('start-playback');
-        if (!playButton) {
-            throw new Error('Play button not found');
-        }
-
+        // Активируем кнопку
+        playButton.disabled = false;
+        spinner.style.display = 'none';
+        buttonText.textContent = 'Запустить радио';
+        
+        // Обработчик клика
         playButton.addEventListener('click', async () => {
             try {
-                console.log('Play button clicked');
+                overlay.style.display = 'none';
                 
-                // Скрываем оверлей если есть
-                const overlay = document.getElementById('audio-overlay');
-                if (overlay) {
-                    overlay.style.display = 'none';
-                }
+                // Показываем состояние загрузки при начале воспроизведения
+                playButton.disabled = true;
+                spinner.style.display = 'inline-block';
+                buttonText.textContent = 'Подготовка потока...';
                 
                 // Проверяем готовность аудио
                 if (player.elements.audio.readyState < 2) {
@@ -28,26 +37,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 }
                 
-                // Запускаем воспроизведение
                 await player.elements.audio.play();
                 
-                // Возобновляем аудиоконтекст если нужно
                 if (player.state.audioContext?.state === 'suspended') {
                     await player.state.audioContext.resume();
                 }
                 
-                console.log('Playback started successfully');
+                // Обновляем состояние плеера
+                player.state.isPlaying = true;
+                
             } catch (error) {
                 console.error("Playback error:", error);
-                player.setStatus(`Ошибка воспроизведения: ${error.message}`, true);
+                player.setStatus(`Ошибка: ${error.message}`, true);
+                overlay.style.display = 'flex';
+                
+                // Возвращаем кнопку в исходное состояние
+                playButton.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = 'Попробовать снова';
             }
         });
         
     } catch (error) {
         console.error("Initialization failed:", error);
+        
+        // Обновляем состояние кнопки при ошибке
+        playButton.disabled = false;
+        spinner.style.display = 'none';
+        buttonText.textContent = 'Ошибка загрузки. Попробовать снова';
+        
         const statusEl = document.getElementById('stream-status');
         if (statusEl) {
-            statusEl.textContent = `Ошибка инициализации: ${error.message}`;
+            statusEl.textContent = `Ошибка: ${error.message}`;
             statusEl.className = 'status-error';
         }
     }

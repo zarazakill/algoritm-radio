@@ -70,8 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const statusEl = document.getElementById('stream-status');
         if (statusEl) {
-            statusEl.textContent = `Ошибка: ${error.message}`;
-            statusEl.className = 'status-error';
+            statusEl.style.opacity = '1';
         }
     }
 });

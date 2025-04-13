@@ -1,134 +1,201 @@
 import { RadioPlayer } from './player/player.js';
 
 // Константы для состояний UI
-const UI_STATES = {
+const UI_STATES = Object.freeze({
     LOADING: {
         text: 'Загрузка плеера...',
         disabled: true,
-        showSpinner: true
+        showSpinner: true,
+        className: 'is-loading'
     },
     READY: {
         text: 'Запустить радио',
         disabled: false,
-        showSpinner: false
+        showSpinner: false,
+        className: 'is-ready'
     },
     PREPARING: {
         text: 'Подготовка потока...',
         disabled: true,
-        showSpinner: true
+        showSpinner: true,
+        className: 'is-preparing'
     },
     ERROR: {
         text: 'Ошибка загрузки. Попробовать снова',
         disabled: false,
-        showSpinner: false
+        showSpinner: false,
+        className: 'is-error'
     },
     RETRY: {
         text: 'Попробовать снова',
         disabled: false,
-        showSpinner: false
+        showSpinner: false,
+        className: 'is-retry'
+    },
+    PLAYING: {
+        text: 'Сейчас играет',
+        disabled: true,
+        showSpinner: false,
+        className: 'is-playing'
     }
+});
+
+// Конфигурация таймаутов
+const TIMEOUTS = {
+    AUDIO_READY: 5000,
+    INITIALIZATION: 10000
 };
 
 /**
- * Обновляет состояние UI кнопки
- * @param {HTMLElement} button - Элемент кнопки
- * @param {HTMLElement} buttonText - Элемент текста кнопки
- * @param {HTMLElement} spinner - Элемент спиннера
- * @param {Object} state - Состояние UI из UI_STATES
+ * Класс для управления состоянием плеера
  */
-function updateButtonState(button, buttonText, spinner, state) {
-    button.disabled = state.disabled;
-    spinner.style.display = state.showSpinner ? 'inline-block' : 'none';
-    buttonText.textContent = state.text;
-}
-
-/**
- * Инициализирует и управляет радио плеером
- */
-async function initializePlayer() {
-    const playButton = document.getElementById('start-playback');
-    const buttonText = playButton.querySelector('.button-text');
-    const spinner = playButton.querySelector('.loading-spinner');
-    const overlay = document.getElementById('audio-overlay');
-    const statusEl = document.getElementById('stream-status');
-
-    try {
-        console.log('Initializing player...');
-        updateButtonState(playButton, buttonText, spinner, UI_STATES.LOADING);
+class PlayerUI {
+    constructor() {
+        this.playButton = document.getElementById('start-playback');
+        this.buttonText = this.playButton.querySelector('.button-text');
+        this.spinner = this.playButton.querySelector('.loading-spinner');
+        this.overlay = document.getElementById('audio-overlay');
+        this.statusEl = document.getElementById('stream-status');
+        this.player = null;
+        this.initPromise = null;
         
-        const player = new RadioPlayer();
-        await player.init();
+        this._bindEvents();
+    }
+    
+    /**
+     * Инициализация плеера
+     */
+    async init() {
+        try {
+            this._updateUIState(UI_STATES.LOADING);
+            
+            // Таймаут для инициализации
+            this.initPromise = Promise.race([
+                this._initializePlayer(),
+                this._createTimeout(TIMEOUTS.INITIALIZATION, 'Таймаут инициализации')
+            ]);
+            
+            await this.initPromise;
+            this._updateUIState(UI_STATES.READY);
+            
+        } catch (error) {
+            this._handleError(error, 'INIT_ERROR');
+            this._updateUIState(UI_STATES.ERROR);
+        }
+    }
+    
+    /**
+     * Основная логика инициализации плеера
+     */
+    async _initializePlayer() {
+        this.player = new RadioPlayer();
+        await this.player.init();
         
-        updateButtonState(playButton, buttonText, spinner, UI_STATES.READY);
-        
-        // Обработчик клика с улучшенной обработкой состояний
-        playButton.addEventListener('click', async () => {
-            try {
-                overlay.style.display = 'none';
-                updateButtonState(playButton, buttonText, spinner, UI_STATES.PREPARING);
-                
-                // Ожидание готовности аудио с таймаутом
-                const audioReady = Promise.race([
-                    new Promise(resolve => {
-                        player.elements.audio.addEventListener('canplay', resolve, { once: true });
-                    }),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Таймаут подготовки аудио')), 5000)
-                ]);
-                
-                if (player.elements.audio.readyState < 2) {
-                    await audioReady;
-                }
-                
-                await player.elements.audio.play();
-                
-                // Возобновление AudioContext если нужно
-                if (player.state.audioContext?.state === 'suspended') {
-                    await player.state.audioContext.resume();
-                }
-                
-                player.state.isPlaying = true;
-                updateButtonState(playButton, buttonText, spinner, UI_STATES.READY);
-                
-            } catch (error) {
-                console.error("Playback error:", error);
-                player.setStatus(`Ошибка: ${error.message}`, true);
-                overlay.style.display = 'flex';
-                updateButtonState(playButton, buttonText, spinner, UI_STATES.RETRY);
-                
-                // Отправка ошибки в аналитику, если есть
-                if (window.trackError) {
-                    window.trackError('PLAYBACK_ERROR', error);
-                }
+        this.playButton.addEventListener('click', () => this._handlePlayButtonClick());
+    }
+    
+    /**
+     * Обработчик клика по кнопке воспроизведения
+     */
+    async _handlePlayButtonClick() {
+        try {
+            this.overlay.style.display = 'none';
+            this._updateUIState(UI_STATES.PREPARING);
+            
+            await this._waitForAudioReady();
+            await this.player.elements.audio.play();
+            
+            if (this.player.state.audioContext?.state === 'suspended') {
+                await this.player.state.audioContext.resume();
             }
+            
+            this.player.state.isPlaying = true;
+            this._updateUIState(UI_STATES.PLAYING);
+            
+        } catch (error) {
+            this._handleError(error, 'PLAYBACK_ERROR');
+            this._updateUIState(UI_STATES.RETRY);
+        }
+    }
+    
+    /**
+     * Ожидание готовности аудио с таймаутом
+     */
+    async _waitForAudioReady() {
+        if (this.player.elements.audio.readyState < 2) {
+            await Promise.race([
+                new Promise(resolve => {
+                    this.player.elements.audio.addEventListener(
+                        'canplay', 
+                        resolve, 
+                        { once: true }
+                    );
+                }),
+                this._createTimeout(TIMEOUTS.AUDIO_READY, 'Таймаут подготовки аудио')
+            ]);
+        }
+    }
+    
+    /**
+     * Создание таймаута с ошибкой
+     */
+    _createTimeout(ms, message) {
+        return new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(message)), ms)
+        );
+    }
+    
+    /**
+     * Обновление состояния UI
+     */
+    _updateUIState(state) {
+        this.playButton.disabled = state.disabled;
+        this.spinner.style.display = state.showSpinner ? 'inline-block' : 'none';
+        this.buttonText.textContent = state.text;
+        
+        // Удаляем все классы состояний
+        Object.values(UI_STATES).forEach(s => {
+            this.playButton.classList.remove(s.className);
         });
         
-    } catch (error) {
-        console.error("Initialization failed:", error);
-        updateButtonState(playButton, buttonText, spinner, UI_STATES.ERROR);
+        // Добавляем текущий класс состояния
+        this.playButton.classList.add(state.className);
+    }
+    
+    /**
+     * Обработка ошибок
+     */
+    _handleError(error, errorType) {
+        console.error(`${errorType}:`, error);
+        this.player?.setStatus(`Ошибка: ${error.message}`, true);
+        this.overlay.style.display = 'flex';
         
-        if (statusEl) {
-            statusEl.style.opacity = '1';
+        if (this.statusEl) {
+            this.statusEl.style.opacity = '1';
         }
         
-        // Отправка ошибки инициализации в аналитику
         if (window.trackError) {
-            window.trackError('INIT_ERROR', error);
+            window.trackError(errorType, error);
         }
+    }
+    
+    /**
+     * Привязка событий
+     */
+    _bindEvents() {
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            if (window.trackError) {
+                window.trackError('UNHANDLED_ERROR', event.error);
+            }
+        });
     }
 }
 
-// Запуск инициализации после загрузки DOM
+// Инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', () => {
-    // Добавляем обработчик для перехвата глобальных ошибок
-    window.addEventListener('error', (event) => {
-        console.error('Global error:', event.error);
-        if (window.trackError) {
-            window.trackError('UNHANDLED_ERROR', event.error);
-        }
-    });
-    
-    initializePlayer().catch(error => {
+    const playerUI = new PlayerUI();
+    playerUI.init().catch(error => {
         console.error('Unhandled initialization error:', error);
     });
 });

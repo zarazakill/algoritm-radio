@@ -1,4 +1,4 @@
-/**
+ь/**
  * Вспомогательные функции для работы с пользовательским интерфейсом
  */
 export class UIHelpers {
@@ -91,6 +91,61 @@ export class UIHelpers {
         icon.classList.add(iconClass);
     }
 
+    static createHistoryItem(item, index, options = {}) {
+        const li = document.createElement('li');
+        if (index === 0) li.classList.add('new-track');
+
+        const song = item.song || {};
+        const title = song.title || 'Неизвестный трек';
+        const artist = song.artist || 'Неизвестный исполнитель';
+        const duration = item.duration ? this.formatTime(item.duration) : '';
+
+        // Основной контейнер для информации о треке
+        const trackInfo = document.createElement('div');
+        trackInfo.className = 'track-info';
+
+        // Исполнитель
+        const artistSpan = document.createElement('span');
+        artistSpan.className = 'track-artist';
+        artistSpan.textContent = artist;
+
+        // Разделитель
+        const separator = document.createElement('span');
+        separator.className = 'track-separator';
+        separator.textContent = ' - ';
+
+        // Название трека
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'track-title';
+        titleSpan.textContent = title;
+
+        // Время (справа)
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'track-time';
+        timeSpan.textContent = duration;
+
+        // Собираем структуру
+        trackInfo.appendChild(artistSpan);
+        trackInfo.appendChild(separator);
+        trackInfo.appendChild(titleSpan);
+        
+        li.appendChild(trackInfo);
+        li.appendChild(timeSpan);
+
+        // Добавляем атрибуты доступности
+        li.setAttribute('role', 'listitem');
+        li.setAttribute('aria-label', `${artist} - ${title} ${duration}`);
+
+        if (typeof options.onClick === 'function') {
+            li.addEventListener('click', options.onClick);
+            li.style.cursor = 'pointer';
+            li.setAttribute('tabindex', '0');
+            li.setAttribute('role', 'button');
+        }
+
+        return li;
+    }
+    
     /**
      * Экранирование HTML для безопасной вставки в DOM
      * @param {string} str - Строка для экранирования

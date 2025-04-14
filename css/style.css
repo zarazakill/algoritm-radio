@@ -374,14 +374,12 @@ transform: scale(1.2);
     font-weight: 500;
     color: var(--text-primary);
     grid-column: 1;
-    text-align: left;
 }
 
 .track-artist {
     color: var(--text-secondary);
     font-size: 0.85em;
     grid-column: 1;
-    text-align: left;
 }
 
 .track-time {

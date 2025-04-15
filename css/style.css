@@ -201,6 +201,8 @@ main {
 
 .album-cover {
     position: absolute;
+    top: 0; /* Фиксируем сверху */
+    left: 0; /* Фиксируем слева */
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -213,26 +215,13 @@ main {
     height: 100px;
     object-fit: cover;
     border-radius: 50%;
-    bottom: 30px;
-    right: 30px;
+    bottom: 20px; /* Уменьшаем отступ */
+    right: 20px; /* Уменьшаем отступ */
     z-index: 2;
     animation: spin 10s linear infinite;
     border: 2px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
-
-/*.album-art img {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    animation: spin 20s linear infinite;
-}
-
-.album-art.playing img {
-    animation-play-state: running;
-}*/
 
 .track-info {
     text-align: center;

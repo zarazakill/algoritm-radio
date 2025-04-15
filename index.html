@@ -117,9 +117,14 @@
         <main>
             <section class="player-container">
                 <div class="album-art">
-                    <img src="img/album-art/default.jpg" alt="Обложка альбома">
-                    <!-- Добавим лоадер -->
-                    <div class="loader" id="loader"></div>
+                    <!-- Основное изображение альбома (неподвижное) -->
+                    <img src="img/album-art/default.jpg" alt="Обложка альбома" class="album-cover">
+    
+                        <!-- Вращающаяся картинка (в углу) -->
+                        <img src="img/album-art/vinyl.png" alt="Винил" class="vinyl-spin">
+    
+                        <!-- Лоадер -->
+                        <div class="loader" id="loader"></div>
                     <p class="loading-status" id="loadingStatus">Загрузка...</p>
                 </div>
 

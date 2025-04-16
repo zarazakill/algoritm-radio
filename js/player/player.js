@@ -376,34 +376,66 @@ updateCurrentTrack(nowPlaying) {
         this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
     }
 
-    // Обновляем обложку альбома, если она есть в данных
-    if (track.artwork_url) {
-        this.updateAlbumArt(track.artwork_url);
-    } else {
-        // Используем обложку по умолчанию, если нет URL
-        this.updateAlbumArt('img/album-art/default.jpg');
-    }
+    // Обновляем обложку альбома из AzuraCast
+    this.updateAlbumArtFromAzuraCast(nowPlaying);
 }
 
+updateAlbumArtFromAzuraCast(nowPlaying) {
+    let artworkUrl = 'img/album-art/default.jpg';
+    
+    // Проверяем разные возможные места, где AzuraCast может хранить обложку
+    if (nowPlaying.song.art) {
+        artworkUrl = nowPlaying.song.art;
+    } else if (nowPlaying.song.image) {
+        artworkUrl = nowPlaying.song.image;
+    } else if (nowPlaying.song.album && nowPlaying.song.album.artwork_url) {
+        artworkUrl = nowPlaying.song.album.artwork_url;
+    }
+
+    // Используем Now Playing Art если доступно
+    if (nowPlaying.now_playing && nowPlaying.now_playing.art) {
+        artworkUrl = nowPlaying.now_playing.art;
+    }
+
+    // Добавляем базовый URL AzuraCast если указан относительный путь
+    if (artworkUrl && !artworkUrl.startsWith('http') && !artworkUrl.startsWith('/')) {
+        artworkUrl = `${this.config.azuraCastBaseUrl}${artworkUrl}`;
+    }
+
+    this.updateAlbumArt(artworkUrl);
+}
+    
 updateAlbumArt(imageUrl) {
     const albumCover = document.querySelector('.album-cover');
-    if (albumCover) {
-        // Добавляем временный класс для анимации смены обложки
-        albumCover.classList.add('fading');
-        
-        // После небольшой задержки меняем источник изображения
-        setTimeout(() => {
-            albumCover.src = imageUrl;
-            albumCover.onload = () => {
-                albumCover.classList.remove('fading');
-            };
-            albumCover.onerror = () => {
-                // Если изображение не загружается, используем обложку по умолчанию
-                albumCover.src = 'img/album-art/default.jpg';
-                albumCover.classList.remove('fading');
-            };
-        }, 200);
+    if (!albumCover) return;
+
+    // Проверяем валидность URL
+    const isValidUrl = imageUrl && 
+                     (imageUrl.startsWith('http://') || 
+                      imageUrl.startsWith('https://') || 
+                      imageUrl.startsWith('/'));
+
+    if (!isValidUrl) {
+        imageUrl = 'img/album-art/default.jpg';
     }
+
+    // Добавляем временный параметр для избежания кеширования
+    const cacheBusterUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`;
+
+    albumCover.classList.add('fading');
+    
+    setTimeout(() => {
+        const img = new Image();
+        img.src = cacheBusterUrl;
+        img.onload = () => {
+            albumCover.src = cacheBusterUrl;
+            albumCover.classList.remove('fading');
+        };
+        img.onerror = () => {
+            albumCover.src = 'img/album-art/default.jpg';
+            albumCover.classList.remove('fading');
+        };
+    }, 200);
 }
 
     updateNextTrack(playingNext) {

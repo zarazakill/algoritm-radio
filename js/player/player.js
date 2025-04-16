@@ -50,7 +50,7 @@ export class RadioPlayer {
 
 async init() {
     try {
-        // Добавляем проверку готовности DOM
+        // Проверяем наличие необходимых элементов DOM
         if (!document.getElementById('radio-stream')) {
             throw new Error("Не найдены необходимые DOM элементы");
         }
@@ -63,21 +63,23 @@ async init() {
         this.setStatus("Подключение к серверу...");
         
         // Пробуем подключиться несколько раз при необходимости
-        let attempts = 5;
+        let attempts = 3;
         while (attempts > 0) {
             if (await this.connectToStream()) break;
             attempts--;
             await new Promise(resolve => setTimeout(resolve, 3000));
         }
         
+        // Инициализируем API URL
         this.state.currentApiUrl = await this.findWorkingApi();
+        if (!this.state.currentApiUrl) {
+            throw new Error("Не удалось найти рабочий API endpoint");
+        }
+        
         this.startDiagnostics();
         
         // Первое обновление информации
         await this.updateTrackInfo();
-        
-        // Ускоренное второе обновление через 3 секунды
-        setTimeout(() => this.updateTrackInfo(), 3000);
         
         // Устанавливаем интервал для регулярных обновлений
         this.state.updateIntervalId = setInterval(
@@ -88,7 +90,7 @@ async init() {
     } catch (error) {
         console.error("Ошибка инициализации плеера:", error);
         this.setStatus("Ошибка: " + error.message, true);
-        throw error; // Пробрасываем ошибку для обработки в main.js
+        throw error;
     }
 }
 
@@ -307,35 +309,46 @@ async loadAudioWithTimeout(url, timeout) {
     
 async updateTrackInfo() {
     if (!this.state.currentApiUrl) {
-        this.state.currentApiUrl = await this.findWorkingApi();
-        if (!this.state.currentApiUrl) return;
-    }
-
-    // Проверяем, когда было последнее обновление
-    const now = Date.now();
-    if (now - this.state.lastUpdateTime < this.config.updateInterval / 2) {
-        return; // Пропускаем если обновлялись недавно
+        try {
+            this.state.currentApiUrl = await this.findWorkingApi();
+            if (!this.state.currentApiUrl) {
+                this.setStatus("API недоступно", true);
+                return;
+            }
+        } catch (error) {
+            console.error("Error finding API:", error);
+            return;
+        }
     }
 
     try {
         const response = await NetworkUtils.fetchWithTimeout(
             this.state.currentApiUrl, 
-            2000
+            5000 // Увеличили таймаут
         );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         // Кэшируем данные и время последнего обновления
         this.state.lastTrackData = data;
-        this.state.lastUpdateTime = now;
+        this.state.lastUpdateTime = Date.now();
         
         this.updateUI(data);
     } catch (error) {
         console.error("Ошибка обновления:", error);
+        
         // Используем кэшированные данные, если есть
         if (this.state.lastTrackData) {
             this.updateUI(this.state.lastTrackData);
         }
+        
+        // Пробуем найти новый рабочий API URL
         this.state.currentApiUrl = await this.findWorkingApi();
+        this.setStatus("Проблемы с соединением, пытаемся восстановить...", true);
     }
 }
 
@@ -521,9 +534,33 @@ setStatus(text, isError = false) {
     }
 }
 
-    async findWorkingApi() {
-        return NetworkUtils.findWorkingUrl(this.config.apiEndpoints);
+async findWorkingApi() {
+    try {
+        // Проверяем наличие apiUrls в конфиге
+        if (!this.config.apiUrls || !Array.isArray(this.config.apiUrls)) {
+            console.warn('apiUrls not configured, using primary endpoint');
+            return this.config.apiEndpoints.primary || this.config.apiEndpoints.nowPlaying;
+        }
+        
+        // Ищем рабочий URL среди apiUrls
+        const workingUrl = await NetworkUtils.findWorkingUrl(this.config.apiUrls);
+        
+        if (workingUrl) {
+            return workingUrl;
+        }
+        
+        // Если ничего не найдено, пробуем основные endpoint'ы
+        console.warn('No working API URL found, trying fallback endpoints');
+        return this.config.apiEndpoints.primary || 
+               this.config.apiEndpoints.nowPlaying || 
+               this.config.apiUrls[0];
+    } catch (error) {
+        console.error('Error finding working API:', error);
+        return this.config.apiEndpoints.primary || 
+               this.config.apiEndpoints.nowPlaying || 
+               (this.config.apiUrls && this.config.apiUrls[0]);
     }
+}
 
     handleConnectionError(error) {
         console.error("Ошибка подключения:", error);

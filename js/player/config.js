@@ -1,25 +1,55 @@
 // Конфигурация радио-плеера
 const RadioPlayerConfig = {
+    // Основные потоки
     streams: [
         { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
         { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
     ],
-    apiEndpoints: [
-        "https://wwcat.duckdns.org:8443/api/nowplaying/1"
-    ],
-    updateInterval: 10000,
-    reconnectDelay: 3000,
-    networkCheckInterval: 10000,
-    bufferLength: 20,
+    
+    // API endpoints
+    apiEndpoints: {
+        nowPlaying: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
+        requests: "https://wwcat.duckdns.org:8443/api/station/1/requests",
+        requestSong: "https://wwcat.duckdns.org:8443/api/station/1/request/:id"
+    },
+    
+    // Настройки AzuraCast
+    azuraCast: {
+        baseUrl: "https://wwcat.duckdns.org:8443",
+        artworkBaseUrl: "https://wwcat.duckdns.org:8443",
+        enableSongRequests: true // Включить запросы песен
+    },
+    
+    // Настройки обновления
+    updateInterval: 10000,          // Интервал обновления информации (мс)
+    reconnectDelay: 3000,           // Задержка переподключения (мс)
+    networkCheckInterval: 10000,    // Интервал проверки сети (мс)
+    
+    // Настройки буфера
+    bufferLength: 20,               // Длина аудиобуфера (сек)
+    
+    // Диагностика
     diagnostics: {
-        enabled: true,
-        logInterval: 60000
+        enabled: true,              // Включить диагностику
+        logInterval: 60000          // Интервал логирования (мс)
     },
+    
+    // История прослушивания
     history: {
-        maxItems: 5,          // Максимальное количество отображаемых треков
-        cacheSize: 20,        // Сколько треков хранить в кеше
-        animationDelay: 100    // Задержка анимации между элементами (мс)
+        maxItems: 5,                // Максимальное количество отображаемых треков
+        cacheSize: 20,              // Сколько треков хранить в кеше
+        animationDelay: 100         // Задержка анимации между элементами (мс)
     },
+    
+    // Настройки обложек альбомов
+    artwork: {
+        defaultUrl: "img/album-art/default.jpg", // Обложка по умолчанию
+        size: 500,                               // Размер обложки (px)
+        useProxy: false,                         // Использовать прокси для обложек
+        proxyUrl: ""                             // URL прокси (если используется)
+    },
+    
+    // Тема по умолчанию
     DEFAULT_THEME: 'dark'
 };
 

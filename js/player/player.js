@@ -381,9 +381,10 @@ updateCurrentTrack(nowPlaying) {
 }
 
 updateAlbumArtFromAzuraCast(nowPlaying) {
-    let artworkUrl = 'img/album-art/default.jpg';
+    // Получаем URL обложки по умолчанию из конфига
+    let artworkUrl = this.config.artwork.defaultUrl;
     
-    // Проверяем разные возможные места, где AzuraCast может хранить обложку
+    // Проверяем возможные места, где AzuraCast может хранить обложку
     if (nowPlaying.song.art) {
         artworkUrl = nowPlaying.song.art;
     } else if (nowPlaying.song.image) {
@@ -391,17 +392,23 @@ updateAlbumArtFromAzuraCast(nowPlaying) {
     } else if (nowPlaying.song.album && nowPlaying.song.album.artwork_url) {
         artworkUrl = nowPlaying.song.album.artwork_url;
     }
-
-    // Используем Now Playing Art если доступно
-    if (nowPlaying.now_playing && nowPlaying.now_playing.art) {
-        artworkUrl = nowPlaying.now_playing.art;
-    }
-
-    // Добавляем базовый URL AzuraCast если указан относительный путь
+    
+    // Обрабатываем относительные URL
     if (artworkUrl && !artworkUrl.startsWith('http') && !artworkUrl.startsWith('/')) {
-        artworkUrl = `${this.config.azuraCastBaseUrl}${artworkUrl}`;
+        artworkUrl = `${this.config.azuraCast.baseUrl}${artworkUrl}`;
     }
-
+    
+    // Добавляем параметр размера если это URL AzuraCast
+    if (artworkUrl.includes(this.config.azuraCast.baseUrl)) {
+        const separator = artworkUrl.includes('?') ? '&' : '?';
+        artworkUrl = `${artworkUrl}${separator}size=${this.config.artwork.size}`;
+    }
+    
+    // Используем прокси если настроено
+    if (this.config.artwork.useProxy && this.config.artwork.proxyUrl) {
+        artworkUrl = `${this.config.artwork.proxyUrl}?url=${encodeURIComponent(artworkUrl)}`;
+    }
+    
     this.updateAlbumArt(artworkUrl);
 }
     
@@ -409,17 +416,12 @@ updateAlbumArt(imageUrl) {
     const albumCover = document.querySelector('.album-cover');
     if (!albumCover) return;
 
-    // Проверяем валидность URL
-    const isValidUrl = imageUrl && 
-                     (imageUrl.startsWith('http://') || 
-                      imageUrl.startsWith('https://') || 
-                      imageUrl.startsWith('/'));
-
-    if (!isValidUrl) {
-        imageUrl = 'img/album-art/default.jpg';
+    // Проверяем URL на валидность
+    if (!imageUrl || typeof imageUrl !== 'string') {
+        imageUrl = this.config.artwork.defaultUrl;
     }
 
-    // Добавляем временный параметр для избежания кеширования
+    // Добавляем cache buster
     const cacheBusterUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`;
 
     albumCover.classList.add('fading');
@@ -427,17 +429,19 @@ updateAlbumArt(imageUrl) {
     setTimeout(() => {
         const img = new Image();
         img.src = cacheBusterUrl;
+        
         img.onload = () => {
             albumCover.src = cacheBusterUrl;
             albumCover.classList.remove('fading');
         };
+        
         img.onerror = () => {
-            albumCover.src = 'img/album-art/default.jpg';
+            console.warn('Failed to load album art, using default');
+            albumCover.src = this.config.artwork.defaultUrl;
             albumCover.classList.remove('fading');
         };
     }, 200);
 }
-
     updateNextTrack(playingNext) {
         const track = playingNext.song;
         const html = `

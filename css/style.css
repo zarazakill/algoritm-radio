@@ -219,6 +219,11 @@ main {
     transition: transform 0.3s ease;
 }
 
+.album-cover.fading {
+    opacity: 0.3;
+}
+
+
 .vinyl-spin {
     position: absolute;
     width: 80px;

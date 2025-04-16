@@ -7,11 +7,18 @@ const RadioPlayerConfig = {
     ],
     
     // API endpoints
-    apiEndpoints: {
+   apiEndpoints: {
+        primary: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
+        fallback: "https://wwcat.duckdns.org:8000/api/nowplaying/1",
         nowPlaying: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
         requests: "https://wwcat.duckdns.org:8443/api/station/1/requests",
         requestSong: "https://wwcat.duckdns.org:8443/api/station/1/request/:id"
     },
+
+    apiUrls: [
+        "https://wwcat.duckdns.org:8443/api/nowplaying/1",
+        "https://wwcat.duckdns.org:8000/api/nowplaying/1"
+    ],
     
     // Настройки AzuraCast
     azuraCast: {

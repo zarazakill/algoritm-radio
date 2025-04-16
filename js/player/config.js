@@ -16,8 +16,7 @@ const RadioPlayerConfig = {
     },
 
     apiUrls: [
-        "https://wwcat.duckdns.org:8443/api/nowplaying/1",
-        "https://wwcat.duckdns.org:8000/api/nowplaying/1"
+        "https://wwcat.duckdns.org:8443/api/nowplaying/1"
     ],
     
     // Настройки AzuraCast

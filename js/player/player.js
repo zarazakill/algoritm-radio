@@ -356,26 +356,55 @@ async updateTrackInfo() {
         }
 
 
-    updateCurrentTrack(nowPlaying) {
-        const track = nowPlaying.song;
-        const html = `
-        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-        <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
-        `;
+updateCurrentTrack(nowPlaying) {
+    const track = nowPlaying.song;
+    const html = `
+    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+    <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
+    `;
 
-        if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+    if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
 
-        if (this.elements.trackTitle) {
-            this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
-        }
-        if (this.elements.trackArtist) {
-            this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
-        }
-        if (this.elements.duration) {
-            this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
-        }
+    if (this.elements.trackTitle) {
+        this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
     }
+    if (this.elements.trackArtist) {
+        this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
+    }
+    if (this.elements.duration) {
+        this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
+    }
+
+    // Обновляем обложку альбома, если она есть в данных
+    if (track.artwork_url) {
+        this.updateAlbumArt(track.artwork_url);
+    } else {
+        // Используем обложку по умолчанию, если нет URL
+        this.updateAlbumArt('img/album-art/default.jpg');
+    }
+}
+
+updateAlbumArt(imageUrl) {
+    const albumCover = document.querySelector('.album-cover');
+    if (albumCover) {
+        // Добавляем временный класс для анимации смены обложки
+        albumCover.classList.add('fading');
+        
+        // После небольшой задержки меняем источник изображения
+        setTimeout(() => {
+            albumCover.src = imageUrl;
+            albumCover.onload = () => {
+                albumCover.classList.remove('fading');
+            };
+            albumCover.onerror = () => {
+                // Если изображение не загружается, используем обложку по умолчанию
+                albumCover.src = 'img/album-art/default.jpg';
+                albumCover.classList.remove('fading');
+            };
+        }, 200);
+    }
+}
 
     updateNextTrack(playingNext) {
         const track = playingNext.song;

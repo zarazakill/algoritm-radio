@@ -58,7 +58,6 @@ async init() {
         this.setupThemeToggle();
         this.setupEventListeners();
         this.initAudioContext();
-        this.setupSongRequests();
         
         // Устанавливаем начальный статус
         this.setStatus("Подключение к серверу...");
@@ -307,99 +306,6 @@ async loadAudioWithTimeout(url, timeout) {
         this.elements.audio.src = url;
         this.elements.audio.load();
     }
-
-setupSongRequests() {
-    const requestBtn = document.getElementById('request-btn');
-    const modal = document.getElementById('request-modal');
-    const cancelBtn = document.getElementById('cancel-request-btn');
-    const submitBtn = document.getElementById('submit-request-btn');
-    const input = document.getElementById('song-request-input');
-
-    if (!requestBtn || !modal) return;
-
-    // Открытие модального окна
-    requestBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-        input.value = '';
-        input.focus();
-    });
-
-    // Закрытие при клике на отмену
-    cancelBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    // Закрытие при клике вне окна
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // Обработка отправки
-    submitBtn.addEventListener('click', async () => {
-        const songQuery = input.value.trim();
-        if (songQuery.length < 3) {
-            this.setStatus("Введите минимум 3 символа", true);
-            return;
-        }
-        
-        await this.requestSong(songQuery);
-    });
-
-    // Отправка по Enter
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            submitBtn.click();
-        }
-    });
-}
-
-async requestSong(songQuery) {
-    if (!this.config.azuraCast.enableSongRequests) {
-        this.setStatus("Запросы песен отключены", true);
-        return false;
-    }
-
-    const modal = document.getElementById('request-modal');
-    const submitBtn = document.getElementById('submit-request-btn');
-    
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
-        
-        const endpoint = this.config.apiEndpoints.requestSong.replace(':id', encodeURIComponent(songQuery));
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Ошибка сервера: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.success) {
-            this.setStatus(`Запрос "${songQuery}" отправлен!`);
-            modal.style.display = 'none';
-            return true;
-        } else {
-            throw new Error(data.message || "Неизвестная ошибка сервера");
-        }
-    } catch (error) {
-        console.error('Ошибка запроса песни:', error);
-        this.setStatus(`Ошибка: ${error.message}`, true);
-        return false;
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Запросить';
-    }
-}
     
 async updateTrackInfo() {
     if (!this.state.currentApiUrl) {

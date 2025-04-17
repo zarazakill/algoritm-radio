@@ -19,3 +19,9 @@
         }
     ]
 }
+"browser_specific_settings": {
+  "gecko": {
+    "id": "{your-id@example.com}",
+    "strict_min_version": "78.0"
+  }
+}

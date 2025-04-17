@@ -297,10 +297,12 @@ background: var(--accent-color);
 }
 
 .player-buttons {
-    display: flex !important;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 1rem;
     justify-content: center;
+    align-items: center;
 }
 
 .player-buttons button {
@@ -316,11 +318,10 @@ background: var(--accent-color);
 }
 
 .volume-control {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    order: 1;
     flex: 1;
-    max-width: 150px;
+    min-width: 150px;
+    max-width: 200px;
 }
 
 #volume-btn {

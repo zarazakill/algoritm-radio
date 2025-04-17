@@ -58,6 +58,7 @@ async init() {
         this.setupThemeToggle();
         this.setupEventListeners();
         this.initAudioContext();
+        this.setupSongRequests();
         
         // Устанавливаем начальный статус
         this.setStatus("Подключение к серверу...");
@@ -306,6 +307,78 @@ async loadAudioWithTimeout(url, timeout) {
         this.elements.audio.src = url;
         this.elements.audio.load();
     }
+
+setupSongRequests() {
+    const requestBtn = document.getElementById('request-btn');
+    const modal = document.getElementById('request-modal');
+    const cancelBtn = document.getElementById('cancel-request-btn');
+    const submitBtn = document.getElementById('submit-request-btn');
+    const input = document.getElementById('song-request-input');
+
+    if (!requestBtn || !modal) return;
+
+    requestBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        input.focus();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        input.value = '';
+    });
+
+    submitBtn.addEventListener('click', async () => {
+        const songQuery = input.value.trim();
+        if (!songQuery) return;
+
+        try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Отправка...';
+            
+            const success = await this.requestSong(songQuery);
+            if (success) {
+                this.setStatus("Запрос песни отправлен!");
+                modal.style.display = 'none';
+                input.value = '';
+            }
+        } catch (error) {
+            console.error("Ошибка запроса песни:", error);
+            this.setStatus("Ошибка при запросе песни", true);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Запросить';
+        }
+    });
+}
+
+async requestSong(songQuery) {
+    if (!this.config.azuraCast.enableSongRequests) {
+        console.warn('Song requests are disabled in config');
+        return false;
+    }
+
+    try {
+        const endpoint = this.config.apiEndpoints.requestSong.replace(':id', encodeURIComponent(songQuery));
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.success === true;
+    } catch (error) {
+        console.error('Error requesting song:', error);
+        this.setStatus(`Ошибка запроса: ${error.message}`, true);
+        return false;
+    }
+}
     
 async updateTrackInfo() {
     if (!this.state.currentApiUrl) {

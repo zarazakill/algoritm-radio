@@ -226,8 +226,8 @@ main {
 
 .vinyl-spin {
     position: absolute;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     object-fit: cover;
     border-radius: 50%; /* Винил остаётся круглым */
     bottom: 20px;
@@ -705,7 +705,7 @@ footer {
 /* Анимации */
 @keyframes spin {
     from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    to { transform: rotate(-360deg); }
 }
 
 @keyframes fadeIn {

@@ -103,29 +103,56 @@ body::before {
     padding: 10px 0;
 }
 
-.menu-toggle .fa-bars {
-    color: white;
-    font-size: 24px;
-    position: relative; /* Для позиционирования */
-    background: transparent;
+.menu-toggle {
+    /* Базовая стилизация кнопки */
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    cursor: pointer;
-    padding: 12px 10px;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    will-change: transform; /* Оптимизация анимации */
 }
+
+.menu-toggle .fa-bars {
+    /* Стили самой иконки */
+    color: var(--primary-color); /* Используем основной цвет темы */
+    font-size: 22px;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        transition: 
+        color 0.3s ease,
+        transform 0.2s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+}
+
+/* Эффекты при наведении */
+.menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.menu-toggle:hover .fa-bars {
+    color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+/* Для светлой темы */
 body.light-theme .menu-toggle .fa-bars {
-    color: #333;
-    display: block;
-    width: 100%;
-    height: 4px; /* Увеличиваем толщину */
-    background: #ffffff; /* Белый цвет */
-    border-radius: 3px;
-    transition: all 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-    transform-origin: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Тень для контраста */
+    color: var(--primary-dark); /* Более темный оттенок */
+}
+
+body.light-theme .menu-toggle:hover .fa-bars {
+    color: var(--accent-color);
+}
+
+/* Анимация при нажатии */
+.menu-toggle:active {
+    transform: scale(0.95);
 }
 
 /* Шапка */

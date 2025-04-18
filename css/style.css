@@ -233,15 +233,7 @@ header {
 
 .theme-toggle:hover {
     color: var(--accent-color);
-}
 
-button, a, input[type="range"] {
-    transition: var(--transition);
-}
-
-button:active {
-    transform: scale(0.95);
-}
 
 
 /* Основное содержимое */

@@ -113,15 +113,17 @@ body::before {
     flex-direction: column;
     justify-content: space-between;
     height: 24px;
+    width: 30px;
     z-index: 2;
 }
 
 .menu-bar {
     display: block;
-    width: 25px;
+    width: 100%;
     height: 3px;
     background: var(--primary-color);
     transition: var(--transition);
+    border-radius: 2px;
 }
 
 .menu-overlay {

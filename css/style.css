@@ -133,6 +133,15 @@ body::before {
     display: none;
     justify-content: center;
     align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.menu-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+    display: flex;
 }
 
 .menu-content {

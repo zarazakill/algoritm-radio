@@ -1102,3 +1102,15 @@ body.dark-theme .up-next h3::before,
 body.dark-theme .recent-tracks h3::before {
     background: var(--primary-color);
 }
+
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}

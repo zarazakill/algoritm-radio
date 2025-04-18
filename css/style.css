@@ -904,7 +904,7 @@ footer {
     .container {
         width: 100%;
         min-width: 100%;
-        padding: 0 15px;
+        padding: 0 5px;
     }
     
     .player-container, 
@@ -926,7 +926,7 @@ footer {
         text-overflow: ellipsis;
     }
     .logo p {
-        display: none; /* Скрываем подпись на мобильных */
+        display: center;
     }
     
     .theme-toggle {

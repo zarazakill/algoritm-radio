@@ -5,7 +5,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const buttonText = playButton.querySelector('.button-text');
     const spinner = playButton.querySelector('.loading-spinner');
     const overlay = document.getElementById('audio-overlay');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menuOverlay = document.getElementById('menuOverlay');
 
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        menuOverlay.style.display = menuOverlay.style.display === 'flex' ? 'none' : 'flex';
+    });
+    
     try {
         console.log('Initializing player...');
         const player = new RadioPlayer();

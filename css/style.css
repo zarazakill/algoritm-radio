@@ -120,7 +120,6 @@ body::before {
     display: block;
     width: 25px;
     height: 3px;
-    margin: 3px 0;
     background: var(--primary-color);
     transition: var(--transition);
 }

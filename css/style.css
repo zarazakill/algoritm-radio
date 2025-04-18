@@ -66,8 +66,8 @@ body::before {
 }
 
 .header-container {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
     align-items: center;
     width: 100%;
     padding: 10px 0;
@@ -101,6 +101,7 @@ body::before {
 }
 
 .menu-toggle {
+    grid-column: 1;
     background: none;
     border: none;
     cursor: pointer;
@@ -110,7 +111,6 @@ body::before {
     justify-content: space-between;
     height: 24px;
     z-index: 2;
-    margin-right: auto; /* Прижимаем к левому краю */
 }
 
 .menu-bar {
@@ -181,11 +181,8 @@ header {
 }
 
 .logo {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 1;
+    position: static;
+    transform: none;
 }
 
 .logo-text {
@@ -220,6 +217,32 @@ header {
     font-size: clamp(0.8rem, 1vw, 2rem);
     color: var(--text-secondary);
 }
+
+/* Переключатель темы справа */
+.theme-toggle {
+    grid-column: 3;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1.5rem;
+    z-index: 2;
+    justify-self: end;
+    padding: 10px;
+}
+
+.theme-toggle:hover {
+    color: var(--accent-color);
+}
+
+button, a, input[type="range"] {
+    transition: var(--transition);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
 
 /* Основное содержимое */
 main {
@@ -850,15 +873,19 @@ footer {
 @media (max-width: 768px) {
     .logo h1 {
         font-size: 1.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .logo p {
-        font-size: 0.8rem;
+        display: none; /* Скрываем подпись на мобильных */
     }
+    
     .theme-toggle {
         right: 10px;
         font-size: 1.2rem;
     }
-}
+
 
     .album-art {
         width: 250px !important;
@@ -1022,29 +1049,3 @@ body.dark-theme .up-next h3::before,
 body.dark-theme .recent-tracks h3::before {
     background: var(--primary-color);
 }
-
-/* Переключатель темы справа */
-.theme-toggle {
-    position: absolute;
-    right: 20px;
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 1.5rem;
-    z-index: 2;
-    margin-left: auto; /* Прижимаем к правому краю */
-}
-
-.theme-toggle:hover {
-    color: var(--accent-color);
-}
-
-button, a, input[type="range"] {
-    transition: var(--transition);
-}
-
-button:active {
-    transform: scale(0.95);
-}
-

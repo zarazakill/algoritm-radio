@@ -230,7 +230,7 @@ main {
     height: 100px;
     object-fit: cover;
     border-radius: 50%; /* Винил остаётся круглым */
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     z-index: 2;
     animation: spin 16s linear infinite;

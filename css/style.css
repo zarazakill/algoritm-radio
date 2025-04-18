@@ -22,11 +22,13 @@
     margin: 5;
     padding: 5;
     box-sizing: border-box;
+    max-width: 100%;    
 }
 
 html {
     scroll-behavior: smooth;
     height: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -167,6 +169,17 @@ body::before {
 .menu-item:hover {
     color: var(--accent-color);
     padding-left: 15px;
+}
+
+.menu-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 2rem;
+    cursor: pointer;
 }
 
 /* Анимация для бургера при открытии */
@@ -645,7 +658,10 @@ footer {
     transform: translateY(-2px);
 }
 
-.status-card
+.status-card {
+    max-width: 100%;
+    box-sizing: border-box;
+}
 
 #stream-status {
     display: inline-flex;
@@ -879,6 +895,30 @@ footer {
 }
 
 @media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+    }
+    
+    .container {
+        width: 100%;
+        min-width: 100%;
+        padding: 0 15px;
+    }
+    
+    .player-container, 
+    .track-details {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Фикс для винила */
+    .vinyl-spin {
+        width: 50px;
+        height: 50px;
+    }
+    
     .logo h1 {
         font-size: 1.5rem;
         white-space: nowrap;
@@ -955,6 +995,11 @@ footer {
     .album-art {
         max-width: 250px;
     }
+
+    .logo h1 {
+        font-size: 1.3rem;
+        white-space: normal;
+    }    
 
     .track-info h2 {
         font-size: 1rem;

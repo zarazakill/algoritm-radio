@@ -4,6 +4,11 @@ document.querySelector('.theme-toggle').addEventListener('click', () => {
     const body = document.body;
     const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+document.querySelector('.menu-close').addEventListener('click', () => {
+    menuToggle.classList.remove('active');
+    menuOverlay.classList.remove('active');
+});
     
     body.classList.remove(currentTheme + '-theme');
     body.classList.add(newTheme + '-theme');
@@ -12,11 +17,6 @@ document.querySelector('.theme-toggle').addEventListener('click', () => {
     // Обновляем иконку
     const icon = document.querySelector('.theme-toggle i');
     icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-});
-
-document.querySelector('.menu-close').addEventListener('click', () => {
-    menuToggle.classList.remove('active');
-    menuOverlay.classList.remove('active');
 });
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -506,6 +506,34 @@ setStatus(text, isError = false) {
     }
 }
 
+setupThemeToggle() {
+    const body = document.body;
+    const themeToggleBtn = document.createElement('button');
+    themeToggleBtn.classList.add('theme-toggle');
+    themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+
+    // Получаем тему из localStorage или используем тему по умолчанию из конфига
+    const savedTheme = localStorage.getItem('theme') || this.config.DEFAULT_THEME;
+    body.classList.add(savedTheme + '-theme');
+    this.updateThemeIcon(themeToggleBtn, savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+        body.classList.remove(currentTheme + '-theme');
+        body.classList.add(newTheme + '-theme');
+        localStorage.setItem('theme', newTheme);
+        this.updateThemeIcon(themeToggleBtn, newTheme);
+    });
+
+    document.querySelector('.container').appendChild(themeToggleBtn);
+}
+
+    updateThemeIcon(button, theme) {
+        button.innerHTML = theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    }
+    
 async findWorkingApi() {
     try {
         // Проверяем наличие apiUrls в конфиге

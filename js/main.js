@@ -14,6 +14,11 @@ document.querySelector('.theme-toggle').addEventListener('click', () => {
     icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
 });
 
+document.querySelector('.menu-close').addEventListener('click', () => {
+    menuToggle.classList.remove('active');
+    menuOverlay.classList.remove('active');
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
     const playButton = document.getElementById('start-playback');
     const buttonText = playButton.querySelector('.button-text');

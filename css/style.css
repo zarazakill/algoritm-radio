@@ -1008,6 +1008,11 @@ footer {
     }
 }
 
+body.dark-theme main {
+    background: linear-gradient(to left, var(--darker-color), var(--dark-color));
+    color: var(--text-primary);
+}
+
 body.light-theme,
 body.dark-theme {
     transition: background 0.5s ease;

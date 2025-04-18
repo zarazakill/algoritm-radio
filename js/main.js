@@ -1,5 +1,19 @@
 import { RadioPlayer } from './player/player.js';
 
+document.querySelector('.theme-toggle').addEventListener('click', () => {
+    const body = document.body;
+    const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    body.classList.remove(currentTheme + '-theme');
+    body.classList.add(newTheme + '-theme');
+    localStorage.setItem('theme', newTheme);
+    
+    // Обновляем иконку
+    const icon = document.querySelector('.theme-toggle i');
+    icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
     const playButton = document.getElementById('start-playback');
     const buttonText = playButton.querySelector('.button-text');

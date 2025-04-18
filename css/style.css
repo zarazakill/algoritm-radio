@@ -104,7 +104,6 @@ body::before {
 }
 
 .menu-toggle {
-    grid-column: 1;
     background: none;
     border: none;
     cursor: pointer;
@@ -112,18 +111,20 @@ body::before {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 24px;
+    align-items: center;
     width: 30px;
-    z-index: 2;
+    height: 24px;
+    z-index: 1000;
 }
 
 .menu-bar {
     display: block;
     width: 100%;
     height: 3px;
-    background: var(--primary-color);
-    transition: var(--transition);
+    background: #fff; /* Цвет полосок */
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5); /* Лёгкая тень для чёткости */
     border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .menu-overlay {
@@ -185,9 +186,14 @@ body::before {
     cursor: pointer;
 }
 
+/* Расстояние между полосками */
+.menu-bar:nth-child(1) { transform-origin: 0% 0%; }
+.menu-bar:nth-child(2) { margin: 5px 0; } /* Отступ между полосками */
+.menu-bar:nth-child(3) { transform-origin: 0% 100%; }
+
 /* Анимация для бургера при открытии */
 .menu-toggle.active .menu-bar:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
+    transform: translateY(6px) rotate(45deg);
 }
 
 .menu-toggle.active .menu-bar:nth-child(2) {
@@ -195,7 +201,7 @@ body::before {
 }
 
 .menu-toggle.active .menu-bar:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
+    transform: translateY(-6px) rotate(-45deg);
 }
 
 /* Шапка */

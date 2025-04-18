@@ -12,8 +12,8 @@ if (themeToggle) {
         body.classList.add(newTheme + '-theme');
         localStorage.setItem('theme', newTheme);
         
-        // Обновляем иконку
-        const icon = document.querySelector('.theme-toggle i');
+        // Обновляем иконку только у существующего переключателя
+        const icon = themeToggle.querySelector('i');
         if (icon) {
             icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
         }

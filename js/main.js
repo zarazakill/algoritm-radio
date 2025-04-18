@@ -22,10 +22,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.getElementById('menuOverlay');
 
-    menuToggle.addEventListener('click', () => {
-        menuToggle.classList.toggle('active');
-        menuOverlay.style.display = menuOverlay.style.display === 'flex' ? 'none' : 'flex';
+menuToggle.addEventListener('click', () => {
+    menuToggle.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+});
+
+// Закрытие меню при клике на пункт
+document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+        menuToggle.classList.remove('active');
+        menuOverlay.classList.remove('active');
     });
+});
     
     try {
         console.log('Initializing player...');

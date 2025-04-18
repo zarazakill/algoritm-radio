@@ -1,5 +1,25 @@
 import { RadioPlayer } from './player/player.js';
 
+// Обработчик переключения темы
+const themeToggle = document.querySelector('.theme-toggle');
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        const body = document.body;
+        const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        body.classList.remove(currentTheme + '-theme');
+        body.classList.add(newTheme + '-theme');
+        localStorage.setItem('theme', newTheme);
+        
+        // Обновляем иконку только у существующего переключателя
+        const icon = themeToggle.querySelector('i');
+        if (icon) {
+            icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const playButton = document.getElementById('start-playback');
     const buttonText = playButton?.querySelector('.button-text');

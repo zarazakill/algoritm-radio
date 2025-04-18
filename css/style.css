@@ -103,6 +103,14 @@ body::before {
     padding: 10px 0;
 }
 
+.menu-toggle .fa-bars {
+    color: white;
+    font-size: 24px;
+}
+body.light-theme .menu-toggle .fa-bars {
+    color: #333;
+}
+
 .menu-toggle {
     position: relative; /* Для позиционирования */
     background: transparent;

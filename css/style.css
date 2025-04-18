@@ -39,6 +39,19 @@ body {
     flex-direction: column;
 }
 
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('img/bg-pattern.png') center/cover;
+    opacity: 0.05;
+    z-index: -1;
+    pointer-events: none;
+}
+
 .audio-overlay {
     position: fixed;
     top: 0;
@@ -323,13 +336,14 @@ main {
 }
 
 .track-info h2 {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--text-primary);
     font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .track-info p {
@@ -476,6 +490,11 @@ transform: scale(1.2);
     border-radius: 10px;
     margin-bottom: 0.5rem;
     border-left: 3px solid var(--primary-color);
+}
+
+.track-info-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .track-title {
@@ -1000,3 +1019,12 @@ body.dark-theme .recent-tracks h3::before {
 .theme-toggle:hover {
     color: var(--accent-color);
 }
+
+button, a, input[type="range"] {
+    transition: var(--transition);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+

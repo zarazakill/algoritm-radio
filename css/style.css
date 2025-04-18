@@ -39,6 +39,7 @@ body {
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+    transition: background-color 0.5s ease, color 0.3s ease;
 }
 
 body::before {
@@ -251,6 +252,7 @@ header {
     z-index: 2;
     justify-self: end;
     padding: 10px;
+    transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .theme-toggle:hover {
@@ -1006,11 +1008,17 @@ footer {
     }
 }
 
+body.light-theme,
+body.dark-theme {
+    transition: background 0.5s ease;
+}
+
 /* Светлая */
 body.light-theme {
     background: linear-gradient(to right, #7fc7ff, #0082e6);
     color: var(--dark-color);
-
+    --primary-light-bg-start: #66b5ff;
+    --light-bg-end: #00bfff;
 }
 
 body.light-theme {
@@ -1030,11 +1038,12 @@ body.light-theme .logo h1 {
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     filter: brightness(1.1);
 }
+
 body.light-theme .now-playing-badge {
     background: rgba(175, 218, 251, 0.8);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: 98acd6;
+    color: #98acd6;
 }
 
 /* Темная */

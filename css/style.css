@@ -115,21 +115,21 @@ body::before {
     width: 30px;
     height: 24px;
     z-index: 1000;
+    margin-right: 10px;
 }
 
 .menu-bar {
     display: block;
     width: 100%;
     height: 3px;
-    background: var(--primary-color); /* Цвет полосок */
+    background: #fff;
     border-radius: 2px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 /* Расстояние между полосками */
-.menu-bar:nth-child(1) { transform-origin: 0% 0%; }
-.menu-bar:nth-child(2) { margin: 5px 0; } /* Отступ между полосками */
-.menu-bar:nth-child(3) { transform-origin: 0% 100%; }
+.menu-bar:nth-child(1) { margin-bottom: 5px; }
+.menu-bar:nth-child(2) { margin-bottom: 5px; }
 
 .menu-overlay {
     position: fixed;
@@ -192,7 +192,7 @@ body::before {
 
 /* Анимация для бургера при открытии */
 .menu-toggle.active .menu-bar:nth-child(1) {
-    transform: translateY(6px) rotate(45deg);
+    transform: translateY(8px) rotate(45deg);
 }
 
 .menu-toggle.active .menu-bar:nth-child(2) {
@@ -200,7 +200,7 @@ body::before {
 }
 
 .menu-toggle.active .menu-bar:nth-child(3) {
-    transform: translateY(-6px) rotate(-45deg);
+    transform: translateY(-8px) rotate(-45deg);
 }
 
 /* Шапка */
@@ -1033,9 +1033,12 @@ body.light-theme {
     --light-bg-end: #00bfff;
 }
 
-body.light-theme {
-    --primary-light-bg-start: #66b5ff;
-    --light-bg-end: #00bfff;
+body.light-theme .menu-bar {
+    background: #333; /* Темный цвет для светлой темы */
+}
+
+body.light-theme .menu-toggle.active .menu-bar {
+    background: #333; /* Темный цвет для крестика в светлой теме */
 }
 
 body.light-theme #progress-bar {

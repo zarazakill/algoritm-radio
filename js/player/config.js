@@ -56,9 +56,11 @@ const RadioPlayerConfig = {
     },
     // Настройки для оптимизации
     optimization: {
-        lowLatency: true,          // Включить низколатентный режим
-        bufferTarget: 15,          // Целевой размер буфера в секундах
-        reconnectStrategy: 'fast'  // Стратегия переподключения
+        lowLatency: true,
+        bufferTarget: 15,          // Идеальный размер буфера (сек)
+        minBufferThreshold: 5,      // Минимальный порог перед действием (сек)
+        maxQualitySwitches: 3,      // Макс. переключений качества
+        switchCooldown: 30000       // Задержка между переключениями (мс)
     },
     
     // Тема по умолчанию

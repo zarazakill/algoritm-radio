@@ -2,20 +2,23 @@ export class AudioOptimizer {
     constructor(audioElement, config) {
         this.audio = audioElement;
         this.config = config || {};
-        // Устанавливаем значения по умолчанию, если конфиг не указан
         this.optimizationConfig = this.config.optimization || {
             lowLatency: true,
-            bufferTarget: 15,
-            reconnectStrategy: 'fast'
+            bufferTarget: 15, // Целевой размер буфера в секундах
+            minBufferThreshold: 5, // Минимальный порог буфера перед действием
+            maxQualitySwitches: 3, // Максимальное количество переключений качества
+            switchCooldown: 30000 // 30 секунд между переключениями
         };
         this.bufferCache = new Map();
+        this.qualitySwitchCount = 0;
+        this.lastSwitchTime = 0;
+        this.currentBitrate = 'high';
     }
 
     async optimize() {
         if (this.optimizationConfig.lowLatency) {
             this.enableLowLatency();
         }
-        
         this.setupBufferMonitoring();
     }
 
@@ -25,7 +28,6 @@ export class AudioOptimizer {
             this.audio.setAttribute('webkit-playsinline', '');
             this.audio.setAttribute('preload', 'auto');
             
-            // Для Safari/iOS
             if (typeof this.audio.webkitPreservesPitch !== 'undefined') {
                 this.audio.webkitPreservesPitch = true;
             }
@@ -35,12 +37,10 @@ export class AudioOptimizer {
     }
 
     setupBufferMonitoring() {
-        const bufferTarget = this.optimizationConfig.bufferTarget || 15;
-        
         this.bufferMonitorInterval = setInterval(() => {
             const buffer = this.getCurrentBuffer();
-            if (buffer < bufferTarget) {
-                this.adjustBitrate(buffer);
+            if (buffer < this.optimizationConfig.minBufferThreshold) {
+                this.handleLowBuffer(buffer);
             }
         }, 2000);
     }
@@ -52,9 +52,35 @@ export class AudioOptimizer {
         return end - current;
     }
 
-    adjustBitrate(bufferLevel) {
-        // Логика адаптации битрейта
-        console.log(`Buffer level low (${bufferLevel}s), adjusting bitrate...`);
+    handleLowBuffer(bufferLevel) {
+        const now = Date.now();
+        const sinceLastSwitch = now - this.lastSwitchTime;
+        
+        // Проверяем условия для переключения
+        if (this.qualitySwitchCount < this.optimizationConfig.maxQualitySwitches && 
+            sinceLastSwitch > this.optimizationConfig.switchCooldown) {
+            
+            console.log(`Low buffer (${bufferLevel.toFixed(2)}s), switching to lower bitrate...`);
+            this.switchToLowerBitrate();
+            this.qualitySwitchCount++;
+            this.lastSwitchTime = now;
+            
+        } else if (sinceLastSwitch > this.optimizationConfig.switchCooldown) {
+            console.warn(`Buffer critically low (${bufferLevel.toFixed(2)}s), but max switches reached`);
+        }
+    }
+
+    switchToLowerBitrate() {
+        if (this.currentBitrate === 'high') {
+            console.log('Switching to medium bitrate');
+            this.currentBitrate = 'medium';
+            // Здесь должна быть логика переключения на средний битрейт
+            // Например: player.switchStream('medium');
+        } else if (this.currentBitrate === 'medium') {
+            console.log('Switching to low bitrate');
+            this.currentBitrate = 'low';
+            // player.switchStream('low');
+        }
     }
 
     destroy() {

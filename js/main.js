@@ -29,37 +29,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const menuOverlay = document.getElementById('menuOverlay');
     const menuClose = document.querySelector('.menu-close');
 
-    // Обработчики меню
-    if (menuToggle && menuOverlay) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('active');
-            menuOverlay.classList.toggle('active');
-        });
+    // Изначально отключаем бургер-меню
+    if (menuToggle) {
+        menuToggle.classList.add('disabled');
     }
 
-    if (menuClose && menuToggle && menuOverlay) {
-        menuClose.addEventListener('click', () => {
-            menuToggle.classList.remove('active');
-            menuOverlay.classList.remove('active');
-        });
-    }
-
-    // Закрытие меню при клике на пункт
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', () => {
-            if (menuToggle && menuOverlay) {
-                menuToggle.classList.remove('active');
-                menuOverlay.classList.remove('active');
-            }
-        });
-    });
-    
     try {
         console.log('Initializing player...');
         const player = new RadioPlayer();
         
         if (playButton && buttonText && spinner) {
-            // Показываем состояние загрузки
             playButton.disabled = true;
             spinner.style.display = 'inline-block';
             buttonText.textContent = 'Загрузка плеера...';
@@ -68,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await player.init();
         
         if (playButton && buttonText && spinner) {
-            // Активируем кнопку
             playButton.disabled = false;
             spinner.style.display = 'none';
             buttonText.textContent = 'Запустить радио';
@@ -80,12 +58,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     overlay.style.display = 'none';
                     
-                    // Показываем состояние загрузки при начале воспроизведения
                     playButton.disabled = true;
                     spinner.style.display = 'inline-block';
                     buttonText.textContent = 'Подготовка потока...';
                     
-                    // Проверяем готовность аудио
                     if (player.elements.audio.readyState < 2) {
                         await new Promise(resolve => {
                             player.elements.audio.addEventListener('canplay', resolve, { once: true });
@@ -98,15 +74,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         await player.state.audioContext.resume();
                     }
                     
-                    // Обновляем состояние плеера
                     player.state.isPlaying = true;
+                    
+                    // Активируем бургер-меню после успешного запуска
+                    if (menuToggle) {
+                        menuToggle.classList.remove('disabled');
+                    }
                     
                 } catch (error) {
                     console.error("Playback error:", error);
                     player.setStatus(`Ошибка: ${error.message}`, true);
                     overlay.style.display = 'flex';
                     
-                    // Возвращаем кнопку в исходное состояние
                     if (playButton && buttonText && spinner) {
                         playButton.disabled = false;
                         spinner.style.display = 'none';
@@ -119,7 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error("Initialization failed:", error);
         
-        // Обновляем состояние кнопки при ошибке
         if (playButton && buttonText && spinner) {
             playButton.disabled = false;
             spinner.style.display = 'none';
@@ -130,5 +108,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (statusEl) {
             statusEl.style.opacity = '1';
         }
+    }
+
+    // Обработчики меню (остаются прежними, но будут работать только после активации)
+    if (menuToggle && menuOverlay) {
+        menuToggle.addEventListener('click', () => {
+            if (!menuToggle.classList.contains('disabled')) {
+                menuToggle.classList.toggle('active');
+                menuOverlay.classList.toggle('active');
+            }
+        });
     }
 });

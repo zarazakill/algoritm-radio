@@ -1,6 +1,7 @@
 import RadioPlayerConfig from './config.js';
 import { NetworkUtils } from './network-utils.js';
 import { UIHelpers } from './ui-helpers.js';
+import { AudioOptimizer } from './audio-optimizer.js';
 
 export class RadioPlayer {
     constructor() {

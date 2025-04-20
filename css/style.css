@@ -431,6 +431,31 @@ main {
     min-width: 40px;
 }
 
+.current-time {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.time-separator {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.full-duration {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+/* Для элемента duration в плеере */
+#duration {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    min-width: 80px;
+    text-align: right;
+}
+
 #progress-bar {
 flex: 1;
 height: 5px;

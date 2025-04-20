@@ -27,12 +27,9 @@ export class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
-            this.optimizer = new AudioOptimizer(this.elements.audio, this.config);
-        
             this.abortController = new AbortController();
-        
             this.config = RadioPlayerConfig;
- 
+            this.optimizer = new AudioOptimizer(this.elements.audio, this.config);
             this.state = {
             currentStream: null,
             currentApiUrl: null,

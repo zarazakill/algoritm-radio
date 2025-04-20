@@ -154,16 +154,16 @@ setupEventListeners() {
         }
     });
 
-        this.elements.audio.addEventListener('play', () => {
-            this.smoothTimeUpdate();
-        });
+    this.elements.audio.addEventListener('play', () => {
+        this.updateTimeDisplay(); // Fixed line
+    });
 
-        this.elements.audio.addEventListener('pause', () => {
-            if (this.animationFrameId) {
-                cancelAnimationFrame(this.animationFrameId);
-                this.animationFrameId = null;
-            }
-        });
+    this.elements.audio.addEventListener('pause', () => {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    });
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {

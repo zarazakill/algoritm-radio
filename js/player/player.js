@@ -102,6 +102,58 @@ async init() {
     }
 }
    
+formatDuration(seconds) {
+    if (!seconds) return "00:00";
+    
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    return [
+        days > 0 ? `${days}d` : '',
+        `${hours.toString().padStart(2, '0')}`,
+        `${mins.toString().padStart(2, '0')}`,
+        `${secs.toString().padStart(2, '0')}`
+    ].filter(Boolean).join(':');
+}
+
+// Обновим метод updateCurrentTrack
+updateCurrentTrack(nowPlaying) {
+    this.updateAlbumArtFromAzuraCast(nowPlaying);
+    const track = nowPlaying.song;
+    
+    // Форматируем время для текущего трека (ММ:СС)
+    const formatTrackTime = (seconds) => {
+        if (!seconds) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' + secs : secs}`;
+    };
+
+    const html = `
+    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+    <span class="track-progress">${formatTrackTime(nowPlaying.elapsed)} / ${this.formatDuration(nowPlaying.duration)}</span>
+    `;
+
+    if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+
+    if (this.elements.trackTitle) {
+        this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
+    }
+    if (this.elements.trackArtist) {
+        this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
+    }
+    if (this.elements.duration) {
+        this.elements.duration.textContent = this.formatDuration(nowPlaying.duration);
+        this.elements.duration.classList.add('duration-large'); // Добавляем класс для увеличенного текста
+    }
+
+    this.updateAlbumArtFromAzuraCast(nowPlaying);
+}
+
+// Обновим метод updateTimeDisplay
 updateTimeDisplay() {
     if (this.elements.currentTime && !this.elements.audio.paused) {
         const formatTime = (seconds) => {
@@ -114,6 +166,7 @@ updateTimeDisplay() {
     }
     this.animationFrameId = requestAnimationFrame(this.updateTimeDisplay);
 }
+
     
 setupEventListeners() {
     const self = this;
@@ -178,13 +231,16 @@ setupEventListeners() {
         }
     });
 
-        this.elements.audio.addEventListener('emptied', () => {
-        // Сбрасываем время при смене трека
+ this.elements.audio.addEventListener('emptied', () => {
+        // Полный сброс времени при смене трека
         if (this.elements.currentTime) {
             this.elements.currentTime.textContent = "0:00";
         }
         if (this.elements.progressBar) {
             this.elements.progressBar.value = 0;
+        }
+        if (this.elements.duration) {
+            this.elements.duration.textContent = "00:00";
         }
     });
 }

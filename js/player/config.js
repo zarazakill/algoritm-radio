@@ -54,6 +54,12 @@ const RadioPlayerConfig = {
         useProxy: false,                         // Использовать прокси для обложек
         proxyUrl: ""                             // URL прокси (если используется)
     },
+    // Настройки для оптимизации
+    optimization: {
+        lowLatency: true,          // Включить низколатентный режим
+        bufferTarget: 15,          // Целевой размер буфера в секундах
+        reconnectStrategy: 'fast'  // Стратегия переподключения
+    },
     
     // Тема по умолчанию
     DEFAULT_THEME: 'dark' // Убрана лишняя запятая здесь

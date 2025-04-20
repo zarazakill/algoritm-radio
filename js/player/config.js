@@ -3,11 +3,11 @@ const RadioPlayerConfig = {
     // Основные потоки
     streams: [
         { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
-        { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 }
+        { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
     ],
     
     // API endpoints
-    apiEndpoints: {
+   apiEndpoints: {
         primary: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
         fallback: "https://wwcat.duckdns.org:8000/api/nowplaying/1",
         nowPlaying: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
@@ -54,17 +54,9 @@ const RadioPlayerConfig = {
         useProxy: false,                         // Использовать прокси для обложек
         proxyUrl: ""                             // URL прокси (если используется)
     },
-    // Настройки для оптимизации
-    optimization: {
-        lowLatency: true,
-        bufferTarget: 15,          // Идеальный размер буфера (сек)
-        minBufferThreshold: 5,      // Минимальный порог перед действием (сек)
-        maxQualitySwitches: 3,      // Макс. переключений качества
-        switchCooldown: 30000       // Задержка между переключениями (мс)
-    },
     
     // Тема по умолчанию
-    DEFAULT_THEME: 'dark' // Убрана лишняя запятая здесь
+    DEFAULT_THEME: 'dark'
 };
 
 // Экспорт конфигурации

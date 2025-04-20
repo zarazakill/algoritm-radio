@@ -114,12 +114,6 @@ body::before {
     z-index: 1000;
 }
 
-.menu-toggle.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-    cursor: not-allowed;
-}
-
 .menu-bar {
     display: block;
     width: 100%;
@@ -429,31 +423,6 @@ main {
     font-size: 0.85rem;
     color: var(--text-secondary);
     min-width: 40px;
-}
-
-.current-time {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.time-separator {
-    color: var(--text-secondary);
-    opacity: 0.6;
-}
-
-.full-duration {
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--primary-color);
-}
-
-/* Для элемента duration в плеере */
-#duration {
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--primary-color);
-    min-width: 80px;
-    text-align: right;
 }
 
 #progress-bar {

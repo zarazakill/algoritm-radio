@@ -32,7 +32,7 @@ const RadioPlayerConfig = {
     networkCheckInterval: 10000,    // Интервал проверки сети (мс)
     
     // Настройки буфера
-    bufferLength: 1,               // Длина аудиобуфера (сек)
+    bufferLength: 60,               // Длина аудиобуфера (сек)
     
     // Диагностика
     diagnostics: {

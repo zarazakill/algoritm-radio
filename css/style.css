@@ -114,6 +114,12 @@ body::before {
     z-index: 1000;
 }
 
+.menu-toggle.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
 .menu-bar {
     display: block;
     width: 100%;

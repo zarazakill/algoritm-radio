@@ -1,133 +1,159 @@
 import { RadioPlayer } from './player/player.js';
 
-// Константы для классов и элементов
-const THEME_CLASSES = {
-  dark: 'dark-theme',
-  light: 'light-theme'
+// Конфигурация
+const CONFIG = {
+  themes: {
+    dark: 'dark-theme',
+    light: 'light-theme'
+  },
+  icons: {
+    dark: 'fas fa-moon',
+    light: 'fas fa-sun'
+  },
+  defaultTheme: 'dark'
 };
 
-const ICON_CLASSES = {
-  dark: 'fas fa-moon',
-  light: 'fas fa-sun'
+// DOM элементы
+const DOM = {
+  get themeToggle() { return document.querySelector('.theme-toggle'); },
+  get themeIcon() { return document.querySelector('.theme-toggle i'); },
+  get menuToggle() { return document.querySelector('.menu-toggle'); },
+  get menuOverlay() { return document.getElementById('menuOverlay'); },
+  get playButton() { return document.getElementById('start-playback'); },
+  get buttonText() { return this.playButton?.querySelector('.button-text'); },
+  get spinner() { return this.playButton?.querySelector('.loading-spinner'); },
+  get overlay() { return document.getElementById('audio-overlay'); },
+  get statusElement() { return document.getElementById('stream-status'); }
 };
 
-// Утилитарные функции
-const toggleTheme = () => {
-  const body = document.body;
-  const currentTheme = body.classList.contains(THEME_CLASSES.dark) ? 'dark' : 'light';
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-  // Переключение темы
-  body.classList.replace(THEME_CLASSES[currentTheme], THEME_CLASSES[newTheme]);
-  localStorage.setItem('theme', newTheme);
-
-  // Обновление иконки
-  const icon = document.querySelector('.theme-toggle i');
-  if (icon) {
-    icon.className = ICON_CLASSES[newTheme];
+// Управление темой
+class ThemeManager {
+  static init() {
+    const savedTheme = localStorage.getItem('theme') || CONFIG.defaultTheme;
+    this.applyTheme(savedTheme);
+    
+    if (DOM.themeToggle) {
+      DOM.themeToggle.addEventListener('click', () => this.toggle());
+    }
   }
-};
 
-const setupMenuHandlers = () => {
-  const menuToggle = document.querySelector('.menu-toggle');
-  const menuOverlay = document.getElementById('menuOverlay');
+  static toggle() {
+    const current = document.body.classList.contains(CONFIG.themes.dark) ? 'dark' : 'light';
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    this.applyTheme(newTheme);
+  }
 
-  if (!menuToggle || !menuOverlay) return;
+  static applyTheme(theme) {
+    document.body.classList.remove(CONFIG.themes.dark, CONFIG.themes.light);
+    document.body.classList.add(CONFIG.themes[theme]);
+    localStorage.setItem('theme', theme);
+    
+    if (DOM.themeIcon) {
+      DOM.themeIcon.className = CONFIG.icons[theme];
+    }
+  }
+}
 
-  // Открытие/закрытие меню
-  const toggleMenu = (state) => {
-    menuToggle.classList.toggle('active', state);
-    menuOverlay.classList.toggle('active', state);
-  };
+// Управление меню
+class MenuManager {
+  static init() {
+    if (!DOM.menuToggle || !DOM.menuOverlay) return;
 
-  menuToggle.addEventListener('click', () => {
-    const isActive = menuToggle.classList.contains('active');
-    toggleMenu(!isActive);
-  });
+    DOM.menuToggle.addEventListener('click', () => this.toggle());
+    DOM.menuOverlay.addEventListener('click', () => this.close());
+    
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', () => this.close());
+    });
+  }
 
-  menuOverlay.addEventListener('click', () => toggleMenu(false));
+  static toggle() {
+    const isActive = DOM.menuToggle.classList.toggle('active');
+    DOM.menuOverlay.classList.toggle('active', isActive);
+  }
 
-  document.querySelectorAll('.menu-item').forEach(item => {
-    item.addEventListener('click', () => toggleMenu(false));
-  });
-};
+  static close() {
+    DOM.menuToggle.classList.remove('active');
+    DOM.menuOverlay.classList.remove('active');
+  }
+}
 
-const initPlayer = async () => {
-  const playButton = document.getElementById('start-playback');
-  const buttonText = playButton?.querySelector('.button-text');
-  const spinner = playButton?.querySelector('.loading-spinner');
-  const overlay = document.getElementById('audio-overlay');
+// Управление плеером
+class PlayerManager {
+  static async init() {
+    if (!this.validateDOM()) return;
 
-  if (!playButton || !buttonText || !spinner || !overlay) return;
+    this.player = new RadioPlayer();
+    this.updateButtonState(true, 'Загрузка плеера...');
 
-  const updateButtonState = (isLoading, message) => {
-    playButton.disabled = isLoading;
-    spinner.style.display = isLoading ? 'inline-block' : 'none';
-    buttonText.textContent = message || 'Запустить радио';
-  };
+    try {
+      await this.player.init();
+      this.setupPlayer();
+      this.updateButtonState(false);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 
-  try {
-    console.log('Initializing player...');
-    const player = new RadioPlayer();
+  static validateDOM() {
+    return DOM.playButton && DOM.buttonText && DOM.spinner && DOM.overlay;
+  }
 
-    // Начальное состояние кнопки
-    updateButtonState(true, 'Загрузка плеера...');
-    await player.init();
+  static updateButtonState(isLoading, message = 'Запустить радио') {
+    DOM.playButton.disabled = isLoading;
+    DOM.spinner.style.display = isLoading ? 'inline-block' : 'none';
+    DOM.buttonText.textContent = message;
+  }
 
-    // Готовое состояние кнопки
-    updateButtonState(false);
-
-    // Обработчик воспроизведения
-    playButton.addEventListener('click', async () => {
+  static setupPlayer() {
+    DOM.playButton.addEventListener('click', async () => {
       try {
-        overlay.style.display = 'none';
-        updateButtonState(true, 'Подготовка потока...');
-
-        if (player.elements.audio.readyState < 2) {
-          await new Promise(resolve => {
-            const canPlayHandler = () => {
-              player.elements.audio.removeEventListener('canplay', canPlayHandler);
-              resolve();
-            };
-            player.elements.audio.addEventListener('canplay', canPlayHandler);
-          });
+        DOM.overlay.style.display = 'none';
+        this.updateButtonState(true, 'Подготовка потока...');
+        
+        await this.waitForAudioReady();
+        await this.player.elements.audio.play();
+        
+        if (this.player.state.audioContext?.state === 'suspended') {
+          await this.player.state.audioContext.resume();
         }
-
-        await player.elements.audio.play();
-
-        if (player.state.audioContext?.state === 'suspended') {
-          await player.state.audioContext.resume();
-        }
-
-        player.state.isPlaying = true;
+        
+        this.player.state.isPlaying = true;
       } catch (error) {
-        console.error("Playback error:", error);
-        player.setStatus(`Ошибка: ${error.message}`, true);
-        overlay.style.display = 'flex';
-        updateButtonState(false, 'Попробовать снова');
+        this.handlePlaybackError(error);
       }
     });
+  }
 
-  } catch (error) {
+  static async waitForAudioReady() {
+    if (this.player.elements.audio.readyState < 2) {
+      await new Promise(resolve => {
+        const handler = () => {
+          this.player.elements.audio.removeEventListener('canplay', handler);
+          resolve();
+        };
+        this.player.elements.audio.addEventListener('canplay', handler);
+      });
+    }
+  }
+
+  static handlePlaybackError(error) {
+    console.error("Playback error:", error);
+    this.player.setStatus(`Ошибка: ${error.message}`, true);
+    DOM.overlay.style.display = 'flex';
+    this.updateButtonState(false, 'Попробовать снова');
+  }
+
+  static handleError(error) {
     console.error("Initialization failed:", error);
-    updateButtonState(false, 'Ошибка загрузки. Попробовать снова');
-    document.getElementById('stream-status')?.style.setProperty('opacity', '1');
+    this.updateButtonState(false, 'Ошибка загрузки. Попробовать снова');
+    DOM.statusElement?.style.setProperty('opacity', '1');
   }
-};
+}
 
-// Инициализация при загрузке
+// Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
-  // Восстановление темы из localStorage
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  document.body.classList.add(THEME_CLASSES[savedTheme]);
-  document.querySelector('.theme-toggle i')?.classList.add(ICON_CLASSES[savedTheme]);
-
-  // Обработчики событий
-  const themeToggle = document.querySelector('.theme-toggle');
-  if (themeToggle) {
-    themeToggle.addEventListener('click', toggleTheme);
-  }
-
-  setupMenuHandlers();
-  initPlayer();
+  ThemeManager.init();
+  MenuManager.init();
+  PlayerManager.init();
 });

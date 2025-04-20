@@ -104,8 +104,13 @@ async init() {
    
 updateTimeDisplay() {
     if (this.elements.currentTime && !this.elements.audio.paused) {
-        this.elements.currentTime.textContent = 
-            (Math.floor(this.elements.audio.currentTime));
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' + secs : secs}`;
+        };
+        
+        this.elements.currentTime.textContent = formatTime(Math.floor(this.elements.audio.currentTime));
     }
     this.animationFrameId = requestAnimationFrame(this.updateTimeDisplay);
 }
@@ -170,6 +175,16 @@ setupEventListeners() {
             this.handleBackgroundTab();
         } else {
             this.handleForegroundTab();
+        }
+    });
+
+        this.elements.audio.addEventListener('emptied', () => {
+        // Сбрасываем время при смене трека
+        if (this.elements.currentTime) {
+            this.elements.currentTime.textContent = "0:00";
+        }
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 0;
         }
     });
 }
@@ -422,10 +437,19 @@ async updateTrackInfo() {
 updateCurrentTrack(nowPlaying) {
     this.updateAlbumArtFromAzuraCast(nowPlaying);
     const track = nowPlaying.song;
+    
+    // Форматируем время с разделителем :
+    const formatTime = (seconds) => {
+        if (!seconds) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' + secs : secs}`;
+    };
+
     const html = `
     <span class="track-name">${track.title || 'Неизвестный трек'}</span>
     <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="track-progress">${(nowPlaying.elapsed)} / ${(nowPlaying.duration)}</span>
+    <span class="track-progress">${formatTime(nowPlaying.elapsed)} / ${formatTime(nowPlaying.duration)}</span>
     `;
 
     if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
@@ -437,10 +461,9 @@ updateCurrentTrack(nowPlaying) {
         this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
     }
     if (this.elements.duration) {
-        this.elements.duration.textContent = (nowPlaying.duration);
+        this.elements.duration.textContent = formatTime(nowPlaying.duration);
     }
 
-    // Обновляем обложку альбома из AzuraCast
     this.updateAlbumArtFromAzuraCast(nowPlaying);
 }
 

@@ -1,12 +1,18 @@
 export class AudioOptimizer {
     constructor(audioElement, config) {
         this.audio = audioElement;
-        this.config = config;
+        this.config = config || {};
+        // Устанавливаем значения по умолчанию, если конфиг не указан
+        this.optimizationConfig = this.config.optimization || {
+            lowLatency: true,
+            bufferTarget: 15,
+            reconnectStrategy: 'fast'
+        };
         this.bufferCache = new Map();
     }
 
     async optimize() {
-        if (this.config.optimization.lowLatency) {
+        if (this.optimizationConfig.lowLatency) {
             this.enableLowLatency();
         }
         
@@ -29,9 +35,11 @@ export class AudioOptimizer {
     }
 
     setupBufferMonitoring() {
-        setInterval(() => {
+        const bufferTarget = this.optimizationConfig.bufferTarget || 15;
+        
+        this.bufferMonitorInterval = setInterval(() => {
             const buffer = this.getCurrentBuffer();
-            if (buffer < this.config.optimization.bufferTarget) {
+            if (buffer < bufferTarget) {
                 this.adjustBitrate(buffer);
             }
         }, 2000);
@@ -45,8 +53,13 @@ export class AudioOptimizer {
     }
 
     adjustBitrate(bufferLevel) {
-        // Здесь можно реализовать логику адаптации битрейта
-        // Например, переключение на более низкокачественный поток
-        // при недостаточном уровне буфера
+        // Логика адаптации битрейта
+        console.log(`Buffer level low (${bufferLevel}s), adjusting bitrate...`);
+    }
+
+    destroy() {
+        if (this.bufferMonitorInterval) {
+            clearInterval(this.bufferMonitorInterval);
+        }
     }
 }

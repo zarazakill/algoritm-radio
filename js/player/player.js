@@ -101,9 +101,16 @@ async init() {
         throw error;
     }
 }
-   
-formatDuration(seconds) {
-    if (!seconds) return "00:00";
+
+formatTrackTime(seconds) {
+    if (!seconds) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' + secs : secs}`;
+}
+
+formatFullDuration(seconds) {
+    if (!seconds) return "00:00:00";
     
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
@@ -117,24 +124,19 @@ formatDuration(seconds) {
         `${secs.toString().padStart(2, '0')}`
     ].filter(Boolean).join(':');
 }
-
-// Обновим метод updateCurrentTrack
+    
 updateCurrentTrack(nowPlaying) {
     this.updateAlbumArtFromAzuraCast(nowPlaying);
     const track = nowPlaying.song;
     
-    // Форматируем время для текущего трека (ММ:СС)
-    const formatTrackTime = (seconds) => {
-        if (!seconds) return "0:00";
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs < 10 ? '0' + secs : secs}`;
-    };
-
     const html = `
     <span class="track-name">${track.title || 'Неизвестный трек'}</span>
     <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="track-progress">${formatTrackTime(nowPlaying.elapsed)} / ${this.formatDuration(nowPlaying.duration)}</span>
+    <span class="track-progress">
+        <span class="current-time">${this.formatTrackTime(nowPlaying.elapsed)}</span>
+        <span class="time-separator">/</span>
+        <span class="full-duration">${this.formatFullDuration(nowPlaying.duration)}</span>
+    </span>
     `;
 
     if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
@@ -146,23 +148,15 @@ updateCurrentTrack(nowPlaying) {
         this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
     }
     if (this.elements.duration) {
-        this.elements.duration.textContent = this.formatDuration(nowPlaying.duration);
-        this.elements.duration.classList.add('duration-large'); // Добавляем класс для увеличенного текста
+        this.elements.duration.textContent = this.formatFullDuration(nowPlaying.duration);
     }
 
     this.updateAlbumArtFromAzuraCast(nowPlaying);
 }
 
-// Обновим метод updateTimeDisplay
 updateTimeDisplay() {
     if (this.elements.currentTime && !this.elements.audio.paused) {
-        const formatTime = (seconds) => {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' + secs : secs}`;
-        };
-        
-        this.elements.currentTime.textContent = formatTime(Math.floor(this.elements.audio.currentTime));
+        this.elements.currentTime.textContent = this.formatTrackTime(Math.floor(this.elements.audio.currentTime));
     }
     this.animationFrameId = requestAnimationFrame(this.updateTimeDisplay);
 }
@@ -231,7 +225,7 @@ setupEventListeners() {
         }
     });
 
- this.elements.audio.addEventListener('emptied', () => {
+    this.elements.audio.addEventListener('emptied', () => {
         // Полный сброс времени при смене трека
         if (this.elements.currentTime) {
             this.elements.currentTime.textContent = "0:00";
@@ -240,7 +234,7 @@ setupEventListeners() {
             this.elements.progressBar.value = 0;
         }
         if (this.elements.duration) {
-            this.elements.duration.textContent = "00:00";
+            this.elements.duration.textContent = "00:00:00";
         }
     });
 }

@@ -132,12 +132,28 @@ setupEventListeners() {
             this.handleNetworkIssue();
         });
 
-        this.elements.audio.addEventListener('timeupdate', () => {
-            if (this.elements.currentTime && this.elements.progressBar) {
-                this.elements.currentTime.textContent = UIHelpers.formatTime(this.elements.audio.currentTime);
-                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
+    this.elements.audio.addEventListener('timeupdate', () => {
+        if (this.elements.currentTime && this.elements.progressBar) {
+            // Плавное обновление каждую секунду
+            const currentTime = Math.floor(this.elements.audio.currentTime);
+            this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
+            
+            // Прогресс-бар обновляем чаще для плавности
+            this.elements.progressBar.value = 
+                (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
+        }
+    });
+
+    // Добавляем дополнительный интервал для более плавного обновления
+    this.state.timeUpdateInterval = setInterval(() => {
+        if (this.elements.audio && !this.elements.audio.paused) {
+            const currentTime = Math.floor(this.elements.audio.currentTime);
+            if (this.elements.currentTime) {
+                this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
             }
-        });
+        }
+    }, 200); // Обновление каждые 200 мс
+}
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {

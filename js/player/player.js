@@ -28,7 +28,9 @@ export class RadioPlayer {
         };
 
             this.updateTimeDisplay = this.updateTimeDisplay.bind(this);
-
+        
+            this.lastUpdateTime = 0;
+        
             this.animationFrameId = null;
         
             this.abortController = new AbortController();
@@ -102,21 +104,31 @@ async init() {
     }
 }
 
+smoothTimeUpdate() {
+    if (!this.elements.audio || !this.elements.currentTime) return;
+        
+    const now = Date.now();
+    if (now - this.lastUpdateTime >= 200) { // Обновляем каждые 200мс (5 раз в секунду)
+        this.lastUpdateTime = now;
+        const currentTime = Math.floor(this.elements.audio.currentTime);
+        this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
+            
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 
+                (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
+        }
+    }
+    this.animationFrameId = requestAnimationFrame(() => this.smoothTimeUpdate());
+}
+
+
+    
 updateTimeDisplay() {
     if (this.elements.currentTime && !this.elements.audio.paused) {
         this.elements.currentTime.textContent = 
-            UIHelpers.formatTime(Math.floor(this.elements.audio.currentTime));
+            (Math.floor(this.elements.audio.currentTime));
     }
     this.animationFrameId = requestAnimationFrame(this.updateTimeDisplay);
-}
-
-destroy() {
-    if (this.state.timeUpdateInterval) {
-        clearInterval(this.state.timeUpdateInterval);
-    }
-    if (this.animationFrameId) {
-        cancelAnimationFrame(this.animationFrameId);
-    }
 }
     
 setupEventListeners() {
@@ -157,15 +169,22 @@ setupEventListeners() {
     this.elements.audio.addEventListener('timeupdate', () => {
         if (this.elements.currentTime && this.elements.progressBar) {
             const currentTime = Math.floor(this.elements.audio.currentTime);
-            this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
+            this.elements.currentTime.textContent = (currentTime);
             this.elements.progressBar.value = 
                 (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
         }
     });
 
-    this.elements.audio.addEventListener('play', () => {
-        requestAnimationFrame(this.updateTimeDisplay);
-    });
+        this.elements.audio.addEventListener('play', () => {
+            this.smoothTimeUpdate();
+        });
+
+        this.elements.audio.addEventListener('pause', () => {
+            if (this.animationFrameId) {
+                cancelAnimationFrame(this.animationFrameId);
+                this.animationFrameId = null;
+            }
+        });
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
@@ -175,7 +194,16 @@ setupEventListeners() {
         }
     });
 }
-   
+
+destroy() {
+    if (this.state.timeUpdateInterval) {
+        clearInterval(this.state.timeUpdateInterval);
+    }
+    if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+    }
+}
+    
     updateVolumeIcon() {
     if (!this.elements.volumeBtn) return;
 
@@ -418,7 +446,7 @@ updateCurrentTrack(nowPlaying) {
     const html = `
     <span class="track-name">${track.title || 'Неизвестный трек'}</span>
     <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
+    <span class="track-progress">${(nowPlaying.elapsed)} / ${(nowPlaying.duration)}</span>
     `;
 
     if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
@@ -430,7 +458,7 @@ updateCurrentTrack(nowPlaying) {
         this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
     }
     if (this.elements.duration) {
-        this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
+        this.elements.duration.textContent = (nowPlaying.duration);
     }
 
     // Обновляем обложку альбома из AzuraCast

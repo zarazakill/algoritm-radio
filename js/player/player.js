@@ -28,6 +28,8 @@ export class RadioPlayer {
         };
 
             this.updateTimeDisplay = this.updateTimeDisplay.bind(this);
+
+            this.animationFrameId = null;
         
             this.abortController = new AbortController();
         
@@ -105,7 +107,16 @@ updateTimeDisplay() {
         this.elements.currentTime.textContent = 
             UIHelpers.formatTime(Math.floor(this.elements.audio.currentTime));
     }
-    requestAnimationFrame(this.updateTimeDisplay);
+    this.animationFrameId = requestAnimationFrame(this.updateTimeDisplay);
+}
+
+destroy() {
+    if (this.state.timeUpdateInterval) {
+        clearInterval(this.state.timeUpdateInterval);
+    }
+    if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+    }
 }
     
 setupEventListeners() {
@@ -693,10 +704,4 @@ async findWorkingApi() {
             });
         }, this.config.diagnostics.logInterval);
     }
-    
-destroy() {
-    if (this.state.timeUpdateInterval) {
-        clearInterval(this.state.timeUpdateInterval);
-    }
-    cancelAnimationFrame(this.animationFrameId);
 }

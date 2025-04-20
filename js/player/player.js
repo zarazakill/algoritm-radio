@@ -163,6 +163,16 @@ setupEventListeners() {
     });
 }
 
+const updateTimeDisplay = () => {
+    if (this.elements.currentTime && !this.elements.audio.paused) {
+        this.elements.currentTime.textContent = 
+            UIHelpers.formatTime(Math.floor(this.elements.audio.currentTime));
+    }
+    requestAnimationFrame(updateTimeDisplay);
+};
+// Запустить при инициализации
+requestAnimationFrame(updateTimeDisplay);
+    
     updateVolumeIcon() {
     if (!this.elements.volumeBtn) return;
 

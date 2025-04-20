@@ -29,8 +29,6 @@ export class RadioPlayer {
 
             this.updateTimeDisplay = this.updateTimeDisplay.bind(this);
         
-            this.lastUpdateTime = 0;
-        
             this.animationFrameId = null;
         
             this.abortController = new AbortController();
@@ -103,26 +101,7 @@ async init() {
         throw error;
     }
 }
-
-smoothTimeUpdate() {
-    if (!this.elements.audio || !this.elements.currentTime) return;
-        
-    const now = Date.now();
-    if (now - this.lastUpdateTime >= 200) { // Обновляем каждые 200мс (5 раз в секунду)
-        this.lastUpdateTime = now;
-        const currentTime = Math.floor(this.elements.audio.currentTime);
-        this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
-            
-        if (this.elements.progressBar) {
-            this.elements.progressBar.value = 
-                (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
-        }
-    }
-    this.animationFrameId = requestAnimationFrame(() => this.smoothTimeUpdate());
-}
-
-
-    
+   
 updateTimeDisplay() {
     if (this.elements.currentTime && !this.elements.audio.paused) {
         this.elements.currentTime.textContent = 

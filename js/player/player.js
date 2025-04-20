@@ -27,9 +27,14 @@ export class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
+            this.updateTimeDisplay = this.updateTimeDisplay.bind(this);
+        
             this.abortController = new AbortController();
+        
             this.config = RadioPlayerConfig;
+        
             this.optimizer = new AudioOptimizer(this.elements.audio, this.config);
+        
             this.state = {
             currentStream: null,
             currentApiUrl: null,
@@ -95,8 +100,15 @@ async init() {
     }
 }
 
+updateTimeDisplay() {
+    if (this.elements.currentTime && !this.elements.audio.paused) {
+        this.elements.currentTime.textContent = 
+            UIHelpers.formatTime(Math.floor(this.elements.audio.currentTime));
+    }
+    requestAnimationFrame(this.updateTimeDisplay);
+}
+    
 setupEventListeners() {
-    // Сохраняем контекст this для обработчиков событий
     const self = this;
 
     const handleFirstInteraction = () => {
@@ -108,7 +120,6 @@ setupEventListeners() {
 
     document.addEventListener('click', handleFirstInteraction);
 
-    // Используем стрелочные функции для сохранения контекста
     this.elements.volumeBtn.addEventListener('click', () => {
         self.elements.audio.muted = !self.elements.audio.muted;
         self.updateVolumeIcon();
@@ -134,25 +145,16 @@ setupEventListeners() {
 
     this.elements.audio.addEventListener('timeupdate', () => {
         if (this.elements.currentTime && this.elements.progressBar) {
-            // Плавное обновление каждую секунду
             const currentTime = Math.floor(this.elements.audio.currentTime);
             this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
-        
-            // Прогресс-бар обновляем чаще для плавности
             this.elements.progressBar.value = 
                 (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
         }
     });
 
-    // Добавляем дополнительный интервал для более плавного обновления
-    this.state.timeUpdateInterval = setInterval(() => {
-        if (this.elements.audio && !this.elements.audio.paused) {
-            const currentTime = Math.floor(this.elements.audio.currentTime);
-            if (this.elements.currentTime) {
-                this.elements.currentTime.textContent = UIHelpers.formatTime(currentTime);
-            }
-        }
-    }, 200); // Обновление каждые 200 мс
+    this.elements.audio.addEventListener('play', () => {
+        requestAnimationFrame(this.updateTimeDisplay);
+    });
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
@@ -162,17 +164,7 @@ setupEventListeners() {
         }
     });
 }
-
-const updateTimeDisplay = () => {
-    if (this.elements.currentTime && !this.elements.audio.paused) {
-        this.elements.currentTime.textContent = 
-            UIHelpers.formatTime(Math.floor(this.elements.audio.currentTime));
-    }
-    requestAnimationFrame(updateTimeDisplay);
-};
-// Запустить при инициализации
-requestAnimationFrame(updateTimeDisplay);
-    
+   
     updateVolumeIcon() {
     if (!this.elements.volumeBtn) return;
 
@@ -702,8 +694,9 @@ async findWorkingApi() {
         }, this.config.diagnostics.logInterval);
     }
     
-    destroy() {
+destroy() {
     if (this.state.timeUpdateInterval) {
         clearInterval(this.state.timeUpdateInterval);
     }
+    cancelAnimationFrame(this.animationFrameId);
 }

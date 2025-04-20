@@ -1,6 +1,7 @@
 import RadioPlayerConfig from './config.js';
 import { NetworkUtils } from './network-utils.js';
 import { UIHelpers } from './ui-helpers.js';
+import { AudioOptimizer } from './audio-optimizer.js';
 
 export class RadioPlayer {
     constructor() {
@@ -26,6 +27,8 @@ export class RadioPlayer {
             duration: document.getElementById('duration')
         };
 
+            this.optimizer = new AudioOptimizer(this.elements.audio, this.config);
+        
             this.abortController = new AbortController();
         
             this.config = RadioPlayerConfig;
@@ -79,6 +82,8 @@ async init() {
         
         // Первое обновление информации
         await this.updateTrackInfo();
+
+        await this.optimizer.optimize();
         
         // Устанавливаем интервал для регулярных обновлений
         this.state.updateIntervalId = setInterval(

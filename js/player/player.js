@@ -691,4 +691,9 @@ async findWorkingApi() {
             });
         }, this.config.diagnostics.logInterval);
     }
+    
+    destroy() {
+    if (this.state.timeUpdateInterval) {
+        clearInterval(this.state.timeUpdateInterval);
+    }
 }

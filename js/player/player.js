@@ -138,19 +138,24 @@ export class RadioPlayer {
 setupEventListeners() {
     const self = this;
 
-    const handleFirstInteraction = async () => {
-        if (self.state.audioContext) {
-            try {
-                if (self.state.audioContext.state === 'suspended') {
-                    await self.state.audioContext.resume();
-                    console.log('AudioContext resumed after user interaction');
+ const handleFirstInteraction = async () => {
+    if (self.state.audioContext) {
+        try {
+            if (self.state.audioContext.state === 'suspended') {
+                await self.state.audioContext.resume();
+                console.log('AudioContext resumed after user interaction');
+                
+                // Если аудио должно играть, запускаем его после разрешения контекста
+                if (self.state.isPlaying && self.elements.audio.paused) {
+                    await self.elements.audio.play();
                 }
-            } catch (error) {
-                console.error('Error resuming AudioContext:', error);
             }
+        } catch (error) {
+            console.error('Error resuming AudioContext:', error);
         }
-        document.removeEventListener('click', handleFirstInteraction);
-    };
+    }
+    document.removeEventListener('click', handleFirstInteraction);
+};
 
     document.addEventListener('click', handleFirstInteraction);
 
@@ -315,8 +320,10 @@ setupEventListeners() {
 
 async loadAudioWithTimeout(url, timeout) {
     return new Promise((resolve, reject) => {
-        this.elements.audio.crossOrigin = 'anonymous'; // Важно для CORS
+        // Устанавливаем CORS атрибуты
+        this.elements.audio.crossOrigin = 'anonymous';
         this.elements.audio.preload = 'auto';
+        
         // Очистка предыдущего источника
         this.elements.audio.pause();
         this.elements.audio.src = '';
@@ -330,15 +337,11 @@ async loadAudioWithTimeout(url, timeout) {
 
         const onCanPlay = () => {
             clearTimeout(timer);
-            this.elements.audio.removeEventListener('canplay', onCanPlay);
-            this.elements.audio.removeEventListener('error', onError);
             resolve();
         };
 
         const onError = (e) => {
             clearTimeout(timer);
-            this.elements.audio.removeEventListener('canplay', onCanPlay);
-            this.elements.audio.removeEventListener('error', onError);
             reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
         };
 
@@ -381,7 +384,7 @@ async togglePlayback() {
         
         // Приостанавливаем AudioContext при паузе
         if (this.state.audioContext) {
-            await this.state.audioContext.suspend();
+            await this.state.audioContext.suspend().catch(console.error);
         }
     } else {
         try {
@@ -398,6 +401,11 @@ async togglePlayback() {
         } catch (err) {
             console.error("Ошибка воспроизведения:", err);
             this.updateStatusMessage("Ошибка воспроизведения", true);
+            
+            // Если ошибка связана с политиками, предлагаем пользователю взаимодействие
+            if (err.name === 'NotAllowedError') {
+                showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+            }
         }
     }
 }

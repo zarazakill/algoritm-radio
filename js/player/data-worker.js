@@ -1,64 +1,32 @@
-// Константы для типов сообщений
-const MESSAGE_TYPES = {
-    PROCESS: 'process',
-    SUCCESS: 'success',
-    ERROR: 'error'
-};
-
-// Оптимизированная функция форматирования времени
 function formatTime(seconds) {
-    if (typeof seconds !== 'number' || isNaN(seconds)) return "0:00";
+    if (isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// Более надежная обработка трека
 function processTrack(track) {
-    if (!track || typeof track !== 'object') {
-        return {
-            title: 'Неизвестный трек',
-            artist: 'Неизвестный исполнитель',
-            duration: '0:00'
-        };
-    }
-
-    const song = track.song || {};
+    if (!track) return null;
+    
     return {
-        title: song.title || 'Неизвестный трек',
-        artist: song.artist || 'Неизвестный исполнитель',
-        duration: track.duration ? formatTime(track.duration) : '0:00'
+        title: track.song?.title || 'Неизвестный трек',
+        artist: track.song?.artist || 'Неизвестный исполнитель',
+        duration: track.duration ? formatTime(track.duration) : ''
     };
 }
 
-// Обработчик сообщений
 self.onmessage = function(e) {
     try {
-        if (!e.data || e.data.type !== MESSAGE_TYPES.PROCESS) {
-            throw new Error('Invalid message format');
-        }
-
-        const { now_playing, song_history } = e.data.payload || {};
-        
+        const data = e.data;
         const processed = {
-            now_playing: processTrack(now_playing),
-            history: Array.isArray(song_history) 
-                ? song_history.map(processTrack)
-                : []
+            now_playing: processTrack(data.now_playing),
+            history: Array.isArray(data.song_history) ? 
+                data.song_history.map(processTrack).filter(Boolean) : 
+                []
         };
-
-        postMessage({
-            type: MESSAGE_TYPES.SUCCESS,
-            payload: processed
-        });
-
+        postMessage(processed);
     } catch (error) {
-        postMessage({
-            type: MESSAGE_TYPES.ERROR,
-            error: {
-                message: error.message,
-                stack: error.stack
-            }
-        });
+        console.error('Worker error:', error);
+        postMessage({ error: error.message });
     }
 };

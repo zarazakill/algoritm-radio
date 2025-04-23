@@ -233,6 +233,10 @@ export class RadioPlayer {
                 throw new Error("Не найдены необходимые DOM элементы");
             }
 
+            if (!this.state.currentStream?.url) {
+                throw new Error("URL потока не установлен");
+            }
+
             this.setStatus("Подключение...");
             this.updateStatusMessage("Подключение к потоку...");
             this.updateConnectionProgress(20);
@@ -298,37 +302,36 @@ export class RadioPlayer {
     async loadAudioWithTimeout(url, timeout) {
         return new Promise((resolve, reject) => {
             // Очистка предыдущего источника
+            this.elements.audio.pause();
             this.elements.audio.src = '';
             this.elements.audio.load();
-            
-            setTimeout(() => {
-                this.elements.audio.src = url;
-                
-                const timer = setTimeout(() => {
-                    reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
-                }, timeout);
 
-                const cleanup = () => {
-                    clearTimeout(timer);
-                    this.elements.audio.removeEventListener('canplay', onCanPlay);
-                    this.elements.audio.removeEventListener('error', onError);
-                };
+            // Устанавливаем новый источник
+            this.elements.audio.src = url;
+            this.elements.audio.load(); // Явно вызываем загрузку
 
-                const onCanPlay = () => {
-                    cleanup();
-                    resolve();
-                };
+            const timer = setTimeout(() => {
+                reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
+            }, timeout);
 
-                const onError = (e) => {
-                    cleanup();
-                    reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
-                };
+            const cleanup = () => {
+                clearTimeout(timer);
+                this.elements.audio.removeEventListener('canplay', onCanPlay);
+                this.elements.audio.removeEventListener('error', onError);
+            };
 
-                this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
-                this.elements.audio.addEventListener('error', onError, { once: true });
-                
-                this.elements.audio.load();
-            }, 50); // Небольшая задержка перед установкой нового источника
+            const onCanPlay = () => {
+                cleanup();
+                resolve();
+            };
+
+            const onError = (e) => {
+                cleanup();
+                reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
+            };
+
+            this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
+            this.elements.audio.addEventListener('error', onError, { once: true });
         });
     }
     
@@ -657,7 +660,13 @@ export class RadioPlayer {
             this.elements.retryCount.textContent = this.state.retryCount;
         }
 
+        // Экспоненциальная задержка с максимальным ограничением
         const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
+
+        // Сбрасываем состояние перед повторной попыткой
+        this.elements.audio.src = '';
+        this.elements.audio.load();
+
         setTimeout(() => {
             this.connectToStream();
         }, delay);

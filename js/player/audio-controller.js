@@ -11,9 +11,9 @@ static initAudioContext() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const context = new AudioContext();
         
-        // Приостанавливаем контекст до первого взаимодействия
+        // Автоматически приостанавливаем контекст
         if (context.state === 'running') {
-            context.suspend();
+            context.suspend().catch(e => console.error("Error suspending AudioContext:", e));
         }
         
         return context;

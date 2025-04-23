@@ -1,6 +1,7 @@
 import RadioPlayerConfig from './config.js';
 import { NetworkUtils } from './network-utils.js';
 import { UIHelpers } from './ui-helpers.js';
+import { AudioController } from './audio-controller.js';
 
 export class RadioPlayer {
     constructor() {
@@ -79,6 +80,9 @@ export class RadioPlayer {
             // Устанавливаем начальный статус
             this.setStatus("Подключение к серверу...");
             this.updateStatusMessage("Подключение к серверу...");
+
+            // Сначала находим рабочий поток
+            this.state.currentStream = await this.findWorkingStream();
             
             // Пробуем подключиться несколько раз при необходимости
             let attempts = 3;
@@ -166,8 +170,12 @@ export class RadioPlayer {
         }
 
         this.elements.audio.addEventListener('error', (e) => {
-            console.error("Audio error:", e);
+        console.error("Audio error:", e);
+        if (!this.state.currentStream?.url) {
+            this.handleConnectionError(new Error("URL потока не установлен"));
+            } else {
             this.handleConnectionError(new Error("Ошибка аудио: " + (e.target.error?.message || "Неизвестная ошибка")));
+        }
         });
 
         this.elements.audio.addEventListener('stalled', () => {
@@ -299,37 +307,41 @@ export class RadioPlayer {
         }
     }
 
-    async loadAudioWithTimeout(url, timeout) {
-        return new Promise((resolve, reject) => {
-            // Очистка предыдущего источника
-            this.elements.audio.pause();
-            this.elements.audio.src = '';
-            this.elements.audio.load();
+async loadAudioWithTimeout(url, timeout) {
+    return new Promise((resolve, reject) => {
+        // Очистка предыдущего источника
+        this.elements.audio.pause();
+        this.elements.audio.src = '';
+        this.elements.audio.load();
 
-            const timer = setTimeout(() => {
-                reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
-                this.elements.audio.removeEventListener('canplay', onCanPlay);
-                this.elements.audio.removeEventListener('error', onError);
-            }, timeout);
+        const timer = setTimeout(() => {
+            reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
+            this.elements.audio.removeEventListener('canplay', onCanPlay);
+            this.elements.audio.removeEventListener('error', onError);
+        }, timeout);
 
-            const onCanPlay = () => {
-                clearTimeout(timer);
-                resolve();
-            };
+        const onCanPlay = () => {
+            clearTimeout(timer);
+            this.elements.audio.removeEventListener('canplay', onCanPlay);
+            this.elements.audio.removeEventListener('error', onError);
+            resolve();
+        };
 
-            const onError = (e) => {
-                clearTimeout(timer);
-                reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
-            };
+        const onError = (e) => {
+            clearTimeout(timer);
+            this.elements.audio.removeEventListener('canplay', onCanPlay);
+            this.elements.audio.removeEventListener('error', onError);
+            reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
+        };
 
-            this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
-            this.elements.audio.addEventListener('error', onError, { once: true });
-
-            // Устанавливаем новый источник после добавления обработчиков
-            this.elements.audio.src = url;
-            this.elements.audio.load();
-        });
-    }
+        this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
+        this.elements.audio.addEventListener('error', onError, { once: true });
+        
+        // Устанавливаем новый источник после добавления обработчиков
+        this.elements.audio.src = url;
+        this.elements.audio.load();
+    });
+}
     
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
@@ -647,35 +659,39 @@ export class RadioPlayer {
         }
     }
 
-    handleConnectionError(error) {
-        console.error("Ошибка подключения:", error);
-        this.setStatus(`Ошибка: ${error.message}`, true);
-        this.updateStatusMessage(`Ошибка: ${error.message}`, true);
+handleConnectionError(error) {
+    console.error("Ошибка подключения:", error);
+    this.setStatus(`Ошибка: ${error.message}`, true);
+    this.updateStatusMessage(`Ошибка: ${error.message}`, true);
 
-        // Сбрасываем состояние аудио
-        this.elements.audio.src = '';
-        this.elements.audio.load();
-        this.state.isPlaying = false;
+    // Сбрасываем состояние аудио
+    this.elements.audio.src = '';
+    this.elements.audio.load();
+    this.state.isPlaying = false;
+    this.state.currentStream = null; // Сбрасываем текущий поток
 
-        // Увеличиваем счетчик попыток переподключения
-        this.state.retryCount++;
-        if (this.elements.retryCount) {
-            this.elements.retryCount.textContent = this.state.retryCount;
-        }
-
-        // Экспоненциальная задержка с максимальным ограничением
-        const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
-
-        setTimeout(async () => {
-            try {
-                await this.connectToStream();
-            } catch (err) {
-                console.error("Ошибка при повторном подключении:", err);
-            }
-        }, delay);
-
-        document.getElementById('audio-overlay').style.display = 'flex';
+    // Увеличиваем счетчик попыток переподключения
+    this.state.retryCount++;
+    if (this.elements.retryCount) {
+        this.elements.retryCount.textContent = this.state.retryCount;
     }
+
+    // Экспоненциальная задержка с максимальным ограничением
+    const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
+    
+    setTimeout(async () => {
+        try {
+            // Сначала находим новый рабочий поток
+            this.state.currentStream = await this.findWorkingStream();
+            // Затем пробуем подключиться
+            await this.connectToStream();
+        } catch (err) {
+            console.error("Ошибка при повторном подключении:", err);
+        }
+    }, delay);
+
+    document.getElementById('audio-overlay').style.display = 'flex';
+}
 
     handleNetworkIssue() {
         if (this.state.networkQuality === 'good') {

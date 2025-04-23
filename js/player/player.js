@@ -135,18 +135,24 @@ export class RadioPlayer {
         }
     }
 
-    setupEventListeners() {
-        // Сохраняем контекст this для обработчиков событий
-        const self = this;
+setupEventListeners() {
+    const self = this;
 
-        const handleFirstInteraction = () => {
-            if (self.state.audioContext && self.state.audioContext.state === 'suspended') {
-                self.state.audioContext.resume();
+    const handleFirstInteraction = async () => {
+        if (self.state.audioContext) {
+            try {
+                if (self.state.audioContext.state === 'suspended') {
+                    await self.state.audioContext.resume();
+                    console.log('AudioContext resumed after user interaction');
+                }
+            } catch (error) {
+                console.error('Error resuming AudioContext:', error);
             }
-            document.removeEventListener('click', handleFirstInteraction);
-        };
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+    };
 
-        document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('click', handleFirstInteraction);
 
         // Используем стрелочные функции для сохранения контекста
         this.elements.volumeBtn.addEventListener('click', () => {
@@ -309,6 +315,8 @@ export class RadioPlayer {
 
 async loadAudioWithTimeout(url, timeout) {
     return new Promise((resolve, reject) => {
+        this.elements.audio.crossOrigin = 'anonymous'; // Важно для CORS
+        this.elements.audio.preload = 'auto';
         // Очистка предыдущего источника
         this.elements.audio.pause();
         this.elements.audio.src = '';
@@ -343,42 +351,56 @@ async loadAudioWithTimeout(url, timeout) {
     });
 }
     
-    async findWorkingStream() {
-        const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
+async findWorkingStream() {
+    const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
 
-        // Проверяем каждый поток на доступность
-        for (const stream of sortedStreams) {
-            try {
-                const isAvailable = await NetworkUtils.testUrl(stream.url);
-                if (isAvailable) {
-                    return stream;
-                }
-            } catch (error) {
-                console.warn(`Stream ${stream.url} is not available:`, error);
+    for (const stream of sortedStreams) {
+        try {
+            // Проверяем доступность с CORS
+            const response = await fetch(stream.url, {
+                method: 'HEAD',
+                mode: 'cors'
+            });
+            
+            if (response.ok) {
+                return stream;
             }
+        } catch (error) {
+            console.warn(`Stream ${stream.url} is not available:`, error);
         }
-
-        // Если ни один поток не доступен, выбрасываем ошибку
-        throw new Error("Все потоки недоступны");
     }
 
-    async togglePlayback() {
-        if (this.state.isPlaying) {
-            this.elements.audio.pause();
-            this.state.isPlaying = false;
-            this.updateStatusMessage("Пауза");
-        } else {
+    throw new Error("Все потоки недоступны");
+}
+
+async togglePlayback() {
+    if (this.state.isPlaying) {
+        this.elements.audio.pause();
+        this.state.isPlaying = false;
+        this.updateStatusMessage("Пауза");
+        
+        // Приостанавливаем AudioContext при паузе
+        if (this.state.audioContext) {
+            await this.state.audioContext.suspend();
+        }
+    } else {
+        try {
             await this.connectToStream();
-            try {
-                await this.elements.audio.play();
-                this.state.isPlaying = true;
-                this.updateStatusMessage("Воспроизведение");
-            } catch (err) {
-                console.error("Ошибка воспроизведения:", err);
-                this.updateStatusMessage("Ошибка воспроизведения", true);
+            
+            // Возобновляем AudioContext перед воспроизведением
+            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+                await this.state.audioContext.resume();
             }
+            
+            await this.elements.audio.play();
+            this.state.isPlaying = true;
+            this.updateStatusMessage("Воспроизведение");
+        } catch (err) {
+            console.error("Ошибка воспроизведения:", err);
+            this.updateStatusMessage("Ошибка воспроизведения", true);
         }
     }
+}
 
     async loadAudioSource(url) {
         this.elements.audio.src = '';
@@ -763,19 +785,23 @@ handleConnectionError(error) {
         }
     }
 
-    setupAudioBuffer() {
-        if (!this.state.audioContext) return;
+setupAudioBuffer() {
+    if (!this.state.audioContext) return;
 
-        // Используем AudioController для создания анализатора
-        const analyser = AudioController.createAnalyser(
-            this.state.audioContext,
-            this.elements.audio
-        );
-
-        if (analyser) {
-            this.state.analyser = analyser;
-        }
+    // Отключаем предыдущий анализатор, если есть
+    if (this.state.analyser) {
+        this.state.analyser.disconnect();
     }
+
+    const analyser = AudioController.createAnalyser(
+        this.state.audioContext,
+        this.elements.audio
+    );
+
+    if (analyser) {
+        this.state.analyser = analyser;
+    }
+}
     
     startUptimeCounter() {
         this.state.startTime = Date.now();

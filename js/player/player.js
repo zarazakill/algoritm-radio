@@ -306,50 +306,48 @@ export class RadioPlayer {
             this.elements.audio.src = '';
             this.elements.audio.load();
 
-            // Устанавливаем новый источник
-            this.elements.audio.src = url;
-            this.elements.audio.load(); // Явно вызываем загрузку
-
             const timer = setTimeout(() => {
                 reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
-            }, timeout);
-
-            const cleanup = () => {
-                clearTimeout(timer);
                 this.elements.audio.removeEventListener('canplay', onCanPlay);
                 this.elements.audio.removeEventListener('error', onError);
-            };
+            }, timeout);
 
             const onCanPlay = () => {
-                cleanup();
+                clearTimeout(timer);
                 resolve();
             };
 
             const onError = (e) => {
-                cleanup();
+                clearTimeout(timer);
                 reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
             };
 
             this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
             this.elements.audio.addEventListener('error', onError, { once: true });
+
+            // Устанавливаем новый источник после добавления обработчиков
+            this.elements.audio.src = url;
+            this.elements.audio.load();
         });
     }
     
     async findWorkingStream() {
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
-        const streamUrls = sortedStreams.map(s => s.url);
-        
-        const workingUrl = await NetworkUtils.findWorkingUrl(streamUrls);
-        return sortedStreams.find(s => s.url === workingUrl);
-    }
 
-    setupAudioBuffer() {
-        if (!this.state.audioContext) return;
+        // Проверяем каждый поток на доступность
+        for (const stream of sortedStreams) {
+            try {
+                const isAvailable = await NetworkUtils.testUrl(stream.url);
+                if (isAvailable) {
+                    return stream;
+                }
+            } catch (error) {
+                console.warn(`Stream ${stream.url} is not available:`, error);
+            }
+        }
 
-        const source = this.state.audioContext.createMediaElementSource(this.elements.audio);
-        const analyser = this.state.audioContext.createAnalyser();
-        source.connect(analyser);
-        analyser.connect(this.state.audioContext.destination);
+        // Если ни один поток не доступен, выбрасываем ошибку
+        throw new Error("Все потоки недоступны");
     }
 
     async togglePlayback() {
@@ -654,6 +652,11 @@ export class RadioPlayer {
         this.setStatus(`Ошибка: ${error.message}`, true);
         this.updateStatusMessage(`Ошибка: ${error.message}`, true);
 
+        // Сбрасываем состояние аудио
+        this.elements.audio.src = '';
+        this.elements.audio.load();
+        this.state.isPlaying = false;
+
         // Увеличиваем счетчик попыток переподключения
         this.state.retryCount++;
         if (this.elements.retryCount) {
@@ -663,12 +666,12 @@ export class RadioPlayer {
         // Экспоненциальная задержка с максимальным ограничением
         const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
 
-        // Сбрасываем состояние перед повторной попыткой
-        this.elements.audio.src = '';
-        this.elements.audio.load();
-
-        setTimeout(() => {
-            this.connectToStream();
+        setTimeout(async () => {
+            try {
+                await this.connectToStream();
+            } catch (err) {
+                console.error("Ошибка при повторном подключении:", err);
+            }
         }, delay);
 
         document.getElementById('audio-overlay').style.display = 'flex';
@@ -735,9 +738,26 @@ export class RadioPlayer {
 
     initAudioContext() {
         try {
-            this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.state.audioContext = AudioController.initAudioContext();
+            if (this.state.audioContext) {
+                this.setupAudioBuffer();
+            }
         } catch (error) {
             console.error("Ошибка инициализации AudioContext:", error);
+        }
+    }
+
+    setupAudioBuffer() {
+        if (!this.state.audioContext) return;
+
+        // Используем AudioController для создания анализатора
+        const analyser = AudioController.createAnalyser(
+            this.state.audioContext,
+            this.elements.audio
+        );
+
+        if (analyser) {
+            this.state.analyser = analyser;
         }
     }
     

@@ -6,15 +6,22 @@ export class AudioController {
      * Инициализирует аудио контекст с обработкой ошибок
      * @returns {AudioContext|null} - Созданный аудио контекст или null при ошибке
      */
-    static initAudioContext() {
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            return new AudioContext();
-        } catch (error) {
-            console.error("Ошибка инициализации AudioContext:", error);
-            return null;
+static initAudioContext() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContext();
+        
+        // Приостанавливаем контекст до первого взаимодействия
+        if (context.state === 'running') {
+            context.suspend();
         }
+        
+        return context;
+    } catch (error) {
+        console.error("Ошибка инициализации AudioContext:", error);
+        return null;
     }
+}
     
     /**
      * Создает анализатор для визуализации звука

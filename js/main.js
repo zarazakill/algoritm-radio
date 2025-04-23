@@ -327,49 +327,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Обработчик клика
         if (playButton && overlay && buttonText && spinner) {
-            playButton.addEventListener('click', async () => {
-                try {
-                    overlay.style.display = 'none';
-                    
-                    // Показываем состояние загрузки при начале воспроизведения
-                    playButton.disabled = true;
-                    spinner.style.display = 'inline-block';
-                    buttonText.textContent = 'Подготовка потока...';
-                    
-                    // Проверяем готовность аудио
-                    if (player.elements.audio.readyState < 2) {
-                        await new Promise(resolve => {
-                            player.elements.audio.addEventListener('canplay', resolve, { once: true });
-                        });
-                    }
-                    
-                    await player.elements.audio.play();
-                    
-                    if (player.state.audioContext?.state === 'suspended') {
-                        await player.state.audioContext.resume();
-                    }
-                    
-                    // Обновляем состояние плеера
-                    player.state.isPlaying = true;
-                    animateEqualizer(true);
-                    
-                    showToast('Радио запущено', 'success');
-                    
-                } catch (error) {
-                    console.error("Playback error:", error);
-                    player.setStatus(`Ошибка: ${error.message}`, true);
-                    overlay.style.display = 'flex';
-                    
-                    // Возвращаем кнопку в исходное состояние
-                    if (playButton && buttonText && spinner) {
-                        playButton.disabled = false;
-                        spinner.style.display = 'none';
-                        buttonText.textContent = 'Попробовать снова';
-                    }
-                    
-                    showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
-                }
-            });
+playButton.addEventListener('click', async () => {
+    try {
+        overlay.style.display = 'none';
+        playButton.disabled = true;
+        spinner.style.display = 'inline-block';
+        buttonText.textContent = 'Подготовка потока...';
+        
+        // Проверяем и возобновляем AudioContext
+        if (player.state.audioContext?.state === 'suspended') {
+            await player.state.audioContext.resume();
+        }
+        
+        await player.elements.audio.play();
+        player.state.isPlaying = true;
+        animateEqualizer(true);
+        showToast('Радио запущено', 'success');
+        
+    } catch (error) {
+        console.error("Playback error:", error);
+        player.setStatus(`Ошибка: ${error.message}`, true);
+        overlay.style.display = 'flex';
+        
+        if (error.name === 'NotAllowedError') {
+            showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+        } else {
+            showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
+        }
+        
+        if (playButton && buttonText && spinner) {
+            playButton.disabled = false;
+            spinner.style.display = 'none';
+            buttonText.textContent = 'Попробовать снова';
+        }
+    }
+});
         }
         
     } catch (error) {

@@ -165,6 +165,16 @@ svg {
     transform: scale(1.1);
 }
 
+.menu-toggle.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.menu-toggle.disabled .menu-bar {
+    background: var(--text-secondary);
+}
+
 .menu-bar {
     display: block;
     width: 24px;

@@ -37,6 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Изначально отключаем меню-бургер
+    const menuToggle = document.querySelector('.menu-toggle');
+    if (menuToggle) {
+        menuToggle.disabled = true;
+    }
 });
 
 // Показать всплывающее сообщение
@@ -162,7 +168,13 @@ function setupKeyboardShortcuts(player) {
         switch (e.key) {
             case ' ': // Пробел: пауза/воспр.
                 e.preventDefault();
-                player.togglePlayback();
+                // Toggle playback only if the player is initialized and not in the overlay state
+                const overlay = document.getElementById('audio-overlay');
+                if (overlay && overlay.style.display !== 'none') {
+                    // Do nothing or handle overlay interaction
+                } else {
+                     player.togglePlayback();
+                }
                 break;
                 
             case 'm': // M: отключение звука
@@ -201,6 +213,13 @@ function setupKeyboardShortcuts(player) {
                 
             case 'Escape': // Esc: закрыть все модальные окна
                 document.getElementById('shortcuts-modal')?.classList.remove('active');
+                // Также закрываем меню-оверлей
+                const menuOverlay = document.getElementById('menuOverlay');
+                const menuToggle = document.querySelector('.menu-toggle');
+                if (menuOverlay?.classList.contains('active')) {
+                    menuOverlay.classList.remove('active');
+                    menuToggle?.classList.remove('active');
+                }
                 break;
         }
     });
@@ -235,7 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const buttonText = playButton?.querySelector('.button-text');
     const spinner = playButton?.querySelector('.loading-spinner');
     const overlay = document.getElementById('audio-overlay');
-    const menuToggle = document.querySelector('.menu-toggle');
+    const menuToggle = document.querySelector('.menu-toggle'); // Получаем элемент меню-бургера
     const menuOverlay = document.getElementById('menuOverlay');
     
     // Инициализация дополнительных UI элементов
@@ -255,32 +274,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateStatusTime, 1000);
     updateStatusTime(); // Вызываем сразу же
 
-    // Обработчики меню
+    // Обработчики меню (добавляем только если менюToggle не disabled)
     if (menuToggle && menuOverlay) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('active');
-            menuOverlay.classList.toggle('active');
-        });
-    }
-
-    // Закрытие меню при клике на пункт
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', () => {
-            if (menuToggle && menuOverlay) {
+        // Используем делегирование или проверяем disabled в обработчике
+        document.body.addEventListener('click', (e) => {
+             if (e.target.closest('.menu-toggle') && !menuToggle.disabled) {
+                menuToggle.classList.toggle('active');
+                menuOverlay.classList.toggle('active');
+             } else if (menuOverlay.classList.contains('active') && 
+                 !e.target.closest('.menu-content') && !e.target.closest('.menu-toggle')) {
                 menuToggle.classList.remove('active');
                 menuOverlay.classList.remove('active');
-            }
+             }
         });
-    });
-    
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', (e) => {
-        if (menuOverlay && menuOverlay.classList.contains('active') && 
-            !e.target.closest('.menu-content') && !e.target.closest('.menu-toggle')) {
-            menuToggle.classList.remove('active');
-            menuOverlay.classList.remove('active');
-        }
-    });
+
+         // Закрытие меню при клике на пункт
+         document.querySelectorAll('.menu-item').forEach(item => {
+             item.addEventListener('click', () => {
+                 if (menuToggle && menuOverlay) {
+                     menuToggle.classList.remove('active');
+                     menuOverlay.classList.remove('active');
+                 }
+             });
+         });
+    }
     
     try {
         console.log('Initializing player...');
@@ -310,6 +327,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (audio) {
             audio.addEventListener('playing', () => {
                 animateEqualizer(true);
+                // Активируем меню-бургер после начала воспроизведения
+                 if (menuToggle) {
+                     menuToggle.disabled = false;
+                 }
             });
             
             audio.addEventListener('pause', () => {
@@ -327,41 +348,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Обработчик клика
         if (playButton && overlay && buttonText && spinner) {
-playButton.addEventListener('click', async () => {
-    try {
-        overlay.style.display = 'none';
-        playButton.disabled = true;
-        spinner.style.display = 'inline-block';
-        buttonText.textContent = 'Подготовка потока...';
-        
-        // Проверяем и возобновляем AudioContext
-        if (player.state.audioContext?.state === 'suspended') {
-            await player.state.audioContext.resume();
-        }
-        
-        await player.elements.audio.play();
-        player.state.isPlaying = true;
-        animateEqualizer(true);
-        showToast('Радио запущено', 'success');
-        
-    } catch (error) {
-        console.error("Playback error:", error);
-        player.setStatus(`Ошибка: ${error.message}`, true);
-        overlay.style.display = 'flex';
-        
-        if (error.name === 'NotAllowedError') {
-            showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
-        } else {
-            showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
-        }
-        
-        if (playButton && buttonText && spinner) {
-            playButton.disabled = false;
-            spinner.style.display = 'none';
-            buttonText.textContent = 'Попробовать снова';
-        }
-    }
-});
+            playButton.addEventListener('click', async () => {
+                try {
+                    overlay.style.display = 'none';
+                    playButton.disabled = true;
+                    spinner.style.display = 'inline-block';
+                    buttonText.textContent = 'Подготовка потока...';
+                    
+                    // Проверяем и возобновляем AudioContext
+                    if (player.state.audioContext?.state === 'suspended') {
+                        await player.state.audioContext.resume();
+                    }
+                    
+                    await player.elements.audio.play();
+                    player.state.isPlaying = true;
+                    animateEqualizer(true);
+                    showToast('Радио запущено', 'success');
+                    
+                } catch (error) {
+                    console.error("Playback error:", error);
+                    player.setStatus(`Ошибка: ${error.message}`, true);
+                    overlay.style.display = 'flex';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+                    } else {
+                        showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
+                    }
+                    
+                    if (playButton && buttonText && spinner) {
+                        playButton.disabled = false;
+                        spinner.style.display = 'none';
+                        buttonText.textContent = 'Попробовать снова';
+                    }
+                }
+            });
         }
         
     } catch (error) {
@@ -382,4 +403,3 @@ playButton.addEventListener('click', async () => {
         showToast(`Ошибка инициализации: ${error.message}`, 'error');
     }
 });
-

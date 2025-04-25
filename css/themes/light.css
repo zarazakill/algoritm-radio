@@ -1,7 +1,7 @@
 /* Светлая */
 body.light-theme {
-    background: linear-gradient(to right, #e6f0fd, #f0ebfe);
-    color: #333;
+    background: linear-gradient(to right, #7abdff, #f8f4ff);
+    color: #3b2b2b;
     --text-primary: #333;
     --text-secondary: rgba(0, 0, 0, 0.7);
     --card-bg: rgba(255, 255, 255, 0.9);

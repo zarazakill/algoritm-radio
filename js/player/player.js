@@ -538,7 +538,7 @@ updateCurrentTrack(nowPlaying) {
     const html = `
     <span class="track-name">${track.title || 'Неизвестный трек'}</span>
     <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
+    <span class="track-progress">${UIHelpers.formatTime(nowPlaying.duration)}</span>
     `;
 
     if (this.elements.currentTrackEl) {

@@ -455,8 +455,7 @@ async updateTrackInfo() {
             this.state.lastTrackData = data;
             this.state.lastUpdateTime = Date.now();
             this.updateUI(data);
-        }
-            
+        
             // Сбрасываем таймер обновления времени при смене трека
             if (this.state.timeUpdateInterval) {
                 clearInterval(this.state.timeUpdateInterval);

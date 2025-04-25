@@ -434,21 +434,28 @@ async updateTrackInfo() {
 
     try {
         const response = await NetworkUtils.fetchWithTimeout(
-            this.state.currentApiUrl, 
+            this.state.currentApiUrl,
             5000
         );
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Проверяем, изменился ли трек
         if (this.isTrackChanged(data.now_playing, this.state.lastTrackData?.now_playing)) {
+            // Очищаем предыдущий интервал
+            if (this.state.timeUpdateInterval) {
+                clearInterval(this.state.timeUpdateInterval);
+                this.state.timeUpdateInterval = null;
+            }
+
             this.state.lastTrackData = data;
             this.state.lastUpdateTime = Date.now();
             this.updateUI(data);
+        }
             
             // Сбрасываем таймер обновления времени при смене трека
             if (this.state.timeUpdateInterval) {
@@ -526,7 +533,9 @@ updateCurrentTrack(nowPlaying) {
     <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
     `;
 
-    if (this.elements.currentTrackEl) this.elements.currentTrackEl.innerHTML = html;
+    if (this.elements.currentTrackEl) {
+        this.elements.currentTrackEl.innerHTML = html;
+    }
 
     if (this.elements.trackTitle) {
         this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
@@ -537,42 +546,52 @@ updateCurrentTrack(nowPlaying) {
     if (this.elements.duration) {
         this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
     }
-    if (this.elements.currentTime) {
-        this.elements.currentTime.textContent = UIHelpers.formatTime(nowPlaying.elapsed);
-    }
-    if (this.elements.progressBar) {
-        this.elements.progressBar.value = (nowPlaying.elapsed / nowPlaying.duration) * 100 || 0;
-    }
 
     // Обновляем заголовок страницы
     document.title = `${track.title} - ${track.artist} | АлгоРитм-StreAM`;
 
     // Обновляем обложку альбома из AzuraCast
     this.updateAlbumArtFromAzuraCast(nowPlaying);
+
+    // Запускаем обновление времени, если его еще нет
+    if (!this.state.timeUpdateInterval) {
+        this.state.timeUpdateInterval = setInterval(
+            () => this.updateCurrentTime(),
+            1000
+        );
+    }
 }
 
-    updateCurrentTime() {
+updateCurrentTime() {
     if (!this.state.lastTrackData?.now_playing) return;
 
     const nowPlaying = this.state.lastTrackData.now_playing;
     const elapsed = nowPlaying.elapsed + 1; // Увеличиваем на 1 секунду
     nowPlaying.elapsed = elapsed;
 
-    // Обновляем только время в UI, не трогая другие элементы
-    if (this.elements.currentTime) {
-        this.elements.currentTime.textContent = UIHelpers.formatTime(elapsed);
-    }
-
-    if (this.elements.progressBar) {
-        const progress = (elapsed / nowPlaying.duration) * 100;
-        this.elements.progressBar.value = progress || 0;
-    }
-
     // Обновляем прогресс в блоке "Сейчас играет"
     const progressText = `${UIHelpers.formatTime(elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}`;
     const progressElement = this.elements.currentTrackEl?.querySelector('.track-progress');
     if (progressElement) {
         progressElement.textContent = progressText;
+    }
+
+    // Обновляем прогресс-бар и время в основном плеере
+    if (this.elements.currentTime) {
+        this.elements.currentTime.textContent = UIHelpers.formatTime(elapsed);
+    }
+    if (this.elements.progressBar) {
+        const progress = (elapsed / nowPlaying.duration) * 100;
+        this.elements.progressBar.value = progress || 0;
+    }
+
+    // Если трек закончился, сбрасываем время
+    if (elapsed >= nowPlaying.duration) {
+        nowPlaying.elapsed = 0;
+        if (this.state.timeUpdateInterval) {
+            clearInterval(this.state.timeUpdateInterval);
+            this.state.timeUpdateInterval = null;
+        }
     }
 }
     

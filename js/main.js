@@ -2,6 +2,7 @@ import { RadioPlayer } from './player/player.js';
 
 // Функция для безопасного воспроизведения с повторными попытками
 async function safePlay(audioElement, maxRetries = 3) {
+
     let lastError = null;
     for (let i = 0; i < maxRetries; i++) {
         try {
@@ -381,9 +382,13 @@ if (playButton && overlay && buttonText && spinner) {
             // Используем safePlay вместо прямого вызова audio.play()
             await safePlay(player.elements.audio);
 
-            player.state.isPlaying = true;
-            animateEqualizer(true);
-            showToast('Радио запущено', 'success');
+if (!player.state.isPlaying) {
+    await safePlay(player.elements.audio);
+    player.state.isPlaying = true;
+} else {
+    player.elements.audio.pause();
+    player.state.isPlaying = false;
+}
 
             // Активируем меню после успешного запуска
             if (menuToggle) {

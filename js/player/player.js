@@ -205,18 +205,25 @@ setupEventListeners() {
             }
         });
         
-        this.elements.audio.addEventListener('playing', () => {
-            this.updateStatusMessage("Воспроизведение");
-            
-            if (this.elements.loader) {
-                this.elements.loader.style.display = 'none';
+this.elements.audio.addEventListener('playing', () => {
+    this.updateStatusMessage("Воспроизведение");
+    
+    if (this.elements.loader) {
+        this.elements.loader.style.display = 'none';
+    }
+    
+    // Устанавливаем время начала воспроизведения только если оно еще не установлено
+    if (!this.state.startTime) {
+        this.state.startTime = Date.now();
+        // Запускаем обновление времени стрима
+        this.state.streamTimeInterval = setInterval(() => {
+            if (this.state.startTime && this.elements.streamDuration) {
+                const streamTime = Math.floor((Date.now() - this.state.startTime) / 1000);
+                this.elements.streamDuration.textContent = this.formatStreamTime(streamTime);
             }
-            
-            // Устанавливаем время начала воспроизведения
-            if (!this.state.startTime) {
-                this.state.startTime = Date.now();
-            }
-        });
+        }, 1000);
+    }
+});
 
         this.elements.audio.addEventListener('timeupdate', () => {
             if (this.elements.currentTime && this.elements.progressBar) {
@@ -246,6 +253,13 @@ setupEventListeners() {
         }
     }
 
+formatStreamTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+    
     async connectToStream(maxRetries = 3) {
         try {
             // 1. Проверка элементов DOM
@@ -577,29 +591,26 @@ updateCurrentTime() {
     const elapsed = nowPlaying.elapsed + 1; // Увеличиваем на 1 секунду
     nowPlaying.elapsed = elapsed;
 
-    // Обновляем прогресс в блоке "Сейчас играет"
-    const progressText = `${UIHelpers.formatTime(elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}`;
-    const progressElement = this.elements.currentTrackEl?.querySelector('.track-progress');
-    if (progressElement) {
-        progressElement.textContent = progressText;
-    }
-
-    // Обновляем прогресс-бар и время в основном плеере
+    // Обновляем время текущего трека
     if (this.elements.currentTime) {
         this.elements.currentTime.textContent = UIHelpers.formatTime(elapsed);
     }
+
+    // Обновляем прогресс-бар
     if (this.elements.progressBar) {
         const progress = (elapsed / nowPlaying.duration) * 100;
         this.elements.progressBar.value = progress || 0;
     }
 
+    // Обновляем время стрима (общее время воспроизведения)
+    if (this.state.startTime && this.elements.streamDuration) {
+        const streamTime = Math.floor((Date.now() - this.state.startTime) / 1000);
+        this.elements.streamDuration.textContent = this.formatStreamTime(streamTime);
+    }
+
     // Если трек закончился, сбрасываем время
     if (elapsed >= nowPlaying.duration) {
         nowPlaying.elapsed = 0;
-        if (this.state.timeUpdateInterval) {
-            clearInterval(this.state.timeUpdateInterval);
-            this.state.timeUpdateInterval = null;
-        }
     }
 }
     
@@ -941,14 +952,17 @@ setupAudioBuffer() {
 
 
     destroy() {
-    if (this.state.updateIntervalId) {
-        clearInterval(this.state.updateIntervalId);
-    }
-    if (this.state.timeUpdateInterval) {
+        if (this.state.updateIntervalId) {
+            clearInterval(this.state.updateIntervalId);
+        }
+        if (this.state.timeUpdateInterval) {
         clearInterval(this.state.timeUpdateInterval);
+        }
+        if (this.state.streamTimeInterval) {
+            clearInterval(this.state.streamTimeInterval);
+        }
+        if (this.bufferMonitorInterval) {
+            clearInterval(this.bufferMonitorInterval);
+        }
     }
-    if (this.bufferMonitorInterval) {
-        clearInterval(this.bufferMonitorInterval);
-    }
-}
 }

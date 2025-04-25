@@ -897,17 +897,23 @@ handleForegroundTab() {
     console.log('Приложение вернулось на передний план');
 }
 
-    initAudioContext() {
-        try {
-            this.state.audioContext = AudioController.initAudioContext();
-            if (this.state.audioContext) {
-                this.setupAudioBuffer();
-            }
-        } catch (error) {
-            console.error("Ошибка инициализации AudioContext:", error);
-        }
+initAudioContext() {
+  try {
+    if (this.state.audioContext) return;
+    
+    this.state.audioContext = AudioController.initAudioContext();
+    if (this.state.audioContext) {
+      this.setupAudioBuffer();
+      this.state.audioContext.onstatechange = () => {
+        console.log('AudioContext state:', this.state.audioContext.state);
+      };
     }
-
+  } catch (error) {
+    console.error("Ошибка инициализации AudioContext:", error);
+    this.setStatus("Аудио функции ограничены", true);
+  }
+}
+    
 setupAudioBuffer() {
     if (!this.state.audioContext) return;
 
@@ -962,18 +968,20 @@ setupAudioBuffer() {
 
 
 
-    destroy() {
-        if (this.state.updateIntervalId) {
-            clearInterval(this.state.updateIntervalId);
-        }
-        if (this.state.timeUpdateInterval) {
-            clearInterval(this.state.timeUpdateInterval);
-        }
-        if (this.state.streamTimeInterval) {
-            clearInterval(this.state.streamTimeInterval);
-        }
-        if (this.bufferMonitorInterval) {
-            clearInterval(this.bufferMonitorInterval);
-        }
+destroy() {
+  this.clearAllIntervals();
+  this.abortController?.abort();
+  
+  if (this.state.audioContext) {
+    if (this.state.audioContext.state !== 'closed') {
+      this.state.audioContext.close().catch(console.error);
+    }
+    this.state.audioContext = null;
+  }
+  
+  this.elements.audio.pause();
+  this.elements.audio.src = '';
+  this.elements.audio.load();
+}
     }
 }

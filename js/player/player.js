@@ -465,29 +465,62 @@ async togglePlayback() {
             this.elements.audio.pause();
             this.state.isPlaying = false;
             this.updateStatusMessage("Пауза");
-        } else {
-            // Если не играет - запускаем воспроизведение
-            if (!this.state.currentStream) {
-                await this.connectToStream();
+            return;
+        }
+
+        // Если не играет - запускаем воспроизведение
+        
+        // 1. Проверяем подключение к потоку
+        if (!this.state.currentStream) {
+            await this.connectToStream();
+        }
+
+        // 2. Активируем AudioContext при необходимости
+        if (!this.state.audioContext) {
+            this.initAudioContext();
+        } else if (this.state.audioContext.state === 'suspended') {
+            await this.state.audioContext.resume();
+        }
+
+        // 3. Добавляем защиту от ошибок воспроизведения
+        let playbackAttempts = 0;
+        const maxAttempts = 3;
+        
+        while (playbackAttempts < maxAttempts) {
+            try {
+                await new Promise(resolve => setTimeout(resolve, 100 * (playbackAttempts + 1)));
+                await this.elements.audio.play();
+                
+                this.state.isPlaying = true;
+                this.updateStatusMessage("Воспроизведение");
+                return;
+            } catch (playError) {
+                playbackAttempts++;
+                console.warn(`Попытка воспроизведения ${playbackAttempts} не удалась:`, playError);
+                
+                if (playbackAttempts >= maxAttempts) {
+                    throw playError;
+                }
+                
+                // При NotAllowedError пробуем восстановить контекст
+                if (playError.name === 'NotAllowedError' && this.state.audioContext) {
+                    await this.state.audioContext.resume();
+                }
             }
-
-            // Проверяем и возобновляем AudioContext
-            if (this.state.audioContext?.state === 'suspended') {
-                await this.state.audioContext.resume();
-            }
-
-            // Даем время на подготовку
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Пробуем воспроизвести с защитой от ошибок
-            await this.elements.audio.play();
-            this.state.isPlaying = true;
-            this.updateStatusMessage("Воспроизведение");
         }
     } catch (error) {
-        console.error("Toggle playback error:", error);
+        console.error("Ошибка переключения воспроизведения:", error);
         this.state.isPlaying = false;
-        throw error; // Пробрасываем ошибку выше
+        
+        // Специальная обработка для NotAllowedError
+        if (error.name === 'NotAllowedError') {
+            this.updateStatusMessage("Нажмите разрешить воспроизведение", true);
+            throw new Error("Требуется взаимодействие пользователя для воспроизведения");
+        }
+        
+        // Для других ошибок пробуем переподключиться
+        this.state.currentStream = null;
+        throw error;
     }
 }
 

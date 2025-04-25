@@ -754,33 +754,40 @@ handleConnectionError(error) {
         }
     }
 
-    handleBackgroundTab() {
-        if (this.state.audioContext) {
-            this.state.audioContext.suspend().catch(console.error);
-        }
+handleBackgroundTab() {
+    // Не приостанавливаем AudioContext - оставляем воспроизведение
+    // Только уменьшаем частоту обновлений информации
+    clearInterval(this.state.updateIntervalId);
+    this.state.updateIntervalId = setInterval(
+        () => this.updateTrackInfo(),
+        this.config.updateInterval * 3 // Реже обновляем в фоне
+    );
+    
+    console.log('Приложение перешло в фоновый режим (воспроизведение продолжается)');
+}
 
-        clearInterval(this.state.updateIntervalId);
-        this.state.updateIntervalId = setInterval(
-            () => this.updateTrackInfo(),
-            this.config.updateInterval * 3
-        );
+handleForegroundTab() {
+    // Восстанавливаем частоту обновлений
+    clearInterval(this.state.updateIntervalId);
+    this.state.updateIntervalId = setInterval(
+        () => this.updateTrackInfo(),
+        this.config.updateInterval
+    );
+
+    // Проверяем состояние воспроизведения
+    if (this.state.isPlaying) {
+        // Пробуем возобновить, если было прервано
+        this.elements.audio.play().catch(err => {
+            console.warn('Автовоспроизведение в foreground:', err);
+            // Показываем кнопку "Продолжить", если нужно действие пользователя
+            if (err.name === 'NotAllowedError') {
+                this.showResumeButton();
+            }
+        });
     }
-
-    handleForegroundTab() {
-        if (this.state.audioContext) {
-            this.state.audioContext.resume().catch(console.error);
-        }
-
-        clearInterval(this.state.updateIntervalId);
-        this.state.updateIntervalId = setInterval(
-            () => this.updateTrackInfo(),
-            this.config.updateInterval
-        );
-
-        if (this.state.isPlaying) {
-            this.elements.audio.play().catch(console.error);
-        }
-    }
+    
+    console.log('Приложение вернулось на передний план');
+}
 
     initAudioContext() {
         try {

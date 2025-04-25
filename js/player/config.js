@@ -5,9 +5,9 @@ const RadioPlayerConfig = {
         { url: "https://wwcat.duckdns.org:8443/listen/algoritm-stream/radio", priority: 1 },
         { url: "https://wwcat.duckdns.org:8000/radio", priority: 2 },
     ],
-    
+
     // API endpoints
-   apiEndpoints: {
+    apiEndpoints: {
         primary: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
         fallback: "https://wwcat.duckdns.org:8000/api/nowplaying/1",
         nowPlaying: "https://wwcat.duckdns.org:8443/api/nowplaying/1",
@@ -18,43 +18,44 @@ const RadioPlayerConfig = {
     apiUrls: [
         "https://wwcat.duckdns.org:8443/api/nowplaying/1"
     ],
-    
+
     // Настройки AzuraCast
     azuraCast: {
         baseUrl: "https://wwcat.duckdns.org:8443",
         artworkBaseUrl: "https://wwcat.duckdns.org:8443",
         enableSongRequests: true // Включить запросы песен
     },
-    
+
     // Настройки обновления
-    updateInterval: 10000,          // Интервал обновления информации (мс)
+    updateInterval: 30000,          // Интервал обновления информации (мс)
+    useSongChangeDetection: true,   // Ищем следующую песню
     reconnectDelay: 3000,           // Задержка переподключения (мс)
     networkCheckInterval: 10000,    // Интервал проверки сети (мс)
-    
+
     // Настройки буфера
     bufferLength: 20,               // Длина аудиобуфера (сек)
-    
+
     // Диагностика
     diagnostics: {
         enabled: true,              // Включить диагностику
         logInterval: 60000          // Интервал логирования (мс)
     },
-    
+
     // История прослушивания
     history: {
         maxItems: 5,                // Максимальное количество отображаемых треков
         cacheSize: 20,              // Сколько треков хранить в кеше
         animationDelay: 100         // Задержка анимации между элементами (мс)
     },
-    
+
     // Настройки обложек альбомов
     artwork: {
         defaultUrl: "img/album-art/default.jpg", // Обложка по умолчанию
-        size: 500,                               // Размер обложки (px)
-        useProxy: false,                         // Использовать прокси для обложек
-        proxyUrl: ""                             // URL прокси (если используется)
+            size: 500,                               // Размер обложки (px)
+            useProxy: false,                         // Использовать прокси для обложек
+            proxyUrl: ""                             // URL прокси (если используется)
     },
-    
+
     // Тема по умолчанию
     DEFAULT_THEME: 'dark'
 };

@@ -676,11 +676,16 @@ main {
 }
 
 .track-progress {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    margin-top: 0.5rem;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    text-align: right;
+    align-self: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .track-progress span {
@@ -857,25 +862,53 @@ main {
 .equalizer-container {
     display: flex;
     justify-content: center;
-    gap: 4px;
-    height: 30px;
-    margin-top: 10px;
     align-items: flex-end;
+    height: 60px;
+    gap: 6px;
+    margin: 15px 0;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .equalizer-bar {
-    width: 4px;
-    background: var(--primary-color);
-    border-radius: 2px;
-    animation: equalizerBar 1.5s ease-in-out infinite;
+    width: 8px;
+    background: linear-gradient(to top, 
+                var(--primary-color), 
+                #00ffff);
+    border-radius: 4px;
+    animation: equalizerBar 1.6s ease-in-out infinite alternate;
     transform-origin: bottom;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    filter: brightness(1.2);
 }
 
-.equalizer-bar:nth-child(1) { animation-delay: -0.2s; height: 30%; }
-.equalizer-bar:nth-child(2) { animation-delay: -0.4s; height: 60%; }
-.equalizer-bar:nth-child(3) { animation-delay: -0.1s; height: 80%; }
-.equalizer-bar:nth-child(4) { animation-delay: -0.3s; height: 40%; }
-.equalizer-bar:nth-child(5) { animation-delay: -0.5s; height: 70%; }
+.equalizer-bar:nth-child(1) { 
+    animation-delay: -0.1s; 
+    height: 20%; 
+    background: linear-gradient(to top, #ff00ff, #ff00cc);
+}
+.equalizer-bar:nth-child(2) { 
+    animation-delay: -0.3s; 
+    height: 50%; 
+    background: linear-gradient(to top, #00ccff, #0066ff);
+}
+.equalizer-bar:nth-child(3) { 
+    animation-delay: -0.5s; 
+    height: 80%; 
+    background: linear-gradient(to top, #00ffcc, #00ff00);
+}
+.equalizer-bar:nth-child(4) { 
+    animation-delay: -0.2s; 
+    height: 40%; 
+    background: linear-gradient(to top, #ff9900, #ff6600);
+}
+.equalizer-bar:nth-child(5) { 
+    animation-delay: -0.4s; 
+    height: 70%; 
+    background: linear-gradient(to top, #cc00ff, #9900ff);
+}
 
 /* Улучшенный блок информации о треках */
 .track-details {
@@ -1785,8 +1818,14 @@ footer::before {
 }
 
 @keyframes equalizerBar {
-    0%, 100% { transform: scaleY(0.3); }
-    50% { transform: scaleY(1); }
+    0%, 100% {
+        transform: scaleY(0.3);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scaleY(1.5);
+        opacity: 1;
+    }
 }
 
 .playing .album-art img {

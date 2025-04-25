@@ -225,13 +225,6 @@ this.elements.audio.addEventListener('playing', () => {
     }
 });
 
-        this.elements.audio.addEventListener('timeupdate', () => {
-            if (this.elements.currentTime && this.elements.progressBar) {
-                this.elements.currentTime.textContent = UIHelpers.formatTime(this.elements.audio.currentTime);
-                this.elements.progressBar.value = (this.elements.audio.currentTime / this.elements.audio.duration) * 100 || 0;
-            }
-        });
-
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.handleBackgroundTab();
@@ -579,7 +572,7 @@ updateCurrentTrack(nowPlaying) {
     if (!this.state.timeUpdateInterval) {
         this.state.timeUpdateInterval = setInterval(
             () => this.updateCurrentTime(),
-            1000
+            1000 
         );
     }
 }

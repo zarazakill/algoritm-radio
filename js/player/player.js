@@ -459,62 +459,35 @@ document.addEventListener('click', handleFirstInteraction);
     }
 
 async togglePlayback() {
-    // Если уже играет - ставим на паузу
-    if (this.state.isPlaying) {
-        try {
+    try {
+        if (this.state.isPlaying) {
+            // Если уже играет - ставим на паузу
             this.elements.audio.pause();
             this.state.isPlaying = false;
             this.updateStatusMessage("Пауза");
-            
-            // Не приостанавливаем AudioContext - оставляем его активным
-            return;
-        } catch (err) {
-            console.error("Ошибка при паузе:", err);
-            return;
-        }
-    }
+        } else {
+            // Если не играет - запускаем воспроизведение
+            if (!this.state.currentStream) {
+                await this.connectToStream();
+            }
 
-    // Если не играет - запускаем воспроизведение
-    try {
-        // 1. Сначала подключаемся к потоку
-        if (!this.state.currentStream) {
-            await this.connectToStream();
-        }
-
-        // 2. Проверяем и возобновляем AudioContext
-        if (this.state.audioContext) {
-            if (this.state.audioContext.state === 'suspended') {
+            // Проверяем и возобновляем AudioContext
+            if (this.state.audioContext?.state === 'suspended') {
                 await this.state.audioContext.resume();
             }
-        } else {
-            this.initAudioContext();
-        }
 
-        // 3. Запускаем воспроизведение с защитой от ошибок
-        try {
-            await this.elements.audio.play();
-            this.state.isPlaying = true;
-            this.updateStatusMessage("Воспроизведение");
-        } catch (playError) {
-            // Если первая попытка не удалась, пробуем еще раз
-            console.warn("Первая попытка play() не удалась, пробуем снова...");
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Даем время на подготовку
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Пробуем воспроизвести с защитой от ошибок
             await this.elements.audio.play();
             this.state.isPlaying = true;
             this.updateStatusMessage("Воспроизведение");
         }
-
-    } catch (err) {
-        console.error("Ошибка воспроизведения:", err);
+    } catch (error) {
+        console.error("Toggle playback error:", error);
         this.state.isPlaying = false;
-        this.updateStatusMessage("Ошибка воспроизведения", true);
-
-        if (err.name === 'NotAllowedError') {
-            // showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
-        } else {
-            // Для других ошибок пробуем переподключиться
-            this.state.currentStream = null;
-        }
+        throw error; // Пробрасываем ошибку выше
     }
 }
 

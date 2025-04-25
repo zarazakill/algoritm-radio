@@ -553,14 +553,7 @@ updateCurrentTrack(nowPlaying) {
     if (this.elements.duration) {
         this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
     }
-    if (this.elements.currentTime) {
-        this.elements.currentTime.textContent = UIHelpers.formatTime(nowPlaying.elapsed);
-    }
-
-    if (this.elements.progressBar) {
-    this.elements.progressBar.value = (nowPlaying.elapsed / nowPlaying.duration) * 100 || 0;
-    }
-    
+   
     // Обновляем заголовок страницы
     document.title = `${track.title} - ${track.artist} | АлгоРитм-StreAM`;
 

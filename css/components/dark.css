@@ -1,11 +1,10 @@
-/* Темная */
 body.dark-theme {
     background: linear-gradient(to left, var(--darker-color), var(--dark-color));
     color: var(--text-primary);
 }
 
 body.dark-theme .logo h1 {
-    background: linear-gradient(to right, #a5b4fc, #818cf8);
+    background: linear-gradient(to right, #cd00cd, #fc0fc0);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

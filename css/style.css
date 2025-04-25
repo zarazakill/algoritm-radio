@@ -2,33 +2,7 @@
 @import 'themes/light.css';
 @import 'themes/dark.css';
 @import 'base/reset.css';
-
-:root {
-    --primary-color: #bfb8f5;
-    --primary-dark: #43379e;
-    --secondary-color: #a29bfe;
-    --dark-color: #454c96;
-    --darker-color: #16213e;
-
-    --light-color: #f5f6fa;
-    --accent-color: #fd79a8;
-    --success-color: #42ffe9;
-    --warning-color: #fcdc9f;
-    --error-color: #f50029;
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --card-bg: rgba(30, 30, 60, 0.7);
-    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --border-radius: 15px;
-    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    --animation-speed: 0.3s;
-}
-
-/* SVG градиент для используемых в документе SVG */
-svg {
-    --svg-gradient-start: #bfb8f5;
-    --svg-gradient-end: #a29bfe;
-}
+@import 'base/variables.css';
 
 /* Улучшенный оверлей для начального экрана */
 .audio-overlay {

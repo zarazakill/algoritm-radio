@@ -663,23 +663,24 @@ main {
 }
 
 .stream-time {
-    font-size: 1.2rem;
+    width: 100%;
+    text-align: center;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    transition: color 0.3s ease;
+    opacity: 0.8;
 }
 
 .stream-time:hover {
     color: var(--primary-color);
 }
 
-/* Улучшенная индикация прогресса трека */
 .track-progress {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 1rem 0;
     width: 100%;
+    margin-top: 0.5rem;
 }
 
 .track-progress span {

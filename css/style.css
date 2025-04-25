@@ -665,7 +665,7 @@ main {
 .stream-time {
     width: 100%;
     text-align: center;
-    margin: 0.5rem 0;
+    margin: 1.2rem 2;
     font-size: 0.9rem;
     color: var(--text-secondary);
     opacity: 0.8;

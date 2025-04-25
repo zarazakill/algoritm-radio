@@ -662,6 +662,17 @@ main {
     color: var(--primary-color);
 }
 
+.stream-time {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.stream-time:hover {
+    color: var(--primary-color);
+}
+
 /* Улучшенная индикация прогресса трека */
 .track-progress {
     display: flex;

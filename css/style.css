@@ -1,6 +1,7 @@
 @import 'components/equalizer.css';
 @import 'themes/light.css';
 @import 'themes/dark.css';
+@import 'base/reset.css';
 
 :root {
     --primary-color: #bfb8f5;

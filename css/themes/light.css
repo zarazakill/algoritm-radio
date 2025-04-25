@@ -1,6 +1,6 @@
 /* Светлая */
 body.light-theme {
-    background: linear-gradient(135deg, #e6f0fd, #f0ebfe);
+    background: linear-gradient(to right, #e6f0fd, #f0ebfe);
     color: #333;
     --text-primary: #333;
     --text-secondary: rgba(0, 0, 0, 0.7);

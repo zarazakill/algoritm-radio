@@ -370,42 +370,83 @@ if (playButton && overlay && buttonText && spinner) {
             overlay.style.display = 'none';
             playButton.disabled = true;
             spinner.style.display = 'inline-block';
-            buttonText.textContent = player.state.isPlaying ? 'Пауза...' : 'Подготовка потока...';
+            buttonText.textContent = player.state.isPlaying ? 'Пауза...' : 'Подготовка...';
 
-            // Используем togglePlayback для управления состоянием
+            // Специальная обработка для первого запуска
+            if (!player.state.initialized) {
+                await player.init();
+                player.state.initialized = true;
+            }
+
+            // Явная активация AudioContext перед воспроизведением
+            if (player.state.audioContext?.state === 'suspended') {
+                try {
+                    await player.state.audioContext.resume();
+                } catch (ctxError) {
+                    console.warn("AudioContext resume error:", ctxError);
+                }
+            }
+
+            // Задержка для стабильности
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // Основное переключение состояния
             await player.togglePlayback();
 
-            // Обновляем UI после успешного переключения
+            // Обновление UI
             if (player.state.isPlaying) {
                 animateEqualizer(true);
                 showToast('Радио запущено', 'success');
                 buttonText.textContent = 'Пауза';
                 
-                // Активируем меню после успешного запуска
-                if (menuToggle) {
-                    menuToggle.classList.remove('disabled');
-                }
+                if (menuToggle) menuToggle.classList.remove('disabled');
+                
+                // Сохраняем состояние воспроизведения
+                localStorage.setItem('radioPlaying', 'true');
             } else {
                 animateEqualizer(false);
-                buttonText.textContent = 'Запустить радио';
+                buttonText.textContent = 'Запустить';
+                localStorage.setItem('radioPlaying', 'false');
             }
+
         } catch (error) {
             console.error("Playback error:", error);
-            player.setStatus(`Ошибка: ${error.message}`, true);
+            
+            // Восстанавливаем UI при ошибке
             overlay.style.display = 'flex';
+            player.state.isPlaying = false;
+            animateEqualizer(false);
+            buttonText.textContent = 'Запустить';
 
+            // Специальные сообщения для разных ошибок
             if (error.name === 'NotAllowedError') {
                 showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+                player.setStatus("Требуется взаимодействие", true);
+            } else if (error.message.includes('поток')) {
+                showToast('Ошибка подключения к потоку', 'error');
+                player.setStatus("Ошибка подключения", true);
             } else {
-                showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
+                showToast('Ошибка воспроизведения', 'error');
+                player.setStatus("Ошибка воспроизведения", true);
+            }
+            
+            // Сбрасываем состояние при серьезных ошибках
+            if (!error.name === 'NotAllowedError') {
+                player.state.currentStream = null;
             }
         } finally {
-            // Всегда снимаем блокировку кнопки
+            // Гарантированное восстановление UI
             playButton.disabled = false;
             spinner.style.display = 'none';
+            
+            // Проверяем актуальное состояние
+            if (!player.state.isPlaying) {
+                animateEqualizer(false);
+                buttonText.textContent = 'Запустить';
+            }
         }
     });
-}        
+}
     } catch (error) {
         console.error("Initialization failed:", error);
         

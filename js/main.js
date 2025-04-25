@@ -362,50 +362,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         // Обработчик клика
-        if (playButton && overlay && buttonText && spinner) {
-playButton.addEventListener('click', async () => {
-    try {
-        overlay.style.display = 'none';
-        playButton.disabled = true;
-        spinner.style.display = 'inline-block';
-        buttonText.textContent = 'Подготовка потока...';
+if (playButton && overlay && buttonText && spinner) {
+    playButton.addEventListener('click', async () => {
+        try {
+            overlay.style.display = 'none';
+            playButton.disabled = true;
+            spinner.style.display = 'inline-block';
+            buttonText.textContent = 'Подготовка потока...';
 
-        // Проверяем и возобновляем AudioContext
-        if (player.state.audioContext?.state === 'suspended') {
-            await player.state.audioContext.resume();
+            // Проверяем и возобновляем AudioContext
+            if (player.state.audioContext?.state === 'suspended') {
+                await player.state.audioContext.resume();
+            }
+
+            // Даем время на подготовку перед play()
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Используем safePlay вместо прямого вызова audio.play()
+            await safePlay(player.elements.audio);
+
+            player.state.isPlaying = true;
+            animateEqualizer(true);
+            showToast('Радио запущено', 'success');
+
+            // Активируем меню после успешного запуска
+            if (menuToggle) {
+                menuToggle.classList.remove('disabled');
+            }
+        } catch (error) {
+            console.error("Playback error:", error);
+            player.setStatus(`Ошибка: ${error.message}`, true);
+            overlay.style.display = 'flex';
+
+            if (error.name === 'NotAllowedError') {
+                showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+            } else {
+                showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
+            }
+
+            if (playButton && buttonText && spinner) {
+                playButton.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = 'Попробовать снова';
+            }
         }
-
-        // Даем время на подготовку перед play()
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Безопасный вызов play() с повторными попытками
-        await safePlay(player.elements.audio);
-
-        player.state.isPlaying = true;
-        animateEqualizer(true);
-        showToast('Радио запущено', 'success');
-
-        if (menuToggle) {
-            menuToggle.classList.remove('disabled');
-        }
-    } catch (error) {
-        console.error("Playback error:", error);
-        player.setStatus(`Ошибка: ${error.message}`, true);
-        overlay.style.display = 'flex';
-
-        if (error.name === 'NotAllowedError') {
-            showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
-        } else {
-            showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
-        }
-
-        if (playButton && buttonText && spinner) {
-            playButton.disabled = false;
-            spinner.style.display = 'none';
-            buttonText.textContent = 'Попробовать снова';
-        }
-    }
-});
+    });
+}
         }
         
     } catch (error) {

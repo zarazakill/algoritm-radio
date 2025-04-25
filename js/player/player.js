@@ -910,7 +910,7 @@ setupAudioBuffer() {
             });
         }, this.config.diagnostics.logInterval);
     }
-}
+
 
 
     destroy() {

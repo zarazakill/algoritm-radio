@@ -348,22 +348,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Обработчик клика
         if (playButton && overlay && buttonText && spinner) {
-            playButton.addEventListener('click', async () => {
-                try {
-                    overlay.style.display = 'none';
-                    playButton.disabled = true;
-                    spinner.style.display = 'inline-block';
-                    buttonText.textContent = 'Подготовка потока...';
-                    
-                    // Проверяем и возобновляем AudioContext
-                    if (player.state.audioContext?.state === 'suspended') {
-                        await player.state.audioContext.resume();
-                    }
-                    
-                    await player.elements.audio.play();
-                    player.state.isPlaying = true;
-                    animateEqualizer(true);
-                    showToast('Радио запущено', 'success');
+playButton.addEventListener('click', async () => {
+    try {
+        overlay.style.display = 'none';
+        playButton.disabled = true;
+        spinner.style.display = 'inline-block';
+        buttonText.textContent = 'Подготовка потока...';
+
+        // Проверяем и возобновляем AudioContext
+        if (player.state.audioContext?.state === 'suspended') {
+            await player.state.audioContext.resume();
+        }
+
+        // Явное ожидание перед play()
+        await new Promise(resolve => setTimeout(resolve, 100)); // Даем время на подготовку
+
+        await player.elements.audio.play(); // Теперь play() не должен прерываться
+        player.state.isPlaying = true;
+        animateEqualizer(true);
+        showToast('Радио запущено', 'success');
+
+        if (menuToggle) {
+            menuToggle.classList.remove('disabled');
+        }
                     
                 } catch (error) {
                     console.error("Playback error:", error);

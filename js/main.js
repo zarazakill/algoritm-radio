@@ -407,9 +407,7 @@ if (playButton && overlay && buttonText && spinner) {
             }
         }
     });
-}
-        }
-        
+}        
     } catch (error) {
         console.error("Initialization failed:", error);
         

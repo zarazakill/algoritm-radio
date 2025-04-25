@@ -40,6 +40,7 @@ export class RadioPlayer {
         this.config = RadioPlayerConfig;
  
         this.state = {
+            timeUpdateInterval: null,
             currentStream: null,
             currentApiUrl: null,
             isPlaying: false,
@@ -553,20 +554,45 @@ updateCurrentTrack(nowPlaying) {
     if (this.elements.duration) {
         this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
     }
-   
+
     // Обновляем заголовок страницы
     document.title = `${track.title} - ${track.artist} | АлгоРитм-StreAM`;
 
-    // Обновляем обложку альбома из AzuraCast
+    // Обновляем обложку альбома
     this.updateAlbumArtFromAzuraCast(nowPlaying);
 
-    // Запускаем обновление времени, если его еще нет
-    if (!this.state.timeUpdateInterval) {
-        this.state.timeUpdateInterval = setInterval(
-            () => this.updateCurrentTime(),
-            1000 
-        );
+    // Очищаем предыдущий интервал, если он есть
+    if (this.state.timeUpdateInterval) {
+        clearInterval(this.state.timeUpdateInterval);
     }
+
+    // Сбрасываем elapsed при смене трека
+    nowPlaying.elapsed = 0;
+
+    // Запускаем новый интервал
+    this.state.timeUpdateInterval = setInterval(() => {
+        nowPlaying.elapsed += 1;
+        
+        // Обновляем UI
+        const progressElement = this.elements.currentTrackEl?.querySelector('.track-progress');
+        if (progressElement) {
+            progressElement.textContent = `${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}`;
+        }
+
+        // Обновляем основной плеер
+        if (this.elements.currentTime) {
+            this.elements.currentTime.textContent = UIHelpers.formatTime(nowPlaying.elapsed);
+        }
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = (nowPlaying.elapsed / nowPlaying.duration) * 100 || 0;
+        }
+
+        // Если трек закончился
+        if (nowPlaying.elapsed >= nowPlaying.duration) {
+            clearInterval(this.state.timeUpdateInterval);
+            this.state.timeUpdateInterval = null;
+        }
+    }, 1000);
 }
 
 updateCurrentTime() {

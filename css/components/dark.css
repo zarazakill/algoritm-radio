@@ -1,0 +1,19 @@
+/* Темная */
+body.dark-theme {
+    background: linear-gradient(to left, var(--darker-color), var(--dark-color));
+    color: var(--text-primary);
+}
+
+body.dark-theme .logo h1 {
+    background: linear-gradient(to right, #a5b4fc, #818cf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .now-playing h3,
+body.dark-theme .up-next h3,
+body.dark-theme .recent-tracks h3 {
+    color: var(--primary-color);
+}

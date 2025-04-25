@@ -1,3 +1,6 @@
+@import 'components/equalizer.css';
+@import 'components/light.css';
+
 :root {
     --primary-color: #bfb8f5;
     --primary-dark: #43379e;
@@ -2005,5 +2008,3 @@ body.dark-theme .recent-tracks h3 {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color);
 }
-
-@import 'components/equalizer.css';

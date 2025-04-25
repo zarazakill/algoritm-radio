@@ -1,5 +1,20 @@
 import { RadioPlayer } from './player/player.js';
 
+// Функция для безопасного воспроизведения с повторными попытками
+async function safePlay(audioElement, maxRetries = 3) {
+    let lastError = null;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            await audioElement.play();
+            return true; // Успех
+        } catch (err) {
+            lastError = err;
+            await new Promise(resolve => setTimeout(resolve, 300 * (i + 1))); // Задержка между попытками
+        }
+    }
+    throw lastError; // Все попытки провалились
+}
+
 // Загружаем тему из localStorage
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'dark';

@@ -537,7 +537,6 @@ updateCurrentTrack(nowPlaying) {
     const html = `
     <span class="track-name">${track.title || 'Неизвестный трек'}</span>
     <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="stream-time">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
     <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
     `;
 
@@ -949,7 +948,7 @@ setupAudioBuffer() {
             clearInterval(this.state.updateIntervalId);
         }
         if (this.state.timeUpdateInterval) {
-        clearInterval(this.state.timeUpdateInterval);
+            clearInterval(this.state.timeUpdateInterval);
         }
         if (this.state.streamTimeInterval) {
             clearInterval(this.state.streamTimeInterval);

@@ -366,33 +366,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 if (playButton && overlay && buttonText && spinner) {
     playButton.addEventListener('click', async () => {
         try {
+            // Показываем состояние загрузки
             overlay.style.display = 'none';
             playButton.disabled = true;
             spinner.style.display = 'inline-block';
-            buttonText.textContent = 'Подготовка потока...';
+            buttonText.textContent = player.state.isPlaying ? 'Пауза...' : 'Подготовка потока...';
 
-            // Проверяем и возобновляем AudioContext
-            if (player.state.audioContext?.state === 'suspended') {
-                await player.state.audioContext.resume();
-            }
+            // Используем togglePlayback для управления состоянием
+            await player.togglePlayback();
 
-            // Даем время на подготовку перед play()
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Используем safePlay вместо прямого вызова audio.play()
-            await safePlay(player.elements.audio);
-
-if (!player.state.isPlaying) {
-    await safePlay(player.elements.audio);
-    player.state.isPlaying = true;
-} else {
-    player.elements.audio.pause();
-    player.state.isPlaying = false;
-}
-
-            // Активируем меню после успешного запуска
-            if (menuToggle) {
-                menuToggle.classList.remove('disabled');
+            // Обновляем UI после успешного переключения
+            if (player.state.isPlaying) {
+                animateEqualizer(true);
+                showToast('Радио запущено', 'success');
+                buttonText.textContent = 'Пауза';
+                
+                // Активируем меню после успешного запуска
+                if (menuToggle) {
+                    menuToggle.classList.remove('disabled');
+                }
+            } else {
+                animateEqualizer(false);
+                buttonText.textContent = 'Запустить радио';
             }
         } catch (error) {
             console.error("Playback error:", error);
@@ -404,12 +399,10 @@ if (!player.state.isPlaying) {
             } else {
                 showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
             }
-
-            if (playButton && buttonText && spinner) {
-                playButton.disabled = false;
-                spinner.style.display = 'none';
-                buttonText.textContent = 'Попробовать снова';
-            }
+        } finally {
+            // Всегда снимаем блокировку кнопки
+            playButton.disabled = false;
+            spinner.style.display = 'none';
         }
     });
 }        

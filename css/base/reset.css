@@ -1,0 +1,45 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+html {
+    scroll-behavior: smooth;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+    padding: 0;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.5s ease, color 0.3s ease;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(69, 76, 150, 0.1) 0%, rgba(22, 33, 62, 0.1) 100%);
+    opacity: 0.2;
+    z-index: -1;
+    pointer-events: none;
+}
+
+button, a, input[type="range"] {
+    transition: var(--transition);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+

@@ -23,6 +23,7 @@ export class RadioPlayer {
             listenersCount: document.getElementById('listeners-count'),
             trackTitle: document.getElementById('track-title'),
             trackArtist: document.getElementById('track-artist'),
+            streamDuration: document.getElementById('stream-duration'),
             currentTime: document.getElementById('current-time'),
             progressBar: document.getElementById('progress-bar'),
             duration: document.getElementById('duration'),
@@ -529,6 +530,7 @@ updateCurrentTrack(nowPlaying) {
     const html = `
     <span class="track-name">${track.title || 'Неизвестный трек'}</span>
     <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+    <span class="stream-time">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
     <span class="track-progress">${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}</span>
     `;
 
@@ -545,7 +547,14 @@ updateCurrentTrack(nowPlaying) {
     if (this.elements.duration) {
         this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
     }
+    if (this.elements.currentTime) {
+        this.elements.currentTime.textContent = UIHelpers.formatTime(nowPlaying.elapsed);
+    }
 
+    if (this.elements.progressBar) {
+    this.elements.progressBar.value = (nowPlaying.elapsed / nowPlaying.duration) * 100 || 0;
+    }
+    
     // Обновляем заголовок страницы
     document.title = `${track.title} - ${track.artist} | АлгоРитм-StreAM`;
 

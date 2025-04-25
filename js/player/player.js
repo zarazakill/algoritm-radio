@@ -417,70 +417,71 @@ async togglePlayback() {
         this.elements.audio.load();
     }
     
-    async updateTrackInfo() {
-        if (!this.state.currentApiUrl) {
-            try {
-                this.state.currentApiUrl = await this.findWorkingApi();
-                if (!this.state.currentApiUrl) {
-                    this.setStatus("API недоступно", true);
-                    this.updateStatusMessage("API недоступно", true);
-                    return;
-                }
-            } catch (error) {
-                console.error("Error finding API:", error);
+async updateTrackInfo() {
+    if (!this.state.currentApiUrl) {
+        try {
+            this.state.currentApiUrl = await this.findWorkingApi();
+            if (!this.state.currentApiUrl) {
+                this.setStatus("API недоступно", true);
+                this.updateStatusMessage("API недоступно", true);
                 return;
             }
+        } catch (error) {
+            console.error("Error finding API:", error);
+            return;
         }
+    }
 
-        try {
-            const response = await NetworkUtils.fetchWithTimeout(
-                this.state.currentApiUrl, 
-                5000 // Увеличили таймаут
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            // Кэшируем данные и время последнего обновления
+    try {
+        const response = await NetworkUtils.fetchWithTimeout(
+            this.state.currentApiUrl, 
+            5000
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Проверяем, изменился ли трек
+        if (this.isTrackChanged(data.now_playing, this.state.lastTrackData?.now_playing)) {
             this.state.lastTrackData = data;
             this.state.lastUpdateTime = Date.now();
-            
             this.updateUI(data);
-            
-            // Сбрасываем статус сети на хороший, если API доступен
-            if (this.state.networkQuality !== 'good') {
-                this.state.networkQuality = 'good';
-                this.adjustForNetworkQuality();
-                
-                if (this.elements.networkQuality) {
-                    this.elements.networkQuality.textContent = 'Отличное';
-                }
-            }
-        } catch (error) {
-            console.error("Ошибка обновления:", error);
-            
-            // Используем кэшированные данные, если есть
-            if (this.state.lastTrackData) {
-                this.updateUI(this.state.lastTrackData);
-            }
-            
-            // Обновляем статус сети на деградированный
-            this.state.networkQuality = 'degraded';
+        }
+        
+        // Сбрасываем статус сети на хороший, если API доступен
+        if (this.state.networkQuality !== 'good') {
+            this.state.networkQuality = 'good';
             this.adjustForNetworkQuality();
             
             if (this.elements.networkQuality) {
-                this.elements.networkQuality.textContent = 'Плохое';
+                this.elements.networkQuality.textContent = 'Отличное';
             }
-            
-            // Пробуем найти новый рабочий API URL
-            this.state.currentApiUrl = await this.findWorkingApi();
-            this.setStatus("Проблемы с соединением, пытаемся восстановить...", true);
-            this.updateStatusMessage("Проблемы с соединением, пытаемся восстановить...", true);
         }
+    } catch (error) {
+        console.error("Ошибка обновления:", error);
+        
+        // Используем кэшированные данные, если есть
+        if (this.state.lastTrackData) {
+            this.updateUI(this.state.lastTrackData);
+        }
+        
+        // Обновляем статус сети на деградированный
+        this.state.networkQuality = 'degraded';
+        this.adjustForNetworkQuality();
+        
+        if (this.elements.networkQuality) {
+            this.elements.networkQuality.textContent = 'Плохое';
+        }
+        
+        // Пробуем найти новый рабочий API URL
+        this.state.currentApiUrl = await this.findWorkingApi();
+        this.setStatus("Проблемы с соединением, пытаемся восстановить...", true);
+        this.updateStatusMessage("Проблемы с соединением, пытаемся восстановить...", true);
     }
+}
 
     updateUI(data) {
         this.updateCurrentTrack(data.now_playing);
@@ -689,6 +690,14 @@ async togglePlayback() {
         }
     }
 
+isTrackChanged(newTrack, oldTrack) {
+    if (!oldTrack) return true;
+    return (
+        newTrack.song?.title !== oldTrack.song?.title ||
+        newTrack.song?.artist !== oldTrack.song?.artist
+    );
+}
+    
 handleConnectionError(error) {
     console.error("Ошибка подключения:", error);
     this.setStatus(`Ошибка: ${error.message}`, true);
@@ -749,7 +758,7 @@ handleConnectionError(error) {
                 clearInterval(this.state.updateIntervalId);
                 this.state.updateIntervalId = setInterval(
                     () => this.updateTrackInfo(),
-                    this.config.updateInterval
+                    1000 // Проверяем каждую секунду, но обновляем только при изменении трека
                 );
         }
     }

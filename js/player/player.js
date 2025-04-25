@@ -983,5 +983,4 @@ destroy() {
   this.elements.audio.src = '';
   this.elements.audio.load();
 }
-    }
 }

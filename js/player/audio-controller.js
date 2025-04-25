@@ -1,27 +1,42 @@
-/**
- * Класс для управления аудио контекстом и обработкой аудио
- */
 export class AudioController {
     /**
-     * Инициализирует аудио контекст с обработкой ошибок
-     * @returns {AudioContext|null} - Созданный аудио контекст или null при ошибке
+     * Инициализирует аудио контекст в приостановленном состоянии
      */
-static initAudioContext() {
-    try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const context = new AudioContext();
-        
-        // Автоматически приостанавливаем контекст
-        if (context.state === 'running') {
-            context.suspend().catch(e => console.error("Error suspending AudioContext:", e));
+    static initAudioContext() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const context = new AudioContext();
+            
+            // Оставляем контекст приостановленным - будет активирован по жесту пользователя
+            if (context.state === 'running') {
+                context.suspend().catch(e => console.error("Error suspending AudioContext:", e));
+            }
+            
+            return context;
+        } catch (error) {
+            console.error("Ошибка инициализации AudioContext:", error);
+            return null;
         }
-        
-        return context;
-    } catch (error) {
-        console.error("Ошибка инициализации AudioContext:", error);
-        return null;
     }
-}
+
+    /**
+     * Явно возобновляет AudioContext после жеста пользователя
+     */
+    static async activateAudioContext(audioContext) {
+        if (!audioContext) return false;
+        
+        try {
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                console.log("AudioContext успешно активирован");
+                return true;
+            }
+            return true;
+        } catch (error) {
+            console.error("Ошибка активации AudioContext:", error);
+            return false;
+        }
+    }
     
     /**
      * Создает анализатор для визуализации звука

@@ -1,0 +1,77 @@
+/* Светлая */
+body.light-theme {
+    background: linear-gradient(135deg, #e6f0fd, #f0ebfe);
+    color: #333;
+    --text-primary: #333;
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme #progress-bar {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .logo h1 {
+    background: linear-gradient(to right, #0062cc, #0097ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .now-playing-badge {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+body.light-theme .menu-bar {
+    background: #333;
+}
+
+body.light-theme .track-details {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .track-info-box,
+body.light-theme #history-list li {
+    background: rgba(255, 255, 255, 0.5);
+    border-left-color: var(--primary-dark);
+}
+
+body.light-theme .now-playing h3,
+body.light-theme .up-next h3,
+body.light-theme .recent-tracks h3 {
+    color: var(--primary-dark);
+}
+
+body.light-theme .social-links a {
+    background: rgba(0, 0, 0, 0.05);
+    color: #555;
+}
+
+body.light-theme .social-links a:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #0062cc;
+}
+
+body.light-theme #volume-btn {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .status-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .equalizer-bar {
+    background: var(--primary-dark);
+}
+
+body.light-theme .keyboard-shortcuts {
+    background: rgba(0, 0, 0, 0.05);
+    color: #555;
+}

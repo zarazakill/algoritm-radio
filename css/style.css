@@ -858,58 +858,6 @@ main {
     transform: scale(1.2);
 }
 
-/* Эквалайзер */
-.equalizer-container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    height: 60px;
-    gap: 6px;
-    margin: 15px 0;
-    padding: 10px 15px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 50px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-}
-
-.equalizer-bar {
-    width: 8px;
-    background: linear-gradient(to top, 
-                var(--primary-color), 
-                #00ffff);
-    border-radius: 4px;
-    animation: equalizerBar 1.6s ease-in-out infinite alternate;
-    transform-origin: bottom;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-    filter: brightness(1.2);
-}
-
-.equalizer-bar:nth-child(1) { 
-    animation-delay: -0.1s; 
-    height: 20%; 
-    background: linear-gradient(to top, #ff00ff, #ff00cc);
-}
-.equalizer-bar:nth-child(2) { 
-    animation-delay: -0.3s; 
-    height: 50%; 
-    background: linear-gradient(to top, #00ccff, #0066ff);
-}
-.equalizer-bar:nth-child(3) { 
-    animation-delay: -0.5s; 
-    height: 80%; 
-    background: linear-gradient(to top, #00ffcc, #00ff00);
-}
-.equalizer-bar:nth-child(4) { 
-    animation-delay: -0.2s; 
-    height: 40%; 
-    background: linear-gradient(to top, #ff9900, #ff6600);
-}
-.equalizer-bar:nth-child(5) { 
-    animation-delay: -0.4s; 
-    height: 70%; 
-    background: linear-gradient(to top, #cc00ff, #9900ff);
-}
-
 /* Улучшенный блок информации о треках */
 .track-details {
     margin-top: 0.5rem;
@@ -2018,83 +1966,7 @@ body.dark-theme {
     transition: background 0.5s ease;
 }
 
-/* Светлая */
-body.light-theme {
-    background: linear-gradient(135deg, #e6f0fd, #f0ebfe);
-    color: #333;
-    --text-primary: #333;
-    --text-secondary: rgba(0, 0, 0, 0.7);
-    --card-bg: rgba(255, 255, 255, 0.9);
-    --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
 
-body.light-theme #progress-bar {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .logo h1 {
-    background: linear-gradient(to right, #0062cc, #0097ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .now-playing-badge {
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    color: #333;
-}
-
-body.light-theme .menu-bar {
-    background: #333;
-}
-
-body.light-theme .track-details {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .track-info-box,
-body.light-theme #history-list li {
-    background: rgba(255, 255, 255, 0.5);
-    border-left-color: var(--primary-dark);
-}
-
-body.light-theme .now-playing h3,
-body.light-theme .up-next h3,
-body.light-theme .recent-tracks h3 {
-    color: var(--primary-dark);
-}
-
-body.light-theme .social-links a {
-    background: rgba(0, 0, 0, 0.05);
-    color: #555;
-}
-
-body.light-theme .social-links a:hover {
-    background: rgba(0, 0, 0, 0.1);
-    color: #0062cc;
-}
-
-body.light-theme #volume-btn {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .status-card {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .equalizer-bar {
-    background: var(--primary-dark);
-}
-
-body.light-theme .keyboard-shortcuts {
-    background: rgba(0, 0, 0, 0.05);
-    color: #555;
-}
 
 /* Темная */
 body.dark-theme {

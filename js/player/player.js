@@ -924,3 +924,4 @@ setupAudioBuffer() {
         clearInterval(this.bufferMonitorInterval);
     }
 }
+}

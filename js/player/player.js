@@ -312,6 +312,14 @@ export class RadioPlayer {
                     });
         }
 
+const handleFirstInteraction = async () => {
+    if (self.state.audioContext && self.state.audioContext.state === 'suspended') {
+        await self.state.audioContext.resume();
+    }
+    document.removeEventListener('click', handleFirstInteraction);
+};
+document.addEventListener('click', handleFirstInteraction);
+        
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.handleBackgroundTab();
@@ -835,39 +843,30 @@ export class RadioPlayer {
         }
     }
 
-    handleBackgroundTab() {
-        if (this.state.audioContext) {
-            this.state.audioContext.suspend().catch(console.error);
-        }
+handleBackgroundTab() {
+    // Не приостанавливаем AudioContext, только уменьшаем частоту обновлений
+    clearInterval(this.state.updateIntervalId);
+    this.state.updateIntervalId = setInterval(
+        () => this.updateTrackInfo(),
+        this.config.updateInterval * 3
+    );
+}
 
-        clearInterval(this.state.songCheckInterval);
-
-        clearInterval(this.state.updateIntervalId);
-        this.state.updateIntervalId = setInterval(
-            () => this.updateTrackInfo(),
-                                                  this.config.updateInterval * 3
-        );
+handleForegroundTab() {
+    if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+        this.state.audioContext.resume().catch(console.error);
     }
 
-    handleForegroundTab() {
-        if (this.state.audioContext) {
-            this.state.audioContext.resume().catch(console.error);
-        }
+    clearInterval(this.state.updateIntervalId);
+    this.state.updateIntervalId = setInterval(
+        () => this.updateTrackInfo(),
+        this.config.updateInterval
+    );
 
-        if (this.config.useSongChangeDetection) {
-            this.setupSongChangeDetection();
-        }
-
-        clearInterval(this.state.updateIntervalId);
-        this.state.updateIntervalId = setInterval(
-            () => this.updateTrackInfo(),
-                                                  this.config.updateInterval
-        );
-
-        if (this.state.isPlaying) {
-            this.elements.audio.play().catch(console.error);
-        }
+    if (this.state.isPlaying) {
+        this.elements.audio.play().catch(console.error);
     }
+}
 
     initAudioContext() {
         try {

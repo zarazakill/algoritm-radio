@@ -360,10 +360,12 @@ playButton.addEventListener('click', async () => {
             await player.state.audioContext.resume();
         }
 
-        // Явное ожидание перед play()
-        await new Promise(resolve => setTimeout(resolve, 100)); // Даем время на подготовку
+        // Даем время на подготовку перед play()
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        await player.elements.audio.play(); // Теперь play() не должен прерываться
+        // Безопасный вызов play() с повторными попытками
+        await safePlay(player.elements.audio);
+
         player.state.isPlaying = true;
         animateEqualizer(true);
         showToast('Радио запущено', 'success');
@@ -371,25 +373,24 @@ playButton.addEventListener('click', async () => {
         if (menuToggle) {
             menuToggle.classList.remove('disabled');
         }
-                    
-                } catch (error) {
-                    console.error("Playback error:", error);
-                    player.setStatus(`Ошибка: ${error.message}`, true);
-                    overlay.style.display = 'flex';
-                    
-                    if (error.name === 'NotAllowedError') {
-                        showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
-                    } else {
-                        showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
-                    }
-                    
-                    if (playButton && buttonText && spinner) {
-                        playButton.disabled = false;
-                        spinner.style.display = 'none';
-                        buttonText.textContent = 'Попробовать снова';
-                    }
-                }
-            });
+    } catch (error) {
+        console.error("Playback error:", error);
+        player.setStatus(`Ошибка: ${error.message}`, true);
+        overlay.style.display = 'flex';
+
+        if (error.name === 'NotAllowedError') {
+            showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+        } else {
+            showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
+        }
+
+        if (playButton && buttonText && spinner) {
+            playButton.disabled = false;
+            spinner.style.display = 'none';
+            buttonText.textContent = 'Попробовать снова';
+        }
+    }
+});
         }
         
     } catch (error) {

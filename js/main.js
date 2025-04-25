@@ -1,21 +1,5 @@
 import { RadioPlayer } from './player/player.js';
 
-// Функция для безопасного воспроизведения с повторными попытками
-async function safePlay(audioElement, maxRetries = 3) {
-
-    let lastError = null;
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            await audioElement.play();
-            return true; // Успех
-        } catch (err) {
-            lastError = err;
-            await new Promise(resolve => setTimeout(resolve, 300 * (i + 1))); // Задержка между попытками
-        }
-    }
-    throw lastError; // Все попытки провалились
-}
-
 // Загружаем тему из localStorage
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -52,12 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 shortcutsModal.classList.remove('active');
             }
         });
-    }
-
-    // Изначально отключаем меню-бургер
-    const menuToggle = document.querySelector('.menu-toggle');
-    if (menuToggle) {
-        menuToggle.disabled = true;
     }
 });
 
@@ -184,13 +162,7 @@ function setupKeyboardShortcuts(player) {
         switch (e.key) {
             case ' ': // Пробел: пауза/воспр.
                 e.preventDefault();
-                // Toggle playback only if the player is initialized and not in the overlay state
-                const overlay = document.getElementById('audio-overlay');
-                if (overlay && overlay.style.display !== 'none') {
-                    // Do nothing or handle overlay interaction
-                } else {
-                     player.togglePlayback();
-                }
+                player.togglePlayback();
                 break;
                 
             case 'm': // M: отключение звука
@@ -229,13 +201,6 @@ function setupKeyboardShortcuts(player) {
                 
             case 'Escape': // Esc: закрыть все модальные окна
                 document.getElementById('shortcuts-modal')?.classList.remove('active');
-                // Также закрываем меню-оверлей
-                const menuOverlay = document.getElementById('menuOverlay');
-                const menuToggle = document.querySelector('.menu-toggle');
-                if (menuOverlay?.classList.contains('active')) {
-                    menuOverlay.classList.remove('active');
-                    menuToggle?.classList.remove('active');
-                }
                 break;
         }
     });
@@ -270,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const buttonText = playButton?.querySelector('.button-text');
     const spinner = playButton?.querySelector('.loading-spinner');
     const overlay = document.getElementById('audio-overlay');
-    const menuToggle = document.querySelector('.menu-toggle'); // Получаем элемент меню-бургера
+    const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.getElementById('menuOverlay');
     
     // Инициализация дополнительных UI элементов
@@ -290,30 +255,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateStatusTime, 1000);
     updateStatusTime(); // Вызываем сразу же
 
-    // Обработчики меню (добавляем только если менюToggle не disabled)
+    // Обработчики меню
     if (menuToggle && menuOverlay) {
-        // Используем делегирование или проверяем disabled в обработчике
-        document.body.addEventListener('click', (e) => {
-             if (e.target.closest('.menu-toggle') && !menuToggle.disabled) {
-                menuToggle.classList.toggle('active');
-                menuOverlay.classList.toggle('active');
-             } else if (menuOverlay.classList.contains('active') && 
-                 !e.target.closest('.menu-content') && !e.target.closest('.menu-toggle')) {
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        });
+    }
+
+    // Закрытие меню при клике на пункт
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (menuToggle && menuOverlay) {
                 menuToggle.classList.remove('active');
                 menuOverlay.classList.remove('active');
-             }
+            }
         });
-
-         // Закрытие меню при клике на пункт
-         document.querySelectorAll('.menu-item').forEach(item => {
-             item.addEventListener('click', () => {
-                 if (menuToggle && menuOverlay) {
-                     menuToggle.classList.remove('active');
-                     menuOverlay.classList.remove('active');
-                 }
-             });
-         });
-    }
+    });
+    
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', (e) => {
+        if (menuOverlay && menuOverlay.classList.contains('active') && 
+            !e.target.closest('.menu-content') && !e.target.closest('.menu-toggle')) {
+            menuToggle.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+    });
     
     try {
         console.log('Initializing player...');
@@ -343,10 +310,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (audio) {
             audio.addEventListener('playing', () => {
                 animateEqualizer(true);
-                // Активируем меню-бургер после начала воспроизведения
-                 if (menuToggle) {
-                     menuToggle.disabled = false;
-                 }
             });
             
             audio.addEventListener('pause', () => {
@@ -363,90 +326,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         // Обработчик клика
-if (playButton && overlay && buttonText && spinner) {
-    playButton.addEventListener('click', async () => {
-        try {
-            // Показываем состояние загрузки
-            overlay.style.display = 'none';
-            playButton.disabled = true;
-            spinner.style.display = 'inline-block';
-            buttonText.textContent = player.state.isPlaying ? 'Пауза...' : 'Подготовка...';
-
-            // Специальная обработка для первого запуска
-            if (!player.state.initialized) {
-                await player.init();
-                player.state.initialized = true;
-            }
-
-            // Явная активация AudioContext перед воспроизведением
-            if (player.state.audioContext?.state === 'suspended') {
-                try {
-                    await player.state.audioContext.resume();
-                } catch (ctxError) {
-                    console.warn("AudioContext resume error:", ctxError);
-                }
-            }
-
-            // Задержка для стабильности
-            await new Promise(resolve => setTimeout(resolve, 50));
-
-            // Основное переключение состояния
-            await player.togglePlayback();
-
-            // Обновление UI
-            if (player.state.isPlaying) {
-                animateEqualizer(true);
-                showToast('Радио запущено', 'success');
-                buttonText.textContent = 'Пауза';
-                
-                if (menuToggle) menuToggle.classList.remove('disabled');
-                
-                // Сохраняем состояние воспроизведения
-                localStorage.setItem('radioPlaying', 'true');
-            } else {
-                animateEqualizer(false);
-                buttonText.textContent = 'Запустить';
-                localStorage.setItem('radioPlaying', 'false');
-            }
-
-        } catch (error) {
-            console.error("Playback error:", error);
-            
-            // Восстанавливаем UI при ошибке
-            overlay.style.display = 'flex';
-            player.state.isPlaying = false;
-            animateEqualizer(false);
-            buttonText.textContent = 'Запустить';
-
-            // Специальные сообщения для разных ошибок
-            if (error.name === 'NotAllowedError') {
-                showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
-                player.setStatus("Требуется взаимодействие", true);
-            } else if (error.message.includes('поток')) {
-                showToast('Ошибка подключения к потоку', 'error');
-                player.setStatus("Ошибка подключения", true);
-            } else {
-                showToast('Ошибка воспроизведения', 'error');
-                player.setStatus("Ошибка воспроизведения", true);
-            }
-            
-            // Сбрасываем состояние при серьезных ошибках
-            if (!error.name === 'NotAllowedError') {
-                player.state.currentStream = null;
-            }
-        } finally {
-            // Гарантированное восстановление UI
+        if (playButton && overlay && buttonText && spinner) {
+playButton.addEventListener('click', async () => {
+    try {
+        overlay.style.display = 'none';
+        playButton.disabled = true;
+        spinner.style.display = 'inline-block';
+        buttonText.textContent = 'Подготовка потока...';
+        
+        // Проверяем и возобновляем AudioContext
+        if (player.state.audioContext?.state === 'suspended') {
+            await player.state.audioContext.resume();
+        }
+        
+        await player.elements.audio.play();
+        player.state.isPlaying = true;
+        animateEqualizer(true);
+        showToast('Радио запущено', 'success');
+        
+    } catch (error) {
+        console.error("Playback error:", error);
+        player.setStatus(`Ошибка: ${error.message}`, true);
+        overlay.style.display = 'flex';
+        
+        if (error.name === 'NotAllowedError') {
+            showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+        } else {
+            showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
+        }
+        
+        if (playButton && buttonText && spinner) {
             playButton.disabled = false;
             spinner.style.display = 'none';
-            
-            // Проверяем актуальное состояние
-            if (!player.state.isPlaying) {
-                animateEqualizer(false);
-                buttonText.textContent = 'Запустить';
-            }
+            buttonText.textContent = 'Попробовать снова';
         }
-    });
-}
+    }
+});
+        }
+        
     } catch (error) {
         console.error("Initialization failed:", error);
         
@@ -465,3 +382,4 @@ if (playButton && overlay && buttonText && spinner) {
         showToast(`Ошибка инициализации: ${error.message}`, 'error');
     }
 });
+

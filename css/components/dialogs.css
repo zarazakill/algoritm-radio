@@ -1,1 +1,23 @@
+.status-success .progress-fill {
+    background: var(--success-color);
+}
 
+.status-error .progress-fill {
+    background: var(--error-color);
+}
+
+.status-warning .progress-fill {
+    background: var(--warning-color);
+}
+
+.status-success .status-icon {
+    color: var(--success-color);
+}
+
+.status-error .status-icon {
+    color: var(--error-color);
+}
+
+.status-warning .status-icon {
+    color: var(--warning-color);
+}

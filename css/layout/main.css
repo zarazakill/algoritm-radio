@@ -46,3 +46,18 @@ body.dark-theme {
         radial-gradient(circle at 80% 70%, rgba(253, 121, 168, 0.1) 0%, transparent 50%);
     z-index: -1;
 }
+
+.loading-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.button-text {
+    transition: all 0.3s ease;
+}

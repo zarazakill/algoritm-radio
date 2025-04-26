@@ -1,1 +1,250 @@
+.now-playing, .up-next, .recent-tracks {
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
 
+/* Добавляем подчеркивание к заголовкам секций */
+.now-playing h3::after, .up-next h3::after, .recent-tracks h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.now-playing:hover h3::after, .up-next:hover h3::after, .recent-tracks:hover h3::after {
+    width: 100%;
+}
+
+.now-playing h3 i, .up-next h3 i, .recent-tracks h3 i {
+    font-size: 1rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    margin-right: 5px;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.now-playing:hover h3 i, .up-next:hover h3 i, .recent-tracks:hover h3 i {
+    background: var(--primary-color);
+    color: #000;
+    transform: scale(1.1) rotate(10deg);
+}
+
+.track-info-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.8rem !important;
+    border-radius: 10px;
+    margin-bottom: 0.8rem;
+    border-left: 3px solid var(--primary-color);
+    transition: var(--transition);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Добавляем эффект наведения с градиентом */
+.track-info-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(108, 92, 231, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.track-info-box:hover::before {
+    opacity: 1;
+}
+
+.track-info-box:hover {
+    transform: translateY(-3px) translateX(3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--accent-color);
+}
+
+.track-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    grid-column: 1;
+    display: block;
+    margin-bottom: 5px;
+    transition: color 0.3s ease;
+    position: relative;
+    padding-left: 5px;
+}
+
+.track-title::before {
+    content: '♪';
+    font-size: 0.9em;
+    margin-right: 5px;
+    color: var(--primary-color);
+    opacity: 0.7;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.track-info-box:hover .track-title::before {
+    transform: translateX(3px) rotate(10deg);
+    opacity: 1;
+}
+
+.track-artist {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    grid-column: 1;
+    transition: color 0.3s ease;
+    padding-left: 5px;
+}
+
+.track-info-box:hover .track-artist {
+    color: var(--accent-color);
+}
+
+.track-time {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    text-align: right;
+    align-self: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.track-info-box:hover .track-time {
+    background: var(--primary-color);
+    color: #000;
+}
+
+.track-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+}
+
+/* Улучшенный список истории треков */
+.history-list {
+    list-style: none;
+    padding: 0;
+    will-change: transform; /* Подсказка браузеру для оптимизации */
+    contain: content; /* Ограничивает область перерисовки */
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: 5px;
+    transition: max-height 0.3s ease;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.1);
+}
+
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
+#history-list li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    align-items: center;
+    transform: translateZ(0); /* Аппаратное ускорение */
+    border-left: 2px solid transparent;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    transition: var(--transition);
+    background: rgba(255, 255, 255, 0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+#history-list li::before {
+    content: '♫';
+    margin-right: 10px;
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+/* Добавляем эффект hover с плавной анимацией */
+#history-list li::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(108, 92, 231, 0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+#history-list li:hover::after {
+    opacity: 1;
+}
+
+#history-list li:hover {
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+#history-list li:hover::before {
+    transform: scale(1.2) rotate(10deg);
+    color: var(--accent-color);
+}
+
+.new-track {
+    animation: fadeInTrack 0.5s ease;
+    background: rgba(108, 92, 231, 0.1) !important;
+    position: relative;
+    border-left-color: var(--accent-color) !important;
+}
+
+.new-track::after {
+    content: 'NEW';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--accent-color);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: pulse 2s infinite;
+}

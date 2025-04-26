@@ -15,6 +15,7 @@
 @import 'components/forms.css';
 @import 'components/dialogs.css';
 @import 'components/player.css';
+@import 'components/toasts.css';
 
 /* Улучшенный оверлей для начального экрана */
 .audio-overlay {

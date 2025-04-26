@@ -137,6 +137,23 @@ export class RadioPlayer {
         }
     }
 
+setupAudioContextResume() {
+    // Обработчик для возобновления AudioContext при клике
+    const handleFirstInteraction = async () => {
+        if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+            try {
+                await this.state.audioContext.resume();
+                console.log('AudioContext resumed after user interaction');
+            } catch (error) {
+                console.error('Error resuming AudioContext:', error);
+            }
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+    };
+    
+    document.addEventListener('click', handleFirstInteraction);
+}
+    
 setupEventListeners() {
     const self = this;
 

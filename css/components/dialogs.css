@@ -21,3 +21,12 @@
 .status-warning .status-icon {
     color: var(--warning-color);
 }
+
+.online-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--success-color);
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 10px var(--success-color);
+}

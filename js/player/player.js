@@ -819,6 +819,15 @@ handleConnectionError(error) {
     this.setStatus(`Ошибка: ${error.message}`, true);
     this.updateStatusMessage(`Ошибка: ${error.message}`, true);
 
+    // Особенное сообщение для iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const message = isIOS ? 
+        "Нажмите 'Попробовать снова' для подключения" : 
+        `Ошибка: ${error.message}`;
+    
+    this.setStatus(message, true);
+    this.updateStatusMessage(message, true);    
+
     // Сбрасываем состояние аудио
     this.elements.audio.src = '';
     this.elements.audio.load();

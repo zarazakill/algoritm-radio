@@ -329,37 +329,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (playButton && overlay && buttonText && spinner) {
 playButton.addEventListener('click', async () => {
     try {
-        overlay.style.display = 'none';
+        // Показываем состояние загрузки
         playButton.disabled = true;
         spinner.style.display = 'inline-block';
         buttonText.textContent = 'Подготовка потока...';
         
-        // Проверяем и возобновляем AudioContext
-        if (player.state.audioContext?.state === 'suspended') {
+        // 1. Инициализируем AudioContext при первом клике
+        if (!player.state.audioContext) {
+            player.initAudioContext();
+        }
+        // 2. Возобновляем AudioContext если он приостановлен
+        else if (player.state.audioContext.state === 'suspended') {
             await player.state.audioContext.resume();
         }
         
+        // 3. Запускаем воспроизведение
         await player.elements.audio.play();
+        
+        // Обновляем UI
         player.state.isPlaying = true;
         animateEqualizer(true);
+        overlay.style.display = 'none';
         showToast('Радио запущено', 'success');
         
     } catch (error) {
         console.error("Playback error:", error);
-        player.setStatus(`Ошибка: ${error.message}`, true);
-        overlay.style.display = 'flex';
         
+        // Особенная обработка для iOS
         if (error.name === 'NotAllowedError') {
-            showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+            showToast('Нажмите на кнопку воспроизведения ещё раз', 'warning');
         } else {
             showToast(`Ошибка воспроизведения: ${error.message}`, 'error');
         }
         
-        if (playButton && buttonText && spinner) {
-            playButton.disabled = false;
-            spinner.style.display = 'none';
-            buttonText.textContent = 'Попробовать снова';
-        }
+        // Возвращаем кнопку в исходное состояние
+        playButton.disabled = false;
+        spinner.style.display = 'none';
+        buttonText.textContent = 'Попробовать снова';
     }
 });
         }

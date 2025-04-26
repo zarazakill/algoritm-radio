@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Активируем кнопку
             playButton.disabled = false;
             spinner.style.display = 'none';
-            buttonText.textContent = 'Запустить радио';
+            buttonText.textContent = 'Запустить поток...';
         }
         
         // Слушаем события состояния для эквалайзера

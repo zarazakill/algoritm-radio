@@ -312,3 +312,46 @@
     background: var(--accent-color);
     transform: scale(1.2);
 }
+
+.player-container {
+    flex: 1;
+    min-width: min(100%, 250px);
+    max-width: 500px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Добавляем градиентную рамку к контейнеру плеера */
+.player-container::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--primary-color), transparent, var(--accent-color));
+    z-index: -1;
+    border-radius: calc(var(--border-radius) + 2px);
+    opacity: 0.3;
+    filter: blur(4px);
+    transition: opacity 0.5s ease;
+}
+
+.player-container:hover::after {
+    opacity: 0.6;
+}
+
+.player-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}

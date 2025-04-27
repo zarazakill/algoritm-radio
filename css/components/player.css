@@ -136,7 +136,7 @@
     align-self: center;
     background: rgba(0, 0, 0, 0.2);
     padding: 4px 8px;
-    border-radius: 50%;
+    border-radius: 12px;
     transition: background 0.3s ease, color 0.3s ease;
     display: flex;
     align-items: center;

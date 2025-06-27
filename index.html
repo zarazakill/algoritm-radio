@@ -1,269 +1,421 @@
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>АлгоРитм-StreAM | Когнитивная музыка собственного производства</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="icon" href="img/favicon.ico" type="image/x-icon">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#16213e">
-  <link rel="apple-touch-icon" href="img/logo192.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-startup-image" href="img/splash.png">
-  <link rel="mask-icon" href="img/logo512.png" color="#6c5ce7">
-  <link rel="canonical" href="https://algoritm-stream.ru/">
-
-  <meta property="og:title" content="Плеер для радио ¡Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности!">
-  <meta property="og:description" content="¡Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности!">
-  <meta property="og:image" content="img/logo512.png">
-  <meta property="og:url" content="https://algoritm-stream.ru/">
-  <meta property="og:type" content="website">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности">
-  <meta name="twitter:description" content="Плеер для радио ¡Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности!">
-  <meta name="twitter:image" content="img/logo512.png">
-
-  <meta name="keywords" content="Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности">
-  <meta name="author" content="Миха 'SkliffZzz...' П.">
-  <meta name="robots" content="index, follow">
-  <meta name="googlebot" content="index, follow">
-  <meta name="bingbot" content="index, follow">
-  <meta name="yandexbot" content="index, follow">
-  <meta name="revisit-after" content="7 days">
-
-  <meta name="rating" content="general">
-  <meta name="distribution" content="global">
-  <meta name="language" content="ru">
-
-  <link rel="alternate" href="https://algoritm-stream.ru/" hreflang="ru">
-  <meta name="generator" content="VSCode">
-
-  <script type="importmap">
-    {
-            "imports": {
-                "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
-            }
-        }
-    </script>
-  <script type="module" src="js/main.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АлгоРитм StreAM</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/base/reset.css">
+    <link rel="stylesheet" href="/css/base/variables.css">
+    <link rel="stylesheet" href="/css/base/typography.css">
+    <link rel="stylesheet" href="/css/layout/containers.css">
+    <link rel="stylesheet" href="/css/layout/header.css">
+    <link rel="stylesheet" href="/css/layout/main.css">
+    <link rel="stylesheet" href="/css/layout/footer.css">
+    <link rel="stylesheet" href="/css/components/buttons.css">
+    <link rel="stylesheet" href="/css/components/cards.css">
+    <link rel="stylesheet" href="/css/components/player.css">
+    <link rel="stylesheet" href="/css/components/equalizer.css">
+    <link rel="stylesheet" href="/css/components/forms.css">
+    <link rel="stylesheet" href="/css/components/dialogs.css">
+    <link rel="stylesheet" href="/css/components/toasts.css">
+    <link rel="stylesheet" href="/css/utilities/animations.css">
+    <link rel="stylesheet" href="/css/themes/dark.css">
+    <link rel="stylesheet" href="/css/themes/light.css">
+    <link rel="stylesheet" href="/css/responsive/media-queries.css">
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0a0a0a">
+    
+    <!-- Meta -->
+    <meta name="description" content="Продвинутая платформа для стриминга алгоритмической музыки">
+    <meta name="keywords" content="музыка, стриминг, алгоритмическая, ИИ, аудио">
 </head>
-
-<body class="dark-theme">
-
-  <div class="audio-overlay" id="audio-overlay">
-    <button id="start-playback" disabled aria-label="Запустить воспроизведение">
-      <span class="loading-spinner"></span>
-      <span class="button-text">Инициализация плеера...</span>
-    </button>
-  </div>
-
-  <div class="container">
-    <header>
-      <div class="header-container">
-        <!-- Бургер-меню слева -->
-        <button class="menu-toggle" aria-label="Открыть меню">
-          <span class="menu-bar"></span>
-          <span class="menu-bar"></span>
-          <span class="menu-bar"></span>
-        </button>
-
-        <!-- Логотип по центру -->
-        <div class="logo">
-          <div class="logo-text">
-            <h1>АлгоРитм-StreAM</h1>
-            <p>¡Ваша когнитивная музыка | Rock | R&B | Alternative | которая приведет Ваш разум в состояние готовности!</p>
-          </div>
-        </div>
-
-        <!-- Переключатель темы справа -->
-        <button class="theme-toggle" aria-label="Переключить тему">
-          <i class="fas fa-moon"></i>
-        </button>
-      </div>
-      <div class="connection-status">
-        <div id="stream-status" class="status-card">
-          <div class="status-header">
-            <span class="status-icon">
-              <i class="fas fa-circle-notch fa-spin"></i>
-            </span>
-            <span class="status-title">Статус соединения</span>
-            <span class="status-time" id="status-time"></span>
-          </div>
-          <div class="status-body">
-            <div class="status-message" id="status-message">Инициализация плеера...</div>
-            <div class="status-details">
-              <div class="status-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" id="connection-progress"></div>
-                </div>
-              </div>
-              <div class="status-stats">
-                <span class="stat-item">
-                  <i class="fas fa-signal"></i>
-                  <span id="network-quality">Отличное</span>
-                </span>
-                <span class="stat-item">
-                  <i class="fas fa-sync-alt"></i>
-                  <span id="retry-count">0</span> попыток
-                </span>
-                <span class="stat-item">
-                  <i class="fas fa-clock"></i>
-                  <span id="uptime">00:00:00</span>
-                </span>
-              </div>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <div class="logo-pulse"></div>
+                <span class="logo-text">АлгоРитм</span>
             </div>
-          </div>
+            <div class="loading-progress">
+                <div class="progress-bar"></div>
+            </div>
+            <p class="loading-status">Инициализация аудио движка...</p>
         </div>
-      </div>
-
-    </header>
-  </div>
-  <main>
-    <section class="player-container">
-      <div class="album-art">
-        <!-- Основное изображение альбома (неподвижное) -->
-        <div class="album-placeholder">
-          <svg viewBox="0 0 200 200" class="default-album-art">
-            <circle cx="100" cy="100" r="95" fill="#2d3748" stroke="#a29bfe" stroke-width="2" />
-            <path d="M100 30 C 50 30 30 50 30 100 C 30 150 50 170 100 170 C 150 170 170 150 170 100 C 170 50 150 30 100 30 Z" fill="#1c2531" />
-            <circle cx="100" cy="100" r="30" fill="#a29bfe" />
-            <circle cx="100" cy="100" r="10" fill="#2d3748" />
-            <g class="sound-waves">
-              <circle cx="100" cy="100" r="45" fill="none" stroke="#6c5ce7" stroke-width="2" stroke-dasharray="2,6" />
-              <circle cx="100" cy="100" r="60" fill="none" stroke="#6c5ce7" stroke-width="1.5" stroke-dasharray="2,8" />
-              <circle cx="100" cy="100" r="75" fill="none" stroke="#6c5ce7" stroke-width="1" stroke-dasharray="1,10" />
-            </g>
-          </svg>
-        </div>
-        <img src="" alt="Обложка альбома" class="album-cover" loading="lazy">
-
-        <!-- Вращающаяся картинка (в углу) -->
-        <div class="vinyl-container">
-          <img src="img/album-art/vinyl.png" alt="Винил" class="vinyl-svg">
-        </div>
-
-        <!-- Лоадер -->
-        <div class="loader" id="loader"></div>
-        <p class="loading-status" id="loadingStatus">Загрузка...</p>
-      </div>
-
-      <div class="track-info">
-        <h2 id="track-title">Название трека</h2>
-        <p id="track-artist">Исполнитель</p>
-          <div class="stream-time">
-            <span id="stream-duration">00:00:00</span>
-          </div>
-      </div>
-
-
-      
-      <div class="track-progress">
-        <span id="current-time">0:00</span>
-        <div class="progress-container">
-          <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" aria-label="Прогресс трека">
-          <div class="progress-tooltip" id="progress-tooltip">0:00</div>
-        </div>
-        <span id="duration">0:00</span>
-      </div>
-
-      <div class="player-buttons">
-        <div class="volume-control">
-          <button id="volume-btn" aria-label="Громкость"><i class="fas fa-volume-up"></i></button>
-          <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="Регулировка громкости">
-          <span class="volume-percentage" id="volume-percentage">70%</span>
-        </div>
-      </div>
-
-      <div class="equalizer-container" id="equalizer-container">
-        <div class="equalizer-bar"></div>
-        <div class="equalizer-bar"></div>
-        <div class="equalizer-bar"></div>
-        <div class="equalizer-bar"></div>
-        <div class="equalizer-bar"></div>
-      </div>
-
-      <audio id="radio-stream" preload="none" playsinline webkit-playsinline></audio>
-    </section>
-
-    <section class="track-details">
-      <div class="now-playing">
-        <h3><i class="fas fa-play"></i> Сейчас играет</h3>
-        <div class="track-info-box" id="current-track">
-          <span class="track-title">Название текущего трека</span>
-          <span class="track-artist">Исполнитель</span>
-          <span class="track-time">3:45</span>
-        </div>
-      </div>
-
-      <div class="up-next">
-        <h3><i class="fas fa-list-ol"></i> Далее</h3>
-        <div class="track-info-box" id="next-track">
-          <span class="track-title">Название следующего трека</span>
-          <span class="track-artist">Исполнитель</span>
-          <span class="track-time">3:20</span>
-        </div>
-      </div>
-
-      <div class="recent-tracks">
-        <h3><i class="fas fa-history"></i> История прослушивания</h3>
-        <ul id="history-list" class="history-list">
-          <!-- История треков будет добавлена через JavaScript -->
-        </ul>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="footer-content">
-      <p>&copy; 2025 АлгоРитм-StreAM. Все права защищены.</p>
-      <div class="social-links">
-        <a href="https://t.me/algoritmstream" target="_blank" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
-        <!--              <a href="#" target="_blank"><i class="fab fa-vk"></i></a>
-                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
-                  <a href="#" target="_blank"><i class="fab fa-youtube"></i></a>
-        -->
-      </div>
-      <div class="keyboard-shortcuts" tabindex="0" role="button" aria-label="Показать сочетания клавиш">
-        <i class="fas fa-keyboard"></i> <span>Горячие клавиши</span>
-      </div>
-      <div class="shortcuts-modal" id="shortcuts-modal">
-        <div class="shortcuts-content">
-          <h3>Горячие клавиши</h3>
-          <ul>
-            <li><kbd>Space</kbd> Старт/Пауза</li>
-            <li><kbd>M</kbd> Отключить звук</li>
-            <li><kbd>↑</kbd> Увеличить громкость</li>
-            <li><kbd>↓</kbd> Уменьшить громкость</li>
-            <li><kbd>T</kbd> Переключить тему</li>
-            <li><kbd>Esc</kbd> Закрыть диалоги</li>
-          </ul>
-          <button class="close-shortcuts" id="close-shortcuts"><i class="fas fa-times"></i></button>
-        </div>
-      </div>
     </div>
-  </footer>
-  <div class="menu-overlay" id="menuOverlay">
-    <nav class="menu-content">
-      <ul>
-        <li><a href="#" class="menu-item">О нас</a></li>
-        <li><a href="#" class="menu-item">Контакты</a></li>
-        <!--   <li><a href="#" class="menu-item">Плейлист</a></li>
-                     <li><a href="#" class="menu-item">Настройки</a></li>  -->
-      </ul>
-    </nav>
-  </div>
-  <div class="now-playing-badge">
-    <span class="online-status"></span>
-    <span id="listeners-count">0</span>
-  </div>
-  <div id="toast-container" class="toast-container"></div>
-</body>
 
+    <!-- Main App -->
+    <div id="app" class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <div class="logo-wave"></div>
+                        </div>
+                        <span class="logo-title">АлгоРитм</span>
+                    </div>
+                    <nav class="nav-tabs">
+                        <button class="nav-tab active" data-tab="discover">Обзор</button>
+                        <button class="nav-tab" data-tab="library">Библиотека</button>
+                        <button class="nav-tab" data-tab="radio">Радио</button>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="Поиск музыки, исполнителей...">
+                        <button class="search-button">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <button class="theme-toggle" aria-label="Переключить тему">
+                        <svg class="theme-icon sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="theme-icon moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <button class="profile-button">
+                        <div class="profile-avatar"></div>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Discover Tab -->
+            <section id="discover-tab" class="tab-content active">
+                <div class="hero-section">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Откройте свой<br><span class="gradient-text">алгоритмический</span> звук</h1>
+                        <p class="hero-subtitle">Музыкальные подборки на основе ИИ, которые развиваются вместе с вашим вкусом</p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-large">Начать слушать</button>
+                            <button class="btn btn-secondary btn-large">Исследовать жанры</button>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="floating-cards">
+                            <div class="floating-card" style="--delay: 0s">
+                                <div class="card-glow"></div>
+                                <div class="card-content">
+                                    <div class="card-artwork"></div>
+                                    <div class="card-info">
+                                        <div class="card-title">Нейронные Ритмы</div>
+                                        <div class="card-artist">Создано ИИ</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="floating-card" style="--delay: 0.5s">
+                                <div class="card-glow"></div>
+                                <div class="card-content">
+                                    <div class="card-artwork"></div>
+                                    <div class="card-info">
+                                        <div class="card-title">Синтетические Мечты</div>
+                                        <div class="card-artist">Алгоритмический</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Сейчас в тренде</h2>
+                        <button class="section-action">Смотреть все</button>
+                    </div>
+                    <div class="music-grid">
+                        <div class="music-card">
+                            <div class="card-artwork">
+                                <div class="play-overlay">
+                                    <button class="play-button">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                            <polygon points="5,3 19,12 5,21" fill="currentColor"></polygon>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-info">
+                                <h3 class="card-title">Digital Horizons</h3>
+                                <p class="card-artist">Synthetic Orchestra</p>
+                                <div class="card-stats">
+                                    <span class="plays">2.1M прослушиваний</span>
+                                    <span class="duration">3:42</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- More music cards... -->
+                    </div>
+                </div>
+
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Рекомендации ИИ</h2>
+                        <div class="recommendation-controls">
+                            <button class="recommendation-refresh">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                                </svg>
+                                Обновить
+                            </button>
+                        </div>
+                    </div>
+                    <div class="recommendation-slider">
+                        <div class="recommendation-track">
+                            <!-- Dynamic content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Library Tab -->
+            <section id="library-tab" class="tab-content">
+                <div class="library-header">
+                    <h1>Ваша Библиотека</h1>
+                    <div class="library-controls">
+                        <div class="sort-controls">
+                            <select class="sort-select">
+                                <option>Недавно добавленные</option>
+                                <option>Часто прослушиваемые</option>
+                                <option>По алфавиту</option>
+                            </select>
+                        </div>
+                        <div class="view-controls">
+                            <button class="view-toggle active" data-view="grid">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                            </button>
+                            <button class="view-toggle" data-view="list">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="library-content">
+                    <div class="library-stats">
+                        <div class="stat-card">
+                            <div class="stat-value">247</div>
+                            <div class="stat-label">Песен</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">18h</div>
+                            <div class="stat-label">Общая длительность</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">32</div>
+                            <div class="stat-label">Плейлистов</div>
+                        </div>
+                    </div>
+                    <div class="library-grid">
+                        <!-- Library items will be populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Radio Tab -->
+            <section id="radio-tab" class="tab-content">
+                <div class="radio-header">
+                    <h1>Алгоритмическое Радио</h1>
+                    <p class="radio-subtitle">Бесконечные потоки на базе ИИ</p>
+                </div>
+                <div class="radio-stations">
+                    <div class="station-card featured">
+                        <div class="station-visual">
+                            <div class="station-waves">
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                            </div>
+                        </div>
+                        <div class="station-info">
+                            <h3>Нейросеть FM</h3>
+                            <p>Эмбиент и электроника от ИИ</p>
+                            <button class="station-play">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <polygon points="5,3 19,12 5,21" fill="currentColor"></polygon>
+                                </svg>
+                                Слушать вживую
+                            </button>
+                        </div>
+                    </div>
+                    <!-- More station cards... -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Player -->
+        <div class="player-container">
+            <div class="player">
+                <div class="player-track">
+                    <div class="track-artwork">
+                        <div class="artwork-placeholder"></div>
+                    </div>
+                    <div class="track-info">
+                        <div class="track-title">Выберите трек</div>
+                        <div class="track-artist">Имя исполнителя</div>
+                    </div>
+                    <button class="track-favorite">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="player-controls">
+                    <div class="control-buttons">
+                        <button class="control-btn shuffle">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="16,3 21,3 21,8"></polyline>
+                                <line x1="4" y1="20" x2="21" y2="3"></line>
+                                <polyline points="21,16 21,21 16,21"></polyline>
+                                <line x1="15" y1="15" x2="21" y2="21"></line>
+                                <line x1="4" y1="4" x2="9" y2="9"></line>
+                            </svg>
+                        </button>
+                        <button class="control-btn previous">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="19,20 9,12 19,4"></polygon>
+                                <line x1="5" y1="19" x2="5" y2="5"></line>
+                            </svg>
+                        </button>
+                        <button class="control-btn play-pause primary">
+                            <svg class="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <polygon points="5,3 19,12 5,21" fill="currentColor"></polygon>
+                            </svg>
+                            <svg class="pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <rect x="6" y="4" width="4" height="16" fill="currentColor"></rect>
+                                <rect x="14" y="4" width="4" height="16" fill="currentColor"></rect>
+                            </svg>
+                        </button>
+                        <button class="control-btn next">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="5,4 15,12 5,20"></polygon>
+                                <line x1="19" y1="5" x2="19" y2="19"></line>
+                            </svg>
+                        </button>
+                        <button class="control-btn repeat">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="17,1 21,5 17,9"></polyline>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                <polyline points="7,23 3,19 7,15"></polyline>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="progress-container">
+                        <span class="time-current">0:00</span>
+                        <div class="progress-bar">
+                            <div class="progress-track">
+                                <div class="progress-fill"></div>
+                                <div class="progress-handle"></div>
+                            </div>
+                        </div>
+                        <span class="time-total">0:00</span>
+                    </div>
+                </div>
+
+                <div class="player-extras">
+                    <button class="extra-btn queue">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </button>
+                    <button class="extra-btn visualizer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="22,17 13.5,8.5 8.5,13.5 2,7"></polyline>
+                            <polyline points="16,17 22,17 22,11"></polyline>
+                        </svg>
+                    </button>
+                    <div class="volume-control">
+                        <button class="volume-btn">
+                            <svg class="volume-icon high" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <svg class="volume-icon medium" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"></polygon>
+                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <svg class="volume-icon low" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"></polygon>
+                            </svg>
+                            <svg class="volume-icon muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"></polygon>
+                                <line x1="23" y1="9" x2="17" y2="15"></line>
+                                <line x1="17" y1="9" x2="23" y2="15"></line>
+                            </svg>
+                        </button>
+                        <div class="volume-slider">
+                            <div class="volume-track">
+                                <div class="volume-fill"></div>
+                                <div class="volume-handle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+            "gsap": "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"
+        }
+    }
+    </script>
+    
+    <script src="/js/player/config.js"></script>
+    <script src="/js/player/network-utils.js"></script>
+    <script src="/js/player/audio-controller.js"></script>
+    <script src="/js/player/audio-optimizer.js"></script>
+    <script src="/js/player/ui-helpers.js"></script>
+    <script src="/js/player/player.js"></script>
+    <script src="/js/player/data-worker.js"></script>
+    <script src="/js/main.js"></script>
+</body>
 </html>

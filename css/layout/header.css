@@ -1,53 +1,286 @@
-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    animation: fadeIn 0.8s ease;
-    position: relative;
+/* Header Styles */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--color-border-primary);
+    height: var(--header-height);
 }
 
-header::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, 
-        transparent, 
-        var(--primary-color), 
-        var(--accent-color), 
-        var(--primary-color), 
-        transparent
-    );
-    animation: shimmer 3s infinite linear;
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 var(--space-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xl);
 }
 
 .logo {
-    position: static;
-    transform: none;
-}
-
-.logo-text {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    align-items: center;
+    gap: var(--space-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast);
 }
 
-.logo:hover img {
-    transform: rotate(15deg) scale(1.05);
+.logo:hover {
+    transform: scale(1.05);
 }
 
-.logo img {
-    width: 250px;
-    height: 250px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.6));
-    transition: var(--transition);
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
 }
 
-.connection-status {
-    margin-top: 15px;
-    font-size: 0.9rem;
-    display: block;
-    min-height: 24px;
+.logo-wave {
+    width: 60%;
+    height: 60%;
+    background: white;
+    border-radius: 2px;
+    position: relative;
+    animation: waveform 2s ease-in-out infinite;
 }
+
+.logo-wave::before,
+.logo-wave::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 2px;
+    animation: waveform 2s ease-in-out infinite;
+}
+
+.logo-wave::before {
+    width: 3px;
+    height: 120%;
+    left: -6px;
+    animation-delay: -0.3s;
+}
+
+.logo-wave::after {
+    width: 3px;
+    height: 80%;
+    right: -6px;
+    animation-delay: 0.3s;
+}
+
+.logo-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    gap: var(--space-xs);
+    background: var(--color-bg-secondary);
+    padding: var(--space-xs);
+    border-radius: var(--radius-lg);
+}
+
+.nav-tab {
+    background: none;
+    border: none;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.nav-tab:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-tertiary);
+}
+
+.nav-tab.active {
+    color: var(--color-text-primary);
+    background: var(--color-accent-primary);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Header Right */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+/* Search */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 300px;
+    padding: var(--space-sm) var(--space-md);
+    padding-right: 40px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    width: 350px;
+}
+
+.search-input::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.search-button {
+    position: absolute;
+    right: var(--space-sm);
+    background: none;
+    border: none;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast);
+}
+
+.search-button:hover {
+    color: var(--color-accent-primary);
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle:hover {
+    background: var(--color-bg-tertiary);
+    transform: scale(1.05);
+}
+
+.theme-icon {
+    position: absolute;
+    transition: all var(--transition-normal);
+}
+
+.theme-icon.sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-icon.moon {
+    opacity: 0;
+    transform: rotate(180deg) scale(0.8);
+}
+
+[data-theme="light"] .theme-icon.sun {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.8);
+}
+
+[data-theme="light"] .theme-icon.moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+/* Profile Button */
+.profile-button {
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform var(--transition-fast);
+}
+
+.profile-button:hover {
+    transform: scale(1.05);
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-secondary);
+    border-radius: var(--radius-lg);
+}
+
+/* Animations */
+@keyframes waveform {
+    0%, 100% {
+        transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(1.5);
+    }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .search-input {
+        width: 250px;
+    }
+    
+    .search-input:focus {
+        width: 280px;
+    }
+    
+    .nav-tabs {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        padding: 0 var(--space-md);
+    }
+    
+    .header-left {
+        gap: var(--space-md);
+    }
+    
+    .search-container {
+        display: none;
+    }
+    
+    .logo-title {
+        display: none;
+    }
+}
+

@@ -18,7 +18,7 @@
 }
 
 #stream-status {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -31,8 +31,6 @@
     opacity: 1;
     transform: translateY(0);
 }
-
-
 
 .status-success, .status-error {
     display: inline-flex;
@@ -127,6 +125,7 @@
 .status-message.error::before {
     background: var(--error-color);
 }
+
 .progress-bar {
     height: 4px;
     background: rgba(255, 255, 255, 0.1);

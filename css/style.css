@@ -1,491 +1,66 @@
-/* Main Application Styles */
+@import 'base/reset.css';
+@import 'base/variables.css';
+@import 'base/typography.css';
+@import 'layout/main.css';
+@import 'layout/containers.css';
+@import 'layout/header.css';
+@import 'layout/footer.css';
+@import 'components/buttons.css';
+@import 'components/cards.css';
+@import 'components/dialogs.css';
+@import 'components/equalizer.css';
+@import 'components/forms.css'; /* This file name is misleading, contains track lists and badges */
+@import 'components/player.css';
+@import 'components/toasts.css';
+@import 'components/pages.css';
+@import 'themes/light.css';
+@import 'themes/dark.css';
+@import 'utilities/animations.css';
+@import 'responsive/media-queries.css';
 
-/* Loading Screen */
-.loading-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--color-bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity var(--transition-slow), transform var(--transition-slow);
-}
+/* Улучшенный оверлей для начального экрана */
+/* Стили для бургер-меню */
 
-.loading-screen.fade-out {
-    opacity: 0;
-    transform: scale(1.05);
-    pointer-events: none;
-}
+/* Шапка */
 
-.loading-content {
-    text-align: center;
-    animation: fadeInUp 0.8s ease-out;
-}
 
-.loading-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-md);
-    margin-bottom: var(--space-xl);
-}
+/* Улучшенный переключатель темы */
 
-.logo-pulse {
-    width: 60px;
-    height: 60px;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-full);
-    animation: pulse 2s ease-in-out infinite;
-    position: relative;
-}
 
-.logo-pulse::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-full);
-    opacity: 0.3;
-    animation: pulse 2s ease-in-out infinite 0.5s;
-}
+/* Основное содержимое */
 
-.logo-text {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
 
-.loading-progress {
-    width: 200px;
-    height: 4px;
-    background: var(--color-bg-tertiary);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-    margin-bottom: var(--space-lg);
-}
+/* Визуально улучшенная кнопка ПУСК */
 
-.progress-bar {
-    height: 100%;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-full);
-    animation: loading-progress 2s ease-in-out infinite;
-}
 
-.loading-status {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-    animation: fadeInOut 2s ease-in-out infinite;
-}
+/* Улучшенный индикатор загрузки */
 
-/* App Container */
-.app {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-}
 
-/* Hero Section */
-.hero-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3xl);
-    align-items: center;
-    min-height: 70vh;
-    padding: var(--space-3xl) 0;
-    position: relative;
-    overflow: hidden;
-}
+/* Улучшенный дизайн плеера */
 
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(ellipse at center, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
-    pointer-events: none;
-}
+/* Улучшенный дизайн для альбомов */
 
-.hero-content {
-    z-index: 2;
-}
+/* Улучшенный блок информации о треках */
 
-.hero-title {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.1;
-    margin-bottom: var(--space-lg);
-    letter-spacing: -0.05em;
-}
 
-.hero-subtitle {
-    font-size: var(--font-size-xl);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-2xl);
-    line-height: var(--line-height-relaxed);
-}
 
-.hero-actions {
-    display: flex;
-    gap: var(--space-md);
-    flex-wrap: wrap;
-}
+/* Улучшенный подвал */
 
-.hero-visual {
-    position: relative;
-    height: 500px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/* Карточки статуса соединения */
 
-.floating-cards {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
 
-.floating-card {
-    position: absolute;
-    width: 280px;
-    background: var(--color-bg-elevated);
-    border: 1px solid var(--color-border-primary);
-    border-radius: var(--radius-xl);
-    padding: var(--space-lg);
-    backdrop-filter: blur(20px);
-    animation: float 6s ease-in-out infinite;
-    animation-delay: var(--delay);
-    box-shadow: var(--shadow-xl);
-    transition: transform var(--transition-normal);
-}
 
-.floating-card:nth-child(1) {
-    top: 20%;
-    left: 10%;
-    transform: rotate(-5deg);
-}
+/* Состояния статуса */
 
-.floating-card:nth-child(2) {
-    top: 50%;
-    right: 10%;
-    transform: rotate(5deg);
-}
 
-.floating-card:hover {
-    transform: scale(1.05) rotate(0deg);
-}
+/* Улучшенный бейдж слушателей */
 
-.card-glow {
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-xl);
-    z-index: -1;
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
 
-.floating-card:hover .card-glow {
-    opacity: 0.3;
-}
 
-.card-content {
-    display: flex;
-    gap: var(--space-md);
-    align-items: center;
-}
+/* Тосты для уведомлений */
 
-.card-artwork {
-    width: 60px;
-    height: 60px;
-    background: var(--gradient-secondary);
-    border-radius: var(--radius-md);
-    flex-shrink: 0;
-}
 
-.card-info {
-    flex: 1;
-    min-width: 0;
-}
+/* Улучшенный лоадер */
 
-.card-title {
-    font-weight: var(--font-weight-semibold);
-    margin-bottom: var(--space-xs);
-    truncate;
-}
 
-.card-artist {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-/* Section Containers */
-.section-container {
-    margin-bottom: var(--space-3xl);
-}
-
-.section-header {
-    display: flex;
-    justify-content: between;
-    align-items: center;
-    margin-bottom: var(--space-xl);
-}
-
-.section-title {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-semibold);
-}
-
-.section-action {
-    background: none;
-    border: none;
-    color: var(--color-accent-primary);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    cursor: pointer;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
-}
-
-.section-action:hover {
-    background: var(--color-bg-tertiary);
-    transform: translateY(-1px);
-}
-
-/* Music Grid */
-.music-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-lg);
-}
-
-.music-card {
-    background: var(--color-bg-secondary);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    transition: all var(--transition-normal);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.music-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--gradient-primary);
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-    z-index: -1;
-}
-
-.music-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-}
-
-.music-card:hover::before {
-    opacity: 0.1;
-}
-
-.music-card .card-artwork {
-    width: 100%;
-    aspect-ratio: 1;
-    background: var(--gradient-accent);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-md);
-    position: relative;
-    overflow: hidden;
-}
-
-.play-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.music-card:hover .play-overlay {
-    opacity: 1;
-}
-
-.play-button {
-    width: 60px;
-    height: 60px;
-    background: var(--color-accent-primary);
-    border: none;
-    border-radius: var(--radius-full);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-    box-shadow: var(--shadow-glow);
-}
-
-.play-button:hover {
-    transform: scale(1.1);
-    box-shadow: var(--shadow-glow-accent);
-}
-
-.card-info {
-    text-align: left;
-}
-
-.card-title {
-    font-weight: var(--font-weight-semibold);
-    margin-bottom: var(--space-xs);
-    color: var(--color-text-primary);
-}
-
-.card-artist {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--space-sm);
-}
-
-.card-stats {
-    display: flex;
-    justify-content: space-between;
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 0.7;
-    }
-}
-
-@keyframes loading-progress {
-    0% {
-        transform: translateX(-100%);
-    }
-    50% {
-        transform: translateX(0%);
-    }
-    100% {
-        transform: translateX(100%);
-    }
-}
-
-@keyframes fadeInOut {
-    0%, 100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0px) rotate(var(--rotation, 0deg));
-    }
-    50% {
-        transform: translateY(-20px) rotate(var(--rotation, 0deg));
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .hero-section {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: var(--space-xl);
-        min-height: auto;
-        padding: var(--space-xl) 0;
-    }
-    
-    .hero-visual {
-        height: 300px;
-    }
-    
-    .floating-card {
-        width: 240px;
-        position: relative;
-        margin: var(--space-md) auto;
-    }
-    
-    .floating-card:nth-child(1),
-    .floating-card:nth-child(2) {
-        position: relative;
-        top: auto;
-        left: auto;
-        right: auto;
-        transform: none;
-    }
-    
-    .music-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: var(--space-md);
-    }
-    
-    .section-container {
-        margin-bottom: var(--space-xl);
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-subtitle {
-        font-size: var(--font-size-base);
-    }
-    
-    .hero-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .music-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
+/* Светлая и темная темы */

@@ -41,6 +41,7 @@ export class RadioPlayer {
  
         this.state = {
             timeUpdateInterval: null,
+            streamUptimeInterval: null,
             currentStream: null,
             currentApiUrl: null,
             isPlaying: false,
@@ -54,10 +55,67 @@ export class RadioPlayer {
                 connectionErrors: 0,
                 qualityChanges: 0,
                 lastError: null
-            }
+            },
+            isInitialized: false,
+            lastTrackData: null
         };
         
-        this.elements.audio.autoplay = true;
+        // this.elements.audio.autoplay = true; // Autoplay is handled manually
+    }
+
+    /**
+     * Light initialization on page load. Fetches track info without touching audio.
+     */
+    async lightInit() {
+        this.setupEventListeners();
+        this.setStatus("Готов к запуску");
+        this.updateStatusMessage("Нажмите 'Запустить поток', чтобы начать");
+
+        try {
+            await this.updateTrackInfo();
+            // Set up recurring updates for track info
+            this.state.updateIntervalId = setInterval(
+                () => this.updateTrackInfo(), 
+                this.config.updateInterval
+            );
+        } catch (e) {
+            this.setStatus("Не удалось получить информацию о треке", true);
+            this.updateStatusMessage(`Ошибка API: ${e.message}`, true);
+        }
+
+        this.startUptimeCounter();
+        this.state.isInitialized = true;
+    }
+
+    async startPlayback() {
+        if (this.state.isPlaying) return;
+
+        // 1. Initialize AudioContext on first interaction
+        if (!this.state.audioContext) {
+            this.initAudioContext();
+        }
+
+        // 2. Resume AudioContext if suspended
+        if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+            await this.state.audioContext.resume();
+        }
+
+        // 3. Connect to stream and play
+        try {
+            await this.connectToStream();
+            await this.elements.audio.play();
+            this.state.isPlaying = true;
+            this.updateStatusMessage("Воспроизведение");
+
+            if (!this.state.streamUptimeInterval) {
+                this.state.streamUptimeInterval = setInterval(() => this.updateStreamUptime(), 1000);
+            }
+
+        } catch (error) {
+            console.error("Ошибка при запуске воспроизведения:", error);
+            this.handleConnectionError(error);
+            throw error; // Re-throw to inform the caller
+        }
     }
 
     async init() {
@@ -86,13 +144,8 @@ export class RadioPlayer {
             // Сначала находим рабочий поток
             this.state.currentStream = await this.findWorkingStream();
             
-            // Пробуем подключиться несколько раз при необходимости
-            let attempts = 3;
-            while (attempts > 0) {
-                if (await this.connectToStream()) break;
-                attempts--;
-                await new Promise(resolve => setTimeout(resolve, 3000));
-            }
+            // Пробуем подключиться
+            await this.connectToStream();
             
             // Инициализируем API URL
             this.state.currentApiUrl = await this.findWorkingApi();
@@ -120,6 +173,7 @@ export class RadioPlayer {
                 this.config.updateInterval
             );
             
+            this.state.isInitialized = true;
         } catch (error) {
             console.error("Ошибка инициализации плеера:", error);
             this.setStatus("Ошибка: " + error.message, true);
@@ -137,46 +191,46 @@ export class RadioPlayer {
         }
     }
 
-setupAudioContextResume() {
-    // Обработчик для возобновления AudioContext при клике
-    const handleFirstInteraction = async () => {
-        if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-            try {
-                await this.state.audioContext.resume();
-                console.log('AudioContext возобновлен после взаимодействия с пользователем');
-            } catch (error) {
-                console.error('Ошибка возобновления AudioContext:', error);
-            }
-        }
-        document.removeEventListener('click', handleFirstInteraction);
-    };
-    
-    document.addEventListener('click', handleFirstInteraction);
-}
-    
-setupEventListeners() {
-    const self = this;
-
- const handleFirstInteraction = async () => {
-    if (self.state.audioContext) {
-        try {
-            if (self.state.audioContext.state === 'suspended') {
-                await self.state.audioContext.resume();
-                console.log('AudioContext возобновлен после взаимодействия с пользователем');
-                
-                // Если аудио должно играть, запускаем его после разрешения контекста
-                if (self.state.isPlaying && self.elements.audio.paused) {
-                    await self.elements.audio.play();
+    setupAudioContextResume() {
+        // Обработчик для возобновления AudioContext при клике
+        const handleFirstInteraction = async () => {
+            if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
+                try {
+                    await this.state.audioContext.resume();
+                    console.log('AudioContext resumed after user interaction');
+                } catch (error) {
+                    console.error('Error resuming AudioContext:', error);
                 }
             }
-        } catch (error) {
-            console.error('Ошибка возобновления AudioContext:', error);
-        }
+            document.removeEventListener('click', handleFirstInteraction);
+        };
+        
+        document.addEventListener('click', handleFirstInteraction);
     }
-    document.removeEventListener('click', handleFirstInteraction);
-};
+    
+    setupEventListeners() {
+        const self = this;
 
-    document.addEventListener('click', handleFirstInteraction);
+        const handleFirstInteraction = async () => {
+            if (self.state.audioContext) {
+                try {
+                    if (self.state.audioContext.state === 'suspended') {
+                        await self.state.audioContext.resume();
+                        console.log('AudioContext resumed after user interaction');
+                        
+                        // Если аудио должно играть, запускаем его после разрешения контекста
+                        if (self.state.isPlaying && self.elements.audio.paused) {
+                            await self.elements.audio.play();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error resuming AudioContext:', error);
+                }
+            }
+            document.removeEventListener('click', handleFirstInteraction);
+        };
+
+        document.addEventListener('click', handleFirstInteraction);
 
         // Используем стрелочные функции для сохранения контекста
         this.elements.volumeBtn.addEventListener('click', () => {
@@ -200,12 +254,12 @@ setupEventListeners() {
         }
 
         this.elements.audio.addEventListener('error', (e) => {
-        console.error("Ошибка аудио:", e);
-        if (!this.state.currentStream?.url) {
-            this.handleConnectionError(new Error("URL потока не установлен"));
-        } else {
-            this.handleConnectionError(new Error("Ошибка аудио: " + (e.target.error?.message || "Неизвестная ошибка")));
-        }
+            console.error("Audio error:", e);
+            if (!this.state.currentStream?.url) {
+                this.handleConnectionError(new Error("URL потока не установлен"));
+            } else {
+                this.handleConnectionError(new Error("Ошибка аудио: " + (e.target.error?.message || "Неизвестная ошибка")));
+            }
         });
 
         this.elements.audio.addEventListener('stalled', () => {
@@ -223,31 +277,65 @@ setupEventListeners() {
             }
         });
         
-this.elements.audio.addEventListener('playing', () => {
-    this.updateStatusMessage("Воспроизведение");
-    
-    if (this.elements.loader) {
-        this.elements.loader.style.display = 'none';
-    }
-    
-    // Устанавливаем время начала воспроизведения только если оно еще не установлено
-    if (!this.state.startTime) {
-        this.state.startTime = Date.now();
-        // Запускаем обновление времени стрима
-        this.state.streamTimeInterval = setInterval(() => {
-            if (this.state.startTime && this.elements.streamDuration) {
-                const streamTime = Math.floor((Date.now() - this.state.startTime) / 1000);
-                this.elements.streamDuration.textContent = this.formatStreamTime(streamTime);
+        this.elements.audio.addEventListener('playing', () => {
+            this.state.isPlaying = true;
+            this.updateStatusMessage("Воспроизведение");
+            
+            if (this.elements.loader) {
+                this.elements.loader.style.display = 'none';
             }
-        }, 1000);
-    }
-});
+            
+            // Устанавливаем время начала воспроизведения только если оно еще не установлено
+            if (!this.state.startTime) {
+                this.state.startTime = Date.now();
+            }
+            if (!this.state.streamUptimeInterval) {
+                // Запускаем обновление времени стрима
+                this.state.streamUptimeInterval = setInterval(() => this.updateStreamUptime(), 1000);
+            }
+        });
+
+        this.elements.audio.addEventListener('pause', () => {
+            this.state.isPlaying = false;
+            this.updateStatusMessage("Пауза");
+            if(this.state.streamUptimeInterval) {
+                clearInterval(this.state.streamUptimeInterval);
+                this.state.streamUptimeInterval = null;
+            }
+        });
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                this.handleBackgroundTab();
+                // Не приостанавливаем AudioContext - оставляем воспроизведение
+                // Только уменьшаем частоту обновлений информации
+                clearInterval(this.state.updateIntervalId);
+                this.state.updateIntervalId = setInterval(
+                    () => this.updateTrackInfo(),
+                    this.config.updateInterval * 3 // Реже обновляем в фоне
+                );
+                
+                console.log('Приложение перешло в фоновый режим (воспроизведение продолжается)');
             } else {
-                this.handleForegroundTab();
+                // Восстанавливаем частоту обновлений
+                clearInterval(this.state.updateIntervalId);
+                this.state.updateIntervalId = setInterval(
+                    () => this.updateTrackInfo(),
+                    this.config.updateInterval
+                );
+
+                // Проверяем состояние воспроизведения
+                if (this.state.isPlaying) {
+                    // Пробуем возобновить, если было прервано
+                    this.elements.audio.play().catch(err => {
+                        console.warn('Автовоспроизведение в foreground:', err);
+                        // Показываем кнопку "Продолжить", если нужно действие пользователя
+                        if (err.name === 'NotAllowedError') {
+                            this.showResumeButton();
+                        }
+                    });
+                }
+                
+                console.log('Приложение вернулось на передний план');
             }
         });
     }
@@ -264,12 +352,12 @@ this.elements.audio.addEventListener('playing', () => {
         }
     }
 
-formatStreamTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
+    formatStreamTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
     
     async connectToStream(maxRetries = 3) {
         try {
@@ -287,24 +375,11 @@ formatStreamTime(seconds) {
             this.updateConnectionProgress(20);
             
             // 2. Поиск рабочего потока с улучшенной обработкой ошибок
-            try {
-                this.state.currentStream = await Promise.race([
-                    this.findWorkingStream(),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error("Таймаут поиска потока")), 5000)
-                    )
-                ]);
-                this.updateConnectionProgress(50);
-            } catch (streamError) {
-                if (maxRetries > 0) {
-                    console.warn(`Повторная попытка подключения (осталось ${maxRetries} попыток)`);
-                    this.updateStatusMessage(`Повторная попытка подключения...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    return this.connectToStream(maxRetries - 1);
-                }
-                throw streamError;
+            if (!this.state.currentStream) {
+                this.state.currentStream = await this.findWorkingStream();
             }
-
+            this.updateConnectionProgress(50);
+           
             if (!this.state.currentStream) {
                 throw new Error("Все потоки недоступны");
             }
@@ -324,6 +399,7 @@ formatStreamTime(seconds) {
                 return true;
             } catch (loadError) {
                 console.error("Ошибка загрузки аудио:", loadError);
+                this.state.currentStream = null; // Reset stream so it finds a new one
                 if (maxRetries > 0) {
                     return this.connectToStream(maxRetries - 1);
                 }
@@ -344,63 +420,65 @@ formatStreamTime(seconds) {
         }
     }
 
-async loadAudioWithTimeout(url, timeout) {
-    return new Promise((resolve, reject) => {
-        // Устанавливаем CORS атрибуты
-        this.elements.audio.crossOrigin = 'anonymous';
-        this.elements.audio.preload = 'auto';
-        
-        // Очистка предыдущего источника
-        this.elements.audio.pause();
-        this.elements.audio.src = '';
-        this.elements.audio.load();
-
-        const timer = setTimeout(() => {
-            reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
-            this.elements.audio.removeEventListener('canplay', onCanPlay);
-            this.elements.audio.removeEventListener('error', onError);
-        }, timeout);
-
-        const onCanPlay = () => {
-            clearTimeout(timer);
-            resolve();
-        };
-
-        const onError = (e) => {
-            clearTimeout(timer);
-            reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
-        };
-
-        this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
-        this.elements.audio.addEventListener('error', onError, { once: true });
-        
-        // Устанавливаем новый источник после добавления обработчиков
-        this.elements.audio.src = url;
-        this.elements.audio.load();
-    });
-}
-    
-async findWorkingStream() {
-    const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
-
-    for (const stream of sortedStreams) {
-        try {
-            // Проверяем доступность с CORS
-            const response = await fetch(stream.url, {
-                method: 'HEAD',
-                mode: 'cors'
-            });
+    async loadAudioWithTimeout(url, timeout) {
+        return new Promise((resolve, reject) => {
+            // Устанавливаем CORS атрибуты
+            this.elements.audio.crossOrigin = 'anonymous';
+            this.elements.audio.preload = 'auto';
             
-            if (response.ok) {
-                return stream;
-            }
-        } catch (error) {
-            console.warn(`Поток ${stream.url} недоступен:`, error);
-        }
-    }
+            // Очистка предыдущего источника
+            this.elements.audio.pause();
+            this.elements.audio.src = '';
+            this.elements.audio.load();
 
-    throw new Error("Все потоки недоступны");
-}
+            const timer = setTimeout(() => {
+                reject(new Error(`Таймаут загрузки аудио (${timeout}ms)`));
+                this.elements.audio.removeEventListener('canplay', onCanPlay);
+                this.elements.audio.removeEventListener('error', onError);
+            }, timeout);
+
+            const onCanPlay = () => {
+                clearTimeout(timer);
+                resolve();
+            };
+
+            const onError = (e) => {
+                clearTimeout(timer);
+                reject(new Error(`Ошибка аудио: ${e.target.error?.message || 'Неизвестная ошибка'}`));
+            };
+
+            this.elements.audio.addEventListener('canplay', onCanPlay, { once: true });
+            this.elements.audio.addEventListener('error', onError, { once: true });
+            
+            // Устанавливаем новый источник после добавления обработчиков
+            this.elements.audio.src = url;
+            this.elements.audio.load();
+        });
+    }
+    
+    async findWorkingStream() {
+        const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
+
+        for (const stream of sortedStreams) {
+            try {
+                // Проверяем доступность с CORS и таймаутом
+                const response = await NetworkUtils.fetchWithTimeout(stream.url, 5000, {
+                    method: 'HEAD',
+                    mode: 'cors',
+                    signal: this.abortController.signal
+                });
+                
+                if (response.ok) {
+                    console.log(`Found working stream: ${stream.url}`);
+                    return stream;
+                }
+            } catch (error) {
+                console.warn(`Stream ${stream.url} is not available:`, error.message);
+            }
+        }
+
+        throw new Error("Все потоки недоступны");
+    }
 
     async togglePlayback() {
         if (this.state.isPlaying) {
@@ -414,23 +492,15 @@ async findWorkingStream() {
             }
         } else {
             try {
-                await this.connectToStream();
-                
-                // Возобновляем AudioContext перед воспроизведением
-                if (this.state.audioContext && this.state.audioContext.state === 'suspended') {
-                    await this.state.audioContext.resume();
-                }
-                
-                await this.elements.audio.play();
-                this.state.isPlaying = true;
-                this.updateStatusMessage("Воспроизведение");
+                // If not playing, start playback
+                await this.startPlayback();
             } catch (err) {
                 console.error("Ошибка воспроизведения:", err);
                 this.updateStatusMessage("Ошибка воспроизведения", true);
                 
                 // Если ошибка связана с политиками, предлагаем пользователю взаимодействие
                 if (err.name === 'NotAllowedError') {
-                    UIHelpers.showToast('Нажмите на страницу, чтобы разрешить воспроизведение', 'warning');
+                    this.showResumeButton();
                 }
             }
         }
@@ -443,263 +513,232 @@ async findWorkingStream() {
         this.elements.audio.load();
     }
     
-async updateTrackInfo() {
-    if (!this.state.currentApiUrl) {
-        try {
-            this.state.currentApiUrl = await this.findWorkingApi();
-            if (!this.state.currentApiUrl) {
-                this.setStatus("API недоступно", true);
-                this.updateStatusMessage("API недоступно", true);
+    async updateTrackInfo() {
+        if (!this.state.currentApiUrl) {
+            try {
+                this.state.currentApiUrl = await this.findWorkingApi();
+                if (!this.state.currentApiUrl) {
+                    this.setStatus("API недоступно", true);
+                    this.updateStatusMessage("API недоступно", true);
+                    return;
+                }
+            } catch (error) {
+                console.error("Error finding API:", error);
                 return;
             }
+        }
+
+        try {
+            const response = await NetworkUtils.fetchWithTimeout(
+                this.state.currentApiUrl,
+                5000
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Проверяем, изменился ли трек
+            if (this.isTrackChanged(data.now_playing, this.state.lastTrackData?.now_playing)) {
+                // Очищаем предыдущий интервал
+                if (this.state.timeUpdateInterval) {
+                    clearInterval(this.state.timeUpdateInterval);
+                    this.state.timeUpdateInterval = null;
+                }
+
+                this.state.lastTrackData = data;
+                this.state.lastUpdateTime = Date.now();
+                this.updateUI(data);
+            
+                // Сбрасываем таймер обновления времени при смене трека
+                if (this.state.timeUpdateInterval) {
+                    clearInterval(this.state.timeUpdateInterval);
+                }
+                
+                // Запускаем новый интервал для обновления времени
+                this.state.timeUpdateInterval = setInterval(
+                    () => this.updateCurrentTime(), 
+                    1000
+                );
+            }
+            
+            // Сбрасываем статус сети на хороший, если API доступен
+            if (this.state.networkQuality !== 'good') {
+                this.state.networkQuality = 'good';
+                this.adjustForNetworkQuality();
+                
+                if (this.elements.networkQuality) {
+                    this.elements.networkQuality.textContent = 'Отличное';
+                }
+            }
         } catch (error) {
-            console.error("Error finding API:", error);
-            return;
+            console.error("Ошибка обновления:", error);
+            
+            // Используем кэшированные данные, если есть
+            if (this.state.lastTrackData) {
+                this.updateUI(this.state.lastTrackData);
+            }
+            
+            // Обновляем статус сети на деградированный
+            this.state.networkQuality = 'degraded';
+            this.adjustForNetworkQuality();
+            
+            if (this.elements.networkQuality) {
+                this.elements.networkQuality.textContent = 'Плохое';
+            }
+            
+            // Пробуем найти новый рабочий API URL
+            this.state.currentApiUrl = await this.findWorkingApi();
+            this.setStatus("Проблемы с соединением, пытаемся восстановить...", true);
+            this.updateStatusMessage("Проблемы с соединении, пытаемся восстановить...", true);
         }
     }
 
-    try {
-        const response = await NetworkUtils.fetchWithTimeout(
-            this.state.currentApiUrl,
-            5000
-        );
+    updateUI(data) {
+        this.updateCurrentTrack(data.now_playing);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (data.playing_next) {
+            this.updateNextTrack(data.playing_next);
         }
 
-        const data = await response.json();
+        if (data.song_history) {
+            this.updateHistory(data.song_history);
+        }
 
-        // Проверяем, изменился ли трек
-        if (this.isTrackChanged(data.now_playing, this.state.lastTrackData?.now_playing)) {
-            // Очищаем предыдущий интервал
-            if (this.state.timeUpdateInterval) {
-                clearInterval(this.state.timeUpdateInterval);
-                this.state.timeUpdateInterval = null;
-            }
+        if (data.listeners && data.listeners.current) {
+            this.updateListenersCount(data.listeners.current);
+        }
 
-            this.state.lastTrackData = data;
-            this.state.lastUpdateTime = Date.now();
-            this.updateUI(data);
-        
-            // Сбрасываем таймер обновления времени при смене трека
-            if (this.state.timeUpdateInterval) {
-                clearInterval(this.state.timeUpdateInterval);
-            }
-            
-            // Запускаем новый интервал для обновления времени
+        // Запускаем обновление времени, если его еще нет
+        if (!this.state.timeUpdateInterval && data.now_playing) {
             this.state.timeUpdateInterval = setInterval(
                 () => this.updateCurrentTime(), 
                 1000
             );
         }
-        
-        // Сбрасываем статус сети на хороший, если API доступен
-        if (this.state.networkQuality !== 'good') {
-            this.state.networkQuality = 'good';
-            this.adjustForNetworkQuality();
-            
-            if (this.elements.networkQuality) {
-                this.elements.networkQuality.textContent = 'Отличное';
-            }
-        }
-    } catch (error) {
-        console.error("Ошибка обновления:", error);
-        
-        // Используем кэшированные данные, если есть
-        if (this.state.lastTrackData) {
-            this.updateUI(this.state.lastTrackData);
-        }
-        
-        // Обновляем статус сети на деградированный
-        this.state.networkQuality = 'degraded';
-        this.adjustForNetworkQuality();
-        
-        if (this.elements.networkQuality) {
-            this.elements.networkQuality.textContent = 'Плохое';
-        }
-        
-        // Пробуем найти новый рабочий API URL
-        this.state.currentApiUrl = await this.findWorkingApi();
-        this.setStatus("Проблемы с соединением, пытаемся восстановить...", true);
-        this.updateStatusMessage("Проблемы с соединением, пытаемся восстановить...", true);
-    }
-}
-
-updateUI(data) {
-    this.updateCurrentTrack(data.now_playing);
-
-    if (data.playing_next) {
-        this.updateNextTrack(data.playing_next);
     }
 
-    if (data.song_history) {
-        this.updateHistory(data.song_history);
-    }
+    updateCurrentTrack(nowPlaying) {
+        const track = nowPlaying.song;
+        const html = `
+        <span class="track-name">${track.title || 'Неизвестный трек'}</span>
+        <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
+        <span class="track-progress">${UIHelpers.formatTime(nowPlaying.duration)}</span>
+        `;
 
-    if (data.listeners && data.listeners.current) {
-        this.updateListenersCount(data.listeners.current);
-    }
-
-    // Запускаем обновление времени, если его еще нет
-    if (!this.state.timeUpdateInterval && data.now_playing) {
-        this.state.timeUpdateInterval = setInterval(
-            () => this.updateCurrentTime(), 
-            1000
-        );
-    }
-}
-
-updateCurrentTrack(nowPlaying) {
-    const track = nowPlaying.song;
-    const html = `
-    <span class="track-name">${track.title || 'Неизвестный трек'}</span>
-    <span class="track-artist">${track.artist || 'Неизвестный исполнитель'}</span>
-    <span class="track-progress">${UIHelpers.formatTime(nowPlaying.duration)}</span>
-    `;
-
-    if (this.elements.currentTrackEl) {
-        this.elements.currentTrackEl.innerHTML = html;
-    }
-
-    if (this.elements.trackTitle) {
-        this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
-    }
-    if (this.elements.trackArtist) {
-        this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
-    }
-    if (this.elements.duration) {
-        this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
-    }
-
-    // Обновляем заголовок страницы
-    document.title = `${track.title} - ${track.artist} | АлгоРитм StreAM`;
-
-    // Обновляем обложку альбома
-    this.updateAlbumArtFromAzuraCast(nowPlaying);
-
-    // Очищаем предыдущий интервал, если он есть
-    if (this.state.timeUpdateInterval) {
-        clearInterval(this.state.timeUpdateInterval);
-    }
-
-    // Сбрасываем elapsed при смене трека
-    nowPlaying.elapsed = 0;
-
-    // Запускаем новый интервал
-    this.state.timeUpdateInterval = setInterval(() => {
-        nowPlaying.elapsed += 1;
-        
-        // Обновляем UI
-        const progressElement = this.elements.currentTrackEl?.querySelector('.track-progress');
-        if (progressElement) {
-            progressElement.textContent = `${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}`;
+        if (this.elements.currentTrackEl) {
+            this.elements.currentTrackEl.innerHTML = html;
         }
 
-        // Обновляем основной плеер
-        if (this.elements.currentTime) {
-            this.elements.currentTime.textContent = UIHelpers.formatTime(nowPlaying.elapsed);
+        if (this.elements.trackTitle) {
+            this.elements.trackTitle.textContent = track.title || 'Неизвестный трек';
         }
-        if (this.elements.progressBar) {
-            this.elements.progressBar.value = (nowPlaying.elapsed / nowPlaying.duration) * 100 || 0;
+        if (this.elements.trackArtist) {
+            this.elements.trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
+        }
+        if (this.elements.duration) {
+            this.elements.duration.textContent = UIHelpers.formatTime(nowPlaying.duration);
         }
 
-        // Если трек закончился
-        if (nowPlaying.elapsed >= nowPlaying.duration) {
+        // Обновляем заголовок страницы
+        document.title = `${track.title} - ${track.artist} | АлгоРитм-StreAM`;
+
+        // Обновляем обложку альбома
+        this.updateAlbumArt(nowPlaying.song.art);
+
+        // Очищаем предыдущий интервал, если он есть
+        if (this.state.timeUpdateInterval) {
             clearInterval(this.state.timeUpdateInterval);
-            this.state.timeUpdateInterval = null;
         }
-    }, 1000);
-}
 
-updateCurrentTime() {
-    if (!this.state.lastTrackData?.now_playing) return;
-
-    const nowPlaying = this.state.lastTrackData.now_playing;
-    const elapsed = nowPlaying.elapsed + 1; // Увеличиваем на 1 секунду
-    nowPlaying.elapsed = elapsed;
-
-    // Обновляем время текущего трека
-    if (this.elements.currentTime) {
-        this.elements.currentTime.textContent = UIHelpers.formatTime(elapsed);
-    }
-
-    // Обновляем прогресс-бар
-    if (this.elements.progressBar) {
-        const progress = (elapsed / nowPlaying.duration) * 100;
-        this.elements.progressBar.value = progress || 0;
-    }
-
-    // Обновляем время стрима (общее время воспроизведения)
-    if (this.state.startTime && this.elements.streamDuration) {
-        const streamTime = Math.floor((Date.now() - this.state.startTime) / 1000);
-        this.elements.streamDuration.textContent = this.formatStreamTime(streamTime);
-    }
-
-    // Если трек закончился, сбрасываем время
-    if (elapsed >= nowPlaying.duration) {
+        // Сбрасываем elapsed при смене трека
         nowPlaying.elapsed = 0;
+
+        // Запускаем новый интервал
+        this.state.timeUpdateInterval = setInterval(() => {
+            nowPlaying.elapsed += 1;
+            
+            // Обновляем UI
+            const progressElement = this.elements.currentTrackEl?.querySelector('.track-progress');
+            if (progressElement) {
+                progressElement.textContent = `${UIHelpers.formatTime(nowPlaying.elapsed)} / ${UIHelpers.formatTime(nowPlaying.duration)}`;
+            }
+
+            // Обновляем основной плеер
+            if (this.elements.currentTime) {
+                this.elements.currentTime.textContent = UIHelpers.formatTime(nowPlaying.elapsed);
+            }
+            if (this.elements.progressBar) {
+                this.elements.progressBar.value = (nowPlaying.elapsed / nowPlaying.duration) * 100 || 0;
+            }
+
+            // Если трек закончился
+            if (nowPlaying.elapsed >= nowPlaying.duration) {
+                clearInterval(this.state.timeUpdateInterval);
+                this.state.timeUpdateInterval = null;
+            }
+        }, 1000);
     }
-}
+
+    updateCurrentTime() {
+        if (!this.state.lastTrackData?.now_playing) return;
+
+        const nowPlaying = this.state.lastTrackData.now_playing;
+        const elapsed = nowPlaying.elapsed + 1; // Увеличиваем на 1 секунду
+        nowPlaying.elapsed = elapsed;
+
+        // Обновляем время текущего трека
+        if (this.elements.currentTime) {
+            this.elements.currentTime.textContent = UIHelpers.formatTime(elapsed);
+        }
+
+        // Обновляем прогресс-бар
+        if (this.elements.progressBar) {
+            const progress = (elapsed / nowPlaying.duration) * 100;
+            this.elements.progressBar.value = progress || 0;
+        }
+
+        // Обновляем время стрима (общее время воспроизведения)
+        if (this.state.startTime && this.elements.streamDuration) {
+            const streamTime = Math.floor((Date.now() - this.state.startTime) / 1000);
+            this.elements.streamDuration.textContent = this.formatStreamTime(streamTime);
+        }
+
+        // Если трек закончился, сбрасываем время
+        if (elapsed >= nowPlaying.duration) {
+            nowPlaying.elapsed = 0;
+        }
+    }
     
-    updateAlbumArtFromAzuraCast(nowPlaying) {
-        // Получаем URL обложки по умолчанию из конфига
-        let artworkUrl = this.config.artwork.defaultUrl;
-        
-        // Проверяем возможные места, где AzuraCast может хранить обложку
-        if (nowPlaying.song.art) {
-            artworkUrl = nowPlaying.song.art;
-        } else if (nowPlaying.song.image) {
-            artworkUrl = nowPlaying.song.image;
-        } else if (nowPlaying.song.album && nowPlaying.song.album.artwork_url) {
-            artworkUrl = nowPlaying.song.album.artwork_url;
-        }
-        
-        // Обрабатываем относительные URL
-        if (artworkUrl && !artworkUrl.startsWith('http') && !artworkUrl.startsWith('/')) {
-            artworkUrl = `${this.config.azuraCast.baseUrl}${artworkUrl}`;
-        }
-        
-        // Добавляем параметр размера если это URL AzuraCast
-        if (artworkUrl.includes(this.config.azuraCast.baseUrl)) {
-            const separator = artworkUrl.includes('?') ? '&' : '?';
-            artworkUrl = `${artworkUrl}${separator}size=${this.config.artwork.size}`;
-        }
-        
-        // Используем прокси если настроено
-        if (this.config.artwork.useProxy && this.config.artwork.proxyUrl) {
-            artworkUrl = `${this.config.artwork.proxyUrl}?url=${encodeURIComponent(artworkUrl)}`;
-        }
-        
-        this.updateAlbumArt(artworkUrl);
-    }
-        
-    updateAlbumArt(imageUrl) {
+    updateAlbumArt(artworkUrl) {
         const albumCover = document.querySelector('.album-cover');
+        const defaultArt = this.config.artwork.defaultUrl;
+        
         if (!albumCover) return;
+    
+        const finalUrl = (artworkUrl && typeof artworkUrl === 'string') ? artworkUrl : defaultArt;
 
-        // Проверяем URL на валидность
-        if (!imageUrl || typeof imageUrl !== 'string') {
-            imageUrl = this.config.artwork.defaultUrl;
+        // Если URL не изменился, ничего не делаем
+        if (albumCover.src === finalUrl) {
+            return;
         }
-
-        // Добавляем cache buster
-        const cacheBusterUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`;
 
         albumCover.classList.add('fading');
         
         setTimeout(() => {
             const img = new Image();
-            img.src = cacheBusterUrl;
+            img.src = finalUrl;
             
             img.onload = () => {
-                albumCover.src = cacheBusterUrl;
+                albumCover.src = finalUrl;
                 albumCover.classList.remove('fading');
             };
             
             img.onerror = () => {
-                console.warn('Не удалось загрузить обложку альбома, используется стандартная');
-                albumCover.src = this.config.artwork.defaultUrl;
+                console.warn('Failed to load album art, using default');
+                albumCover.src = defaultArt;
                 albumCover.classList.remove('fading');
             };
         }, 300);
@@ -782,7 +821,7 @@ updateCurrentTime() {
         try {
             // Проверяем наличие apiUrls в конфиге
             if (!this.config.apiUrls || !Array.isArray(this.config.apiUrls)) {
-                console.warn('apiUrls не настроены, используется основной endpoint');
+                console.warn('apiUrls not configured, using primary endpoint');
                 return this.config.apiEndpoints.primary || this.config.apiEndpoints.nowPlaying;
             }
             
@@ -794,68 +833,68 @@ updateCurrentTime() {
             }
             
             // Если ничего не найдено, пробуем основные endpoint'ы
-            console.warn('Нет рабочего API URL, пробуем fallback endpoints');
+            console.warn('No working API URL found, trying fallback endpoints');
             return this.config.apiEndpoints.primary || 
                 this.config.apiEndpoints.nowPlaying || 
                 this.config.apiUrls[0];
         } catch (error) {
-            console.error('Ошибка поиска рабочего API:', error);
+            console.error('Error finding working API:', error);
             return this.config.apiEndpoints.primary || 
                 this.config.apiEndpoints.nowPlaying || 
                 (this.config.apiUrls && this.config.apiUrls[0]);
         }
     }
 
-isTrackChanged(newTrack, oldTrack) {
-    if (!oldTrack) return true;
-    return (
-        newTrack.song?.title !== oldTrack.song?.title ||
-        newTrack.song?.artist !== oldTrack.song?.artist
-    );
-}
-    
-handleConnectionError(error) {
-    console.error("Ошибка подключения:", error);
-    this.setStatus(`Ошибка: ${error.message}`, true);
-    this.updateStatusMessage(`Ошибка: ${error.message}`, true);
-
-    // Особенное сообщение для iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const message = isIOS ? 
-        "Нажмите 'Попробовать снова' для подключения" : 
-        `Ошибка: ${error.message}`;
-    
-    this.setStatus(message, true);
-    this.updateStatusMessage(message, true);    
-
-    // Сбрасываем состояние аудио
-    this.elements.audio.src = '';
-    this.elements.audio.load();
-    this.state.isPlaying = false;
-    this.state.currentStream = null; // Сбрасываем текущий поток
-
-    // Увеличиваем счетчик попыток переподключения
-    this.state.retryCount++;
-    if (this.elements.retryCount) {
-        this.elements.retryCount.textContent = this.state.retryCount;
+    isTrackChanged(newTrack, oldTrack) {
+        if (!oldTrack) return true;
+        return (
+            newTrack.song?.title !== oldTrack.song?.title ||
+            newTrack.song?.artist !== oldTrack.song?.artist
+        );
     }
-
-    // Экспоненциальная задержка с максимальным ограничением
-    const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
     
-    setTimeout(async () => {
-        try {
-            // Сначала находим новый рабочий поток
-            this.state.currentStream = await this.findWorkingStream();
-            // Затем пробуем подключиться
-            await this.connectToStream();
-        } catch (err) {
-            console.error("Ошибка при повторном подключении:", err);
-        }
-    }, delay);
+    handleConnectionError(error) {
+        console.error("Ошибка подключения:", error);
+        this.setStatus(`Ошибка: ${error.message}`, true);
+        this.updateStatusMessage(`Ошибка: ${error.message}`, true);
 
-    document.getElementById('audio-overlay').style.display = 'flex';
-}
+        // Особенное сообщение для iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const message = isIOS ? 
+            "Нажмите 'Попробовать снова' для подключения" : 
+            `Ошибка: ${error.message}`;
+        
+        this.setStatus(message, true);
+        this.updateStatusMessage(message, true);    
+
+        // Сбрасываем состояние аудио
+        this.elements.audio.src = '';
+        this.elements.audio.load();
+        this.state.isPlaying = false;
+        this.state.currentStream = null; // Сбрасываем текущий поток
+
+        // Увеличиваем счетчик попыток переподключения
+        this.state.retryCount++;
+        if (this.elements.retryCount) {
+            this.elements.retryCount.textContent = this.state.retryCount;
+        }
+
+        // Экспоненциальная задержка с максимальным ограничением
+        const delay = Math.min(3000 * Math.pow(2, this.state.retryCount), 30000);
+        
+        setTimeout(async () => {
+            try {
+                // Сначала находим новый рабочий поток
+                this.state.currentStream = await this.findWorkingStream();
+                // Затем пробуем подключиться
+                await this.connectToStream();
+            } catch (err) {
+                console.error("Ошибка при повторном подключении:", err);
+            }
+        }, delay);
+
+        document.getElementById('audio-overlay').style.display = 'flex';
+    }
 
     handleNetworkIssue() {
         if (this.state.networkQuality === 'good') {
@@ -888,75 +927,47 @@ handleConnectionError(error) {
         }
     }
 
-handleBackgroundTab() {
-    // Не приостанавливаем AudioContext - оставляем воспроизведение
-    // Только уменьшаем частоту обновлений информации
-    clearInterval(this.state.updateIntervalId);
-    this.state.updateIntervalId = setInterval(
-        () => this.updateTrackInfo(),
-        this.config.updateInterval * 3 // Реже обновляем в фоне
-    );
-    
-    console.log('Приложение перешло в фоновый режим (воспроизведение продолжается)');
-}
+    updateStreamUptime() {
+        if (this.state.startTime && this.elements.streamDuration) {
+            const streamTime = Math.floor((Date.now() - this.state.startTime) / 1000);
+            this.elements.streamDuration.textContent = this.formatStreamTime(streamTime);
+        }
+    }
 
-handleForegroundTab() {
-    // Восстанавливаем частоту обновлений
-    clearInterval(this.state.updateIntervalId);
-    this.state.updateIntervalId = setInterval(
-        () => this.updateTrackInfo(),
-        this.config.updateInterval
-    );
-
-    // Проверяем состояние воспроизведения
-    if (this.state.isPlaying) {
-        // Пробуем возобновить, если было прервано
-        this.elements.audio.play().catch(err => {
-            console.warn('Автовоспроизведение на переднем плане:', err);
-            // Показываем кнопку "Продолжить", если нужно действие пользователя
-            if (err.name === 'NotAllowedError') {
-                this.showResumeButton();
+    initAudioContext() {
+        try {
+            if (this.state.audioContext) return;
+            
+            this.state.audioContext = AudioController.initAudioContext();
+            if (this.state.audioContext) {
+                this.setupAudioBuffer();
+                this.state.audioContext.onstatechange = () => {
+                    console.log('AudioContext state:', this.state.audioContext.state);
+                };
             }
-        });
+        } catch (error) {
+            console.error("Ошибка инициализации AudioContext:", error);
+            this.setStatus("Аудио функции ограничены", true);
+        }
     }
     
-    console.log('Приложение вернулось на передний план');
-}
+    setupAudioBuffer() {
+        if (!this.state.audioContext) return;
 
-initAudioContext() {
-  try {
-    if (this.state.audioContext) return;
-    
-    this.state.audioContext = AudioController.initAudioContext();
-    if (this.state.audioContext) {
-      this.setupAudioBuffer();
-      this.state.audioContext.onstatechange = () => {
-        console.log('AudioContext state:', this.state.audioContext.state);
-      };
+        // Отключаем предыдущий анализатор, если есть
+        if (this.state.analyser) {
+            this.state.analyser.disconnect();
+        }
+
+        const analyser = AudioController.createAnalyser(
+            this.state.audioContext,
+            this.elements.audio
+        );
+
+        if (analyser) {
+            this.state.analyser = analyser;
+        }
     }
-  } catch (error) {
-    console.error("Ошибка инициализации AudioContext:", error);
-    this.setStatus("Аудио функции ограничены", true);
-  }
-}
-    
-setupAudioBuffer() {
-    if (!this.state.audioContext) return;
-
-    // Отключаем предыдущий анализатор, если есть
-    if (this.state.analyser) {
-        this.state.analyser.disconnect();
-    }
-
-    const analyser = AudioController.createAnalyser(
-        this.state.audioContext,
-        this.elements.audio
-    );
-
-    if (analyser) {
-        this.state.analyser = analyser;
-    }
-}
     
     startUptimeCounter() {
         this.state.startTime = Date.now();
@@ -992,19 +1003,25 @@ setupAudioBuffer() {
         }, this.config.diagnostics.logInterval);
     }
 
-destroy() {
-  this.clearAllIntervals();
-  this.abortController?.abort();
-  
-  if (this.state.audioContext) {
-    if (this.state.audioContext.state !== 'closed') {
-      this.state.audioContext.close().catch(console.error);
+    destroy() {
+        this.clearAllIntervals();
+        this.abortController?.abort();
+        
+        if (this.state.audioContext) {
+            if (this.state.audioContext.state !== 'closed') {
+                this.state.audioContext.close().catch(console.error);
+            }
+            this.state.audioContext = null;
+        }
+        
+        this.elements.audio.pause();
+        this.elements.audio.src = '';
+        this.elements.audio.load();
     }
-    this.state.audioContext = null;
-  }
-  
-  this.elements.audio.pause();
-  this.elements.audio.src = '';
-  this.elements.audio.load();
-}
+
+    clearAllIntervals() {
+        clearInterval(this.state.updateIntervalId);
+        clearInterval(this.state.timeUpdateInterval);
+        clearInterval(this.state.streamUptimeInterval);
+    }
 }

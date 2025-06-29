@@ -152,6 +152,10 @@
     align-items: center;
 }
 
+.team-member + .team-member {
+    margin-top: 1.5rem;
+}
+
 .member-info h3 {
     color: var(--accent-color);
     margin-bottom: 0.5rem;

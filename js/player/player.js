@@ -50,6 +50,7 @@ export class RadioPlayer {
             networkQuality: 'good',
             lastUpdateTime: 0,
             audioContext: null,
+            analyser: null, // Добавляем анализатор в состояние
             startTime: null,
             diagnostics: {
                 bufferingEvents: 0,
@@ -108,6 +109,7 @@ export class RadioPlayer {
             await this.elements.audio.play();
             this.state.isPlaying = true;
             this.updateStatusMessage("Воспроизведение");
+            this.elements.audio.muted = false; // Убедимся что звук не выключен
 
             if (!this.state.streamUptimeInterval) {
                 this.state.streamUptimeInterval = setInterval(() => this.updateStreamUptime(), 1000);
@@ -966,7 +968,7 @@ export class RadioPlayer {
             
             this.state.audioContext = AudioController.initAudioContext();
             if (this.state.audioContext) {
-                this.setupAudioBuffer();
+                this.setupAudioAnalysis();
                 this.state.audioContext.onstatechange = () => {
                     console.log('AudioContext state:', this.state.audioContext.state);
                 };
@@ -977,7 +979,7 @@ export class RadioPlayer {
         }
     }
     
-    setupAudioBuffer() {
+    setupAudioAnalysis() {
         if (!this.state.audioContext) return;
 
         // Отключаем предыдущий анализатор, если есть
@@ -992,6 +994,9 @@ export class RadioPlayer {
 
         if (analyser) {
             this.state.analyser = analyser;
+            // Настройки для лучшей визуализации
+            this.state.analyser.fftSize = 128; // Меньше баров, более производительно
+            this.state.analyser.smoothingTimeConstant = 0.6; // Более быстрая реакция
         }
     }
     

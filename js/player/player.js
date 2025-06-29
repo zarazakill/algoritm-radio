@@ -45,6 +45,7 @@ export class RadioPlayer {
             currentStream: null,
             currentApiUrl: null,
             isPlaying: false,
+            isConnecting: false, // Флаг для предотвращения гонки состояний
             retryCount: 0,
             networkQuality: 'good',
             lastUpdateTime: 0,
@@ -88,7 +89,8 @@ export class RadioPlayer {
     }
 
     async startPlayback() {
-        if (this.state.isPlaying) return;
+        if (this.state.isPlaying || this.state.isConnecting) return;
+        this.state.isConnecting = true;
 
         // 1. Initialize AudioContext on first interaction
         if (!this.state.audioContext) {
@@ -115,6 +117,8 @@ export class RadioPlayer {
             console.error("Ошибка при запуске воспроизведения:", error);
             this.handleConnectionError(error);
             throw error; // Re-throw to inform the caller
+        } finally {
+            this.state.isConnecting = false;
         }
     }
 
@@ -255,10 +259,18 @@ export class RadioPlayer {
 
         this.elements.audio.addEventListener('error', (e) => {
             console.error("Audio error:", e);
-            if (!this.state.currentStream?.url) {
+            // Если мы уже обрабатываем ошибку, не создаем новую цепочку.
+            if (this.state.isConnecting) {
+                console.warn("Audio error ignored while connecting.");
+                return;
+            }
+
+            const activeStreamUrl = this.state.currentStream?.url || this.elements.audio.src;
+
+            if (!activeStreamUrl) {
                 this.handleConnectionError(new Error("URL потока не установлен"));
             } else {
-                this.handleConnectionError(new Error("Ошибка аудио: " + (e.target.error?.message || "Неизвестная ошибка")));
+                this.handleConnectionError(new Error("Ошибка аудио потока: " + (e.target.error?.message || "Неизвестная ошибка")));
             }
         });
 
@@ -365,20 +377,21 @@ export class RadioPlayer {
             if (!this.elements.audio || !this.elements.statusEl) {
                 throw new Error("Не найдены необходимые DOM элементы");
             }
+            
+            this.state.isConnecting = true;
 
             if (!this.state.currentStream?.url) {
-                throw new Error("URL потока не установлен");
+                this.setStatus("Поиск доступного потока...");
+                this.updateStatusMessage("Поиск доступного потока...");
+                this.state.currentStream = await this.findWorkingStream();
+                if (!this.state.currentStream) {
+                    throw new Error("Все потоки недоступны");
+                }
             }
 
             this.setStatus("Подключение...");
             this.updateStatusMessage("Подключение к потоку...");
             this.updateConnectionProgress(20);
-            
-            // 2. Поиск рабочего потока с улучшенной обработкой ошибок
-            if (!this.state.currentStream) {
-                this.state.currentStream = await this.findWorkingStream();
-            }
-            this.updateConnectionProgress(50);
            
             if (!this.state.currentStream) {
                 throw new Error("Все потоки недоступны");
@@ -396,6 +409,8 @@ export class RadioPlayer {
                 this.setStatus("Соединение установлено");
                 this.updateStatusMessage("Соединение установлено");
                 this.updateConnectionProgress(100);
+                this.state.retryCount = 0; // Сбрасываем счетчик при успехе
+                this.elements.retryCount.textContent = this.state.retryCount;
                 return true;
             } catch (loadError) {
                 console.error("Ошибка загрузки аудио:", loadError);
@@ -417,6 +432,8 @@ export class RadioPlayer {
             }
             
             return false;
+        } finally {
+            this.state.isConnecting = false;
         }
     }
 
@@ -457,6 +474,7 @@ export class RadioPlayer {
     }
     
     async findWorkingStream() {
+        this.updateStatusMessage('Поиск рабочего потока...');
         const sortedStreams = [...this.config.streams].sort((a, b) => a.priority - b.priority);
 
         for (const stream of sortedStreams) {
@@ -492,7 +510,7 @@ export class RadioPlayer {
             }
         } else {
             try {
-                // If not playing, start playback
+                // Если не воспроизводится, начинаем воспроизведение
                 await this.startPlayback();
             } catch (err) {
                 console.error("Ошибка воспроизведения:", err);
@@ -592,7 +610,7 @@ export class RadioPlayer {
             // Пробуем найти новый рабочий API URL
             this.state.currentApiUrl = await this.findWorkingApi();
             this.setStatus("Проблемы с соединением, пытаемся восстановить...", true);
-            this.updateStatusMessage("Проблемы с соединении, пытаемся восстановить...", true);
+            this.updateStatusMessage("Проблемы с соединением, пытаемся восстановить...", true);
         }
     }
 
@@ -854,10 +872,14 @@ export class RadioPlayer {
     }
     
     handleConnectionError(error) {
-        console.error("Ошибка подключения:", error);
-        this.setStatus(`Ошибка: ${error.message}`, true);
-        this.updateStatusMessage(`Ошибка: ${error.message}`, true);
+        if (this.state.isConnecting) {
+            console.warn("Connection error handling skipped: already connecting.");
+            return;
+        }
+        this.state.isConnecting = true;
 
+        console.error("Ошибка подключения:", error);
+        
         // Особенное сообщение для iOS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const message = isIOS ? 
@@ -868,6 +890,7 @@ export class RadioPlayer {
         this.updateStatusMessage(message, true);    
 
         // Сбрасываем состояние аудио
+        this.elements.audio.pause();
         this.elements.audio.src = '';
         this.elements.audio.load();
         this.state.isPlaying = false;
@@ -884,16 +907,19 @@ export class RadioPlayer {
         
         setTimeout(async () => {
             try {
-                // Сначала находим новый рабочий поток
-                this.state.currentStream = await this.findWorkingStream();
-                // Затем пробуем подключиться
+                // Сначала находим новый рабочий поток, затем подключаемся
                 await this.connectToStream();
             } catch (err) {
                 console.error("Ошибка при повторном подключении:", err);
+            } finally {
+                this.state.isConnecting = false; // Разрешаем новые попытки
             }
         }, delay);
 
-        document.getElementById('audio-overlay').style.display = 'flex';
+        const overlay = document.getElementById('audio-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
     }
 
     handleNetworkIssue() {

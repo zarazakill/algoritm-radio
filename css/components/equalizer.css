@@ -10,7 +10,7 @@
     align-items: flex-end;
     gap: 2px; /* Уменьшим разрыв */
     padding: 10px;
-    z-index: 1; /* Позади обложки (z-index 2), но перед placeholder (z-index 0) */
+    z-index: 2; /* Над обложкой (z-index 1) */
     pointer-events: none; /* Не перехватывает клики */
     overflow: hidden;
     border-radius: inherit;

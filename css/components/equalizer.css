@@ -24,14 +24,14 @@
 .equalizer-bar {
     width: 100%; /* Заполнит доступное пространство */
     background: linear-gradient(to top, 
-        var(--accent-color) 0%, 
-        var(--primary-color) 50%, 
-        #00ffff 100%
+        var(--equalizer-color-start, var(--accent-color)) 0%, 
+        var(--equalizer-color-mid, var(--primary-color)) 50%, 
+        var(--equalizer-color-end, #00ffff) 100%
     );
     border-radius: 2px;
     height: 1%; /* Начальная высота */
     transform-origin: bottom;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 10px var(--equalizer-color-end, rgba(0, 255, 255, 0.5));
     filter: brightness(1.2);
-    transition: height 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); /* Плавная анимация высоты */
+    transition: height 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), background 0.5s ease; /* Плавная анимация высоты */
 }

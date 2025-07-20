@@ -1,16 +1,4 @@
 /* ...existing code... */
-            lastError: null
-        },
-        isInitialized: false,
-        lastTrackData: null,
-        gradientIndex: 0
-    };
-        
-    // this.elements.audio.autoplay = true; // Autoplay is handled manually
-/* ...existing code... */
-    /**
-     * Light initialization on page load. Fetches track info without touching audio.
-     */
     async lightInit() {
         this.setupEventListeners();
         this.changeEqualizerColors(); // Set initial colors
@@ -45,6 +33,30 @@
         rootStyle.setProperty('--equalizer-color-start', newGradient.start);
         rootStyle.setProperty('--equalizer-color-mid', newGradient.mid);
         rootStyle.setProperty('--equalizer-color-end', newGradient.end);
+    }
+
+    async updateTrackInfo() {
+        try {
+            const response = await fetch(this.config.trackInfoUrl);
+            const data = await response.json();
+
+            // Проверяем, изменился ли трек
+            if (this.isTrackChanged(data.now_playing, this.state.lastTrackData?.now_playing)) {
+                // Очищаем предыдущий интервал
+                if (this.state.timeUpdateInterval) {
+                    clearInterval(this.state.timeUpdateInterval);
+                    this.state.timeUpdateInterval = null;
+                }
+
+                this.changeEqualizerColors();
+                this.state.lastTrackData = data;
+                this.state.lastUpdateTime = Date.now();
+                this.updateUI(data);
+            }
+        } catch (error) {
+            console.error("Ошибка при получении информации о треке:", error);
+            this.state.lastError = error;
+        }
     }
 
     async init() {

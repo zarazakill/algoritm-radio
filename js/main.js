@@ -210,17 +210,28 @@ function setupKeyboardShortcuts(player) {
 function animateEqualizer(isPlaying) {
     const container = document.getElementById('equalizer-container');
     if (!container) return;
-    
-    if (isPlaying) {
-        container.classList.add('active');
-        container.querySelectorAll('.equalizer-bar').forEach(bar => {
-            bar.style.animationPlayState = 'running';
-        });
+
+    // Only control animation if the equalizer is visible
+    if (container.classList.contains('active')) {
+        if (isPlaying) {
+            container.classList.add('playing');
+            const bars = container.querySelectorAll('.equalizer-bar');
+            bars.forEach(bar => {
+                const duration = 0.8 + Math.random() * 0.8;
+                const delay = Math.random() * -1;
+                bar.style.animation = `equalizerBar ${duration}s ease-in-out ${delay}s infinite alternate, color-cycle 10s linear infinite`;
+                bar.style.animationDelay = `${delay}s, ${Math.random() * -10}s`;
+            });
+        } else {
+            container.classList.remove('playing');
+            const bars = container.querySelectorAll('.equalizer-bar');
+            bars.forEach(bar => {
+                bar.style.animation = 'none';
+            });
+        }
     } else {
-        container.classList.remove('active');
-        container.querySelectorAll('.equalizer-bar').forEach(bar => {
-            bar.style.animationPlayState = 'paused';
-        });
+         // Ensure animations are stopped if equalizer is hidden
+         container.classList.remove('playing');
     }
 }
 
@@ -231,6 +242,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const overlay = document.getElementById('audio-overlay');
     const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.getElementById('menuOverlay');
+    const equalizerToggleBtn = document.getElementById('equalizer-toggle-btn');
+    const equalizerContainer = document.getElementById('equalizer-container');
     
     // Инициализация дополнительных UI элементов
     setupProgressTooltip();
@@ -254,6 +267,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         menuToggle.addEventListener('click', () => {
             menuToggle.classList.toggle('active');
             menuOverlay.classList.toggle('active');
+        });
+    }
+
+    // Toggle equalizer
+    if (equalizerToggleBtn && equalizerContainer) {
+        equalizerToggleBtn.addEventListener('click', () => {
+            equalizerContainer.classList.toggle('active');
+            const audio = document.getElementById('radio-stream');
+            if (equalizerContainer.classList.contains('active')) {
+                showToast('Эквалайзер включен', 'info', 2000);
+                // Trigger animation check in case it's already playing
+                animateEqualizer(!audio.paused);
+            } else {
+                showToast('Эквалайзер выключен', 'info', 2000);
+                animateEqualizer(false); // Stop animation
+            }
         });
     }
 

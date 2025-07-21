@@ -1,37 +1,221 @@
 /* Эквалайзер */
 .equalizer-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 60px;
+    gap: 6px;
+    margin: 15px 0;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.equalizer-bar {
+    width: 8px;
+    background: linear-gradient(to top, 
+                var(--primary-color), 
+                #00ffff);
+    border-radius: 4px;
+    animation: equalizerBar 1.6s ease-in-out infinite alternate;
+    transform-origin: bottom;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    filter: brightness(1.2);
+}
+
+.equalizer-bar:nth-child(1) { 
+    animation-delay: -0.1s; 
+    height: 20%; 
+    background: linear-gradient(to top, #ff00ff, #ff00cc);
+}
+.equalizer-bar:nth-child(2) { 
+    animation-delay: -0.3s; 
+    height: 50%; 
+    background: linear-gradient(to top, #00ccff, #0066ff);
+}
+.equalizer-bar:nth-child(3) { 
+    animation-delay: -0.5s; 
+    height: 80%; 
+    background: linear-gradient(to top, #00ffcc, #00ff00);
+}
+.equalizer-bar:nth-child(4) { 
+    animation-delay: -0.2s; 
+    height: 40%; 
+    background: linear-gradient(to top, #ff9900, #ff6600);
+}
+.equalizer-bar:nth-child(5) { 
+    animation-delay: -0.4s; 
+    height: 70%; 
+    background: linear-gradient(to top, #cc00ff, #9900ff);
+}
+
+/* Полноэкранный эквалайзер поверх обложки альбома */
+.album-art {
+    position: relative;
+}
+
+.fullscreen-equalizer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: flex-end;
-    gap: 2px; /* Уменьшим разрыв */
-    padding: 10px;
-    z-index: 2; /* Над обложкой (z-index 1) */
-    pointer-events: none; /* Не перехватывает клики */
-    overflow: hidden;
-    border-radius: inherit;
-    mask-image: linear-gradient(to top, black 60%, transparent 100%);
-}
-
-.equalizer-container.active .equalizer-bar {
-    height: 80%; /* Начальная высота при активности */
-}
-
-.equalizer-bar {
-    width: 100%; /* Заполнит доступное пространство */
-    background: linear-gradient(to top, 
-        var(--equalizer-color-start, var(--accent-color)) 0%, 
-        var(--equalizer-color-mid, var(--primary-color)) 50%, 
-        var(--equalizer-color-end, #00ffff) 100%
+    padding: 20px;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: linear-gradient(
+        45deg,
+        rgba(0, 0, 0, 0.1) 0%,
+        rgba(108, 92, 231, 0.05) 30%,
+        rgba(253, 121, 168, 0.05) 70%,
+        rgba(0, 0, 0, 0.1) 100%
     );
-    border-radius: 2px;
-    height: 1%; /* Начальная высота */
+}
+
+.fullscreen-equalizer.active {
+    opacity: 1;
+}
+
+.fullscreen-bar {
+    width: 6px;
+    background: linear-gradient(to top, 
+        var(--primary-color), 
+        var(--accent-color));
+    border-radius: 3px;
+    min-height: 10px;
+    height: 20%;
+    animation: fullscreenEqualizerBar 0.8s ease-in-out infinite alternate;
     transform-origin: bottom;
-    box-shadow: 0 0 10px var(--equalizer-color-end, rgba(0, 255, 255, 0.5));
-    filter: brightness(1.2);
-    transition: height 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), background 0.5s ease; /* Плавная анимация высоты */
+    box-shadow: 0 0 15px rgba(108, 92, 231, 0.5);
+    filter: brightness(1.5);
+    transition: all 0.3s ease;
+}
+
+/* Создаем 20 полосок для более плавного эффекта */
+.fullscreen-bar:nth-child(1) { 
+    animation-delay: -0.1s; 
+    background: linear-gradient(to top, #ff00ff, #ff6b6b);
+}
+.fullscreen-bar:nth-child(2) { 
+    animation-delay: -0.2s; 
+    background: linear-gradient(to top, #00ccff, #4ecdc4);
+}
+.fullscreen-bar:nth-child(3) { 
+    animation-delay: -0.3s; 
+    background: linear-gradient(to top, #00ffcc, #45b7d1);
+}
+.fullscreen-bar:nth-child(4) { 
+    animation-delay: -0.15s; 
+    background: linear-gradient(to top, #ff9900, #f9ca24);
+}
+.fullscreen-bar:nth-child(5) { 
+    animation-delay: -0.25s; 
+    background: linear-gradient(to top, #cc00ff, #6c5ce7);
+}
+.fullscreen-bar:nth-child(6) { 
+    animation-delay: -0.35s; 
+    background: linear-gradient(to top, #00ff88, #55efc4);
+}
+.fullscreen-bar:nth-child(7) { 
+    animation-delay: -0.05s; 
+    background: linear-gradient(to top, #ff4757, #ff3838);
+}
+.fullscreen-bar:nth-child(8) { 
+    animation-delay: -0.4s; 
+    background: linear-gradient(to top, #3742fa, #2f3542);
+}
+.fullscreen-bar:nth-child(9) { 
+    animation-delay: -0.1s; 
+    background: linear-gradient(to top, #7bed9f, #70a1ff);
+}
+.fullscreen-bar:nth-child(10) { 
+    animation-delay: -0.3s; 
+    background: linear-gradient(to top, #ff6348, #ff7675);
+}
+.fullscreen-bar:nth-child(11) { 
+    animation-delay: -0.2s; 
+    background: linear-gradient(to top, #2ed573, #1dd1a1);
+}
+.fullscreen-bar:nth-child(12) { 
+    animation-delay: -0.35s; 
+    background: linear-gradient(to top, #ffa502, #ff6348);
+}
+.fullscreen-bar:nth-child(13) { 
+    animation-delay: -0.15s; 
+    background: linear-gradient(to top, #3742fa, #5352ed);
+}
+.fullscreen-bar:nth-child(14) { 
+    animation-delay: -0.25s; 
+    background: linear-gradient(to top, #ff4757, #c44569);
+}
+.fullscreen-bar:nth-child(15) { 
+    animation-delay: -0.05s; 
+    background: linear-gradient(to top, #00d2d3, #01a3a4);
+}
+.fullscreen-bar:nth-child(16) { 
+    animation-delay: -0.4s; 
+    background: linear-gradient(to top, #ff9ff3, #f368e0);
+}
+.fullscreen-bar:nth-child(17) { 
+    animation-delay: -0.1s; 
+    background: linear-gradient(to top, #54a0ff, #2e86de);
+}
+.fullscreen-bar:nth-child(18) { 
+    animation-delay: -0.3s; 
+    background: linear-gradient(to top, #5f27cd, #341f97);
+}
+.fullscreen-bar:nth-child(19) { 
+    animation-delay: -0.2s; 
+    background: linear-gradient(to top, #00d2d3, #ff9ff3);
+}
+.fullscreen-bar:nth-child(20) { 
+    animation-delay: -0.35s; 
+    background: linear-gradient(to top, #feca57, #ff9ff3);
+}
+
+@keyframes fullscreenEqualizerBar {
+    0% { 
+        height: 15%; 
+        box-shadow: 0 0 15px rgba(108, 92, 231, 0.5);
+        transform: scaleY(0.8) scaleX(1);
+    }
+    25% { 
+        height: 40%; 
+        box-shadow: 0 0 25px rgba(253, 121, 168, 0.7);
+        transform: scaleY(1.2) scaleX(1.1);
+    }
+    50% { 
+        height: 80%; 
+        box-shadow: 0 0 35px rgba(66, 255, 233, 0.8);
+        transform: scaleY(1.5) scaleX(1.2);
+    }
+    75% { 
+        height: 60%; 
+        box-shadow: 0 0 30px rgba(255, 159, 243, 0.7);
+        transform: scaleY(1.3) scaleX(1.1);
+    }
+    100% { 
+        height: 25%; 
+        box-shadow: 0 0 20px rgba(84, 160, 255, 0.6);
+        transform: scaleY(0.9) scaleX(1);
+    }
+}
+
+/* Анимация изменения цветов */
+.fullscreen-bar.color-shift {
+    animation: fullscreenEqualizerBar 0.8s ease-in-out infinite alternate,
+               colorShift 3s ease-in-out infinite;
+}
+
+@keyframes colorShift {
+    0% { filter: hue-rotate(0deg) brightness(1.5) saturate(1.2); }
+    25% { filter: hue-rotate(90deg) brightness(1.8) saturate(1.5); }
+    50% { filter: hue-rotate(180deg) brightness(2) saturate(1.8); }
+    75% { filter: hue-rotate(270deg) brightness(1.8) saturate(1.5); }
+    100% { filter: hue-rotate(360deg) brightness(1.5) saturate(1.2); }
 }

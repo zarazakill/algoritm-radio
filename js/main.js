@@ -207,42 +207,27 @@ function setupKeyboardShortcuts(player) {
 }
 
 // Эквалайзер-анимация
-function setupEqualizer(player) {
-    const equalizerContainer = document.getElementById('equalizer-container');
-    if (!equalizerContainer) return;
-
-    // Генерация баров
-    const barCount = 32; // Количество баров
-    equalizerContainer.innerHTML = ''; // Очищаем старые бары
-    for (let i = 0; i < barCount; i++) {
-        const bar = document.createElement('div');
-        bar.className = 'equalizer-bar';
-        equalizerContainer.appendChild(bar);
-    }
-
-    const bars = equalizerContainer.querySelectorAll('.equalizer-bar');
-    const audio = document.getElementById('radio-stream');
-
-    function draw() {
-        if (!player.state.analyser || (audio.paused && !player.state.isPlaying)) {
-            bars.forEach(bar => bar.style.height = '1%');
-            requestAnimationFrame(draw);
-            return;
-        }
-
-        const analyser = player.state.analyser;
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(dataArray);
-
-        bars.forEach((bar, i) => {
-            const barHeight = Math.pow(dataArray[i] / 255, 2) * 100;
-            bar.style.height = `${Math.max(1, barHeight)}%`;
-        });
-
-        requestAnimationFrame(draw);
-    }
+function animateEqualizer(isPlaying) {
+    const container = document.getElementById('equalizer-container');
+    if (!container) return;
     
-    draw();
+    if (isPlaying) {
+        container.classList.add('active');
+        const bars = container.querySelectorAll('.equalizer-bar');
+        bars.forEach(bar => {
+            // Рандомизируем анимацию
+            const duration = 0.5 + Math.random();
+            const delay = Math.random() * 0.5;
+            bar.style.animation = `equalizerBar ${duration}s ease-in-out ${delay}s infinite alternate`;
+        });
+    } else {
+        container.classList.remove('active');
+        const bars = container.querySelectorAll('.equalizer-bar');
+        bars.forEach(bar => {
+            bar.style.animation = 'none';
+            bar.style.height = '2px';
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -317,8 +302,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         spinner.style.display = 'none';
         buttonText.textContent = 'Запустить поток';
         
-        // Инициализируем эквалайзер
-        setupEqualizer(player);
+        // Setup audio event listeners for equalizer
+        const audio = document.getElementById('radio-stream');
+        if (audio) {
+            audio.addEventListener('playing', () => {
+                animateEqualizer(true);
+                // Полноэкранный эквалайзер управляется в player.js
+            });
+            audio.addEventListener('pause', () => {
+                animateEqualizer(false);
+                // Полноэкранный эквалайзер управляется в player.js
+            });
+            audio.addEventListener('waiting', () => animateEqualizer(false));
+            audio.addEventListener('ended', () => animateEqualizer(false));
+        }
         
         playButton.addEventListener('click', async () => {
             if (player.state.isPlaying) return;

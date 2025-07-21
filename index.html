@@ -149,10 +149,6 @@
           <img src="img/album-art/vinyl.png" alt="Винил" class="vinyl-svg">
         </div>
 
-        <div class="equalizer-container" id="equalizer-container">
-          <!-- Бары эквалайзера будут добавлены через JavaScript -->
-        </div>
-
         <!-- Лоадер -->
         <div class="loader" id="loader"></div>
         <p class="loading-status" id="loadingStatus">Загрузка...</p>
@@ -183,6 +179,14 @@
           <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="Регулировка громкости">
           <span class="volume-percentage" id="volume-percentage">70%</span>
         </div>
+      </div>
+
+      <div class="equalizer-container" id="equalizer-container">
+        <div class="equalizer-bar"></div>
+        <div class="equalizer-bar"></div>
+        <div class="equalizer-bar"></div>
+        <div class="equalizer-bar"></div>
+        <div class="equalizer-bar"></div>
       </div>
 
     </section>

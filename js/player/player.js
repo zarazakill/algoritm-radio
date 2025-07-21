@@ -50,7 +50,6 @@ export class RadioPlayer {
             networkQuality: 'good',
             lastUpdateTime: 0,
             audioContext: null,
-            analyser: null, // Добавляем анализатор в состояние
             startTime: null,
             diagnostics: {
                 bufferingEvents: 0,
@@ -109,7 +108,6 @@ export class RadioPlayer {
             await this.elements.audio.play();
             this.state.isPlaying = true;
             this.updateStatusMessage("Воспроизведение");
-            this.elements.audio.muted = false; // Убедимся что звук не выключен
 
             if (!this.state.streamUptimeInterval) {
                 this.state.streamUptimeInterval = setInterval(() => this.updateStreamUptime(), 1000);
@@ -307,6 +305,9 @@ export class RadioPlayer {
                 // Запускаем обновление времени стрима
                 this.state.streamUptimeInterval = setInterval(() => this.updateStreamUptime(), 1000);
             }
+
+            // Активируем полноэкранный эквалайзер
+            this.activateFullscreenEqualizer();
         });
 
         this.elements.audio.addEventListener('pause', () => {
@@ -316,6 +317,9 @@ export class RadioPlayer {
                 clearInterval(this.state.streamUptimeInterval);
                 this.state.streamUptimeInterval = null;
             }
+
+            // Деактивируем полноэкранный эквалайзер
+            this.deactivateFullscreenEqualizer();
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -968,7 +972,7 @@ export class RadioPlayer {
             
             this.state.audioContext = AudioController.initAudioContext();
             if (this.state.audioContext) {
-                this.setupAudioAnalysis();
+                this.setupAudioBuffer();
                 this.state.audioContext.onstatechange = () => {
                     console.log('AudioContext state:', this.state.audioContext.state);
                 };
@@ -979,7 +983,7 @@ export class RadioPlayer {
         }
     }
     
-    setupAudioAnalysis() {
+    setupAudioBuffer() {
         if (!this.state.audioContext) return;
 
         // Отключаем предыдущий анализатор, если есть
@@ -994,9 +998,6 @@ export class RadioPlayer {
 
         if (analyser) {
             this.state.analyser = analyser;
-            // Настройки для лучшей визуализации
-            this.state.analyser.fftSize = 128; // Меньше баров, более производительно
-            this.state.analyser.smoothingTimeConstant = 0.6; // Более быстрая реакция
         }
     }
     
@@ -1032,6 +1033,56 @@ export class RadioPlayer {
                 muted: this.elements.audio.muted
             });
         }, this.config.diagnostics.logInterval);
+    }
+
+    activateFullscreenEqualizer() {
+        let fullscreenEqualizer = document.querySelector('.fullscreen-equalizer');
+        
+        // Создаем эквалайзер если его нет
+        if (!fullscreenEqualizer) {
+            fullscreenEqualizer = document.createElement('div');
+            fullscreenEqualizer.className = 'fullscreen-equalizer';
+            
+            // Создаем 20 полосок для более плавного эффекта
+            for (let i = 0; i < 20; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'fullscreen-bar';
+                fullscreenEqualizer.appendChild(bar);
+            }
+            
+            const albumArt = document.querySelector('.album-art');
+            if (albumArt) {
+                albumArt.appendChild(fullscreenEqualizer);
+            }
+        }
+        
+        // Активируем анимацию
+        fullscreenEqualizer.classList.add('active');
+        
+        // Добавляем изменение цветов
+        const bars = fullscreenEqualizer.querySelectorAll('.fullscreen-bar');
+        bars.forEach((bar, index) => {
+            bar.classList.add('color-shift');
+            // Рандомизируем анимацию каждой полоски
+            const duration = 0.5 + Math.random() * 0.8;
+            const delay = Math.random() * 0.5;
+            bar.style.animationDuration = `${duration}s, 3s`;
+            bar.style.animationDelay = `${delay}s, ${index * 0.1}s`;
+        });
+    }
+
+    deactivateFullscreenEqualizer() {
+        const fullscreenEqualizer = document.querySelector('.fullscreen-equalizer');
+        if (fullscreenEqualizer) {
+            fullscreenEqualizer.classList.remove('active');
+            
+            const bars = fullscreenEqualizer.querySelectorAll('.fullscreen-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('color-shift');
+                bar.style.animationDuration = '';
+                bar.style.animationDelay = '';
+            });
+        }
     }
 
     destroy() {

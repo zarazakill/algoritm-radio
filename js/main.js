@@ -213,19 +213,13 @@ function animateEqualizer(isPlaying) {
     
     if (isPlaying) {
         container.classList.add('active');
-        const bars = container.querySelectorAll('.equalizer-bar');
-        bars.forEach(bar => {
-            // Рандомизируем анимацию
-            const duration = 0.5 + Math.random();
-            const delay = Math.random() * 0.5;
-            bar.style.animation = `equalizerBar ${duration}s ease-in-out ${delay}s infinite alternate`;
+        container.querySelectorAll('.equalizer-bar').forEach(bar => {
+            bar.style.animationPlayState = 'running';
         });
     } else {
         container.classList.remove('active');
-        const bars = container.querySelectorAll('.equalizer-bar');
-        bars.forEach(bar => {
-            bar.style.animation = 'none';
-            bar.style.height = '2px';
+        container.querySelectorAll('.equalizer-bar').forEach(bar => {
+            bar.style.animationPlayState = 'paused';
         });
     }
 }
@@ -305,14 +299,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Setup audio event listeners for equalizer
         const audio = document.getElementById('radio-stream');
         if (audio) {
-            audio.addEventListener('playing', () => {
-                animateEqualizer(true);
-                // Полноэкранный эквалайзер управляется в player.js
-            });
-            audio.addEventListener('pause', () => {
-                animateEqualizer(false);
-                // Полноэкранный эквалайзер управляется в player.js
-            });
+            audio.addEventListener('playing', () => animateEqualizer(true));
+            audio.addEventListener('pause', () => animateEqualizer(false));
             audio.addEventListener('waiting', () => animateEqualizer(false));
             audio.addEventListener('ended', () => animateEqualizer(false));
         }

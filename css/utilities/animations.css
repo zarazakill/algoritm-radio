@@ -57,6 +57,14 @@
     }
 }
 
+@keyframes changeColor {
+    0% { background: linear-gradient(to top, var(--primary-color), var(--accent-color)); }
+    25% { background: linear-gradient(to top, var(--accent-color), var(--success-color)); }
+    50% { background: linear-gradient(to top, var(--success-color), #00ffff); }
+    75% { background: linear-gradient(to top, #00ffff, var(--warning-color)); }
+    100% { background: linear-gradient(to top, var(--warning-color), var(--primary-color)); }
+}
+
 .playing .album-art img {
     animation: spin 20s linear infinite;
 }

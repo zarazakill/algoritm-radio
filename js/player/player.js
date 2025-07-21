@@ -305,9 +305,6 @@ export class RadioPlayer {
                 // Запускаем обновление времени стрима
                 this.state.streamUptimeInterval = setInterval(() => this.updateStreamUptime(), 1000);
             }
-
-            // Активируем полноэкранный эквалайзер
-            this.activateFullscreenEqualizer();
         });
 
         this.elements.audio.addEventListener('pause', () => {
@@ -317,9 +314,6 @@ export class RadioPlayer {
                 clearInterval(this.state.streamUptimeInterval);
                 this.state.streamUptimeInterval = null;
             }
-
-            // Деактивируем полноэкранный эквалайзер
-            this.deactivateFullscreenEqualizer();
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -1033,56 +1027,6 @@ export class RadioPlayer {
                 muted: this.elements.audio.muted
             });
         }, this.config.diagnostics.logInterval);
-    }
-
-    activateFullscreenEqualizer() {
-        let fullscreenEqualizer = document.querySelector('.fullscreen-equalizer');
-        
-        // Создаем эквалайзер если его нет
-        if (!fullscreenEqualizer) {
-            fullscreenEqualizer = document.createElement('div');
-            fullscreenEqualizer.className = 'fullscreen-equalizer';
-            
-            // Создаем 20 полосок для более плавного эффекта
-            for (let i = 0; i < 20; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'fullscreen-bar';
-                fullscreenEqualizer.appendChild(bar);
-            }
-            
-            const albumArt = document.querySelector('.album-art');
-            if (albumArt) {
-                albumArt.appendChild(fullscreenEqualizer);
-            }
-        }
-        
-        // Активируем анимацию
-        fullscreenEqualizer.classList.add('active');
-        
-        // Добавляем изменение цветов
-        const bars = fullscreenEqualizer.querySelectorAll('.fullscreen-bar');
-        bars.forEach((bar, index) => {
-            bar.classList.add('color-shift');
-            // Рандомизируем анимацию каждой полоски
-            const duration = 0.5 + Math.random() * 0.8;
-            const delay = Math.random() * 0.5;
-            bar.style.animationDuration = `${duration}s, 3s`;
-            bar.style.animationDelay = `${delay}s, ${index * 0.1}s`;
-        });
-    }
-
-    deactivateFullscreenEqualizer() {
-        const fullscreenEqualizer = document.querySelector('.fullscreen-equalizer');
-        if (fullscreenEqualizer) {
-            fullscreenEqualizer.classList.remove('active');
-            
-            const bars = fullscreenEqualizer.querySelectorAll('.fullscreen-bar');
-            bars.forEach(bar => {
-                bar.classList.remove('color-shift');
-                bar.style.animationDuration = '';
-                bar.style.animationDelay = '';
-            });
-        }
     }
 
     destroy() {

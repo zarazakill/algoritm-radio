@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VPNGate Manager Pro ver. 1.45.776</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            /* Предотвращаем zoom на iOS */
+            touch-action: manipulation;
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .iframe-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* Исправление для iOS Safari */
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Специфичные исправления для мобильных браузеров */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                height: -webkit-fill-available;
+            }
+            
+            .iframe-container {
+                height: -webkit-fill-available;
+            }
+        }
+        
+        /* Портретная ориентация */
+        @media (orientation: portrait) {
+            .iframe-container {
+                height: 100vh;
+            }
+        }
+        
+        /* Ландшафтная ориентация */
+        @media (orientation: landscape) {
+            .iframe-container {
+                height: 100vh;
+            }
+        }
+        
+        /* Для очень маленьких экранов */
+        @media (max-width: 320px) {
+            body {
+                font-size: 14px;
+            }
+        }
+        
+        /* Уведомление об ошибке */
+        .error-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 2000;
+            max-width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Индикатор загрузки -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Загрузка VPNGate Manager Pro ver. 1.45.776</div>
+    </div>
+    
+    <!-- Контейнер для iframe -->
+    <div class="iframe-container">
+        <iframe 
+            src="https://wwcat.duckdns.org:8089/" 
+            id="mainFrame"
+            allow="camera; microphone; geolocation; fullscreen"
+            allowfullscreen
+            loading="eager"
+            referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+    </div>
+    
+    <!-- Сообщение об ошибке -->
+    <div class="error-message" id="errorMessage">
+        Ошибка загрузки. Проверьте подключение к интернету.
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const iframe = document.getElementById('mainFrame');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Время ожидания загрузки (10 секунд)
+            const timeoutDuration = 10000;
+            let timeoutId;
+            
+            function hideLoading() {
+                loading.style.display = 'none';
+                clearTimeout(timeoutId);
+            }
+            
+            function showError() {
+                loading.style.display = 'none';
+                errorMessage.style.display = 'block';
+            }
+            
+            // Событие загрузки iframe
+            iframe.addEventListener('load', function() {
+                hideLoading();
+                // Фокус на iframe для лучшей интерактивности
+                iframe.focus();
+            });
+            
+            // Событие ошибки iframe
+            iframe.addEventListener('error', function() {
+                showError();
+            });
+            
+            // Таймаут на случай если iframe не загрузится
+            timeoutId = setTimeout(function() {
+                if (loading.style.display !== 'none') {
+                    showError();
+                }
+            }, timeoutDuration);
+            
+            // Исправление для iOS - предотвращаем масштабирование
+            document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Предотвращаем стандартное поведение жестов на iOS
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+            });
+            
+            // Автоматический ресайз для мобильных устройств
+            function handleResize() {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            }
+            
+            window.addEventListener('resize', handleResize);
+            window.addEventListener('orientationchange', handleResize);
+            handleResize(); // Инициализация
+            
+            // Быстрая загрузка - скрываем индикатор через 3 секунды максимум
+            setTimeout(hideLoading, 3000);
+        });
+        
+        // Исправление высоты для мобильных браузеров
+        function setVH() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        
+        setVH();
+        window.addEventListener('resize', setVH);
+        window.addEventListener('orientationchange', setVH);
+    </script>
+</body>
+</html>
